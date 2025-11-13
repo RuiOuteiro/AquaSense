@@ -2,14 +2,14 @@
 
 ## Descrição
 
-O sistema **AquaSense** é um sistema inteligente para gestão e manutenção de aquários que tem como principal objetivo automatizar algumas e optimizar algumas tarefas.
+O sistema **AquaSense** é um sistema inteligente para gestão e manutenção de aquários que tem como principal objetivo automatizar e optimizar algumas tarefas.
 
 
 **Principais Funcionalidades**
 
 - Sistema de iluminação inteligente
 	- Simulação de nascer e pôr do sol através de dimming (PWM) com fotoperiodo definido pelo utilizador na aplicação móvel.
-	- Ajuste automático do fotoperiodo através de inteligência artificial, com base na claridade da água que é medida através de um LDR que analisa a quantidade de luz que atravessa a coluna de água, podendo assim ajustar o fotoperiodo conforme a claridade da água.
+	- Ajuste automático do fotoperiodo através de inteligência artificial, com base na claridade da água que é medida através de um LDR que analisa a quantidade de luz que atravessa a coluna de água, podendo assim ajustar o fotoperiodo automaticamente.
 - Monitorização continua de:
 	- PH da água
 	- Temperatura da água
