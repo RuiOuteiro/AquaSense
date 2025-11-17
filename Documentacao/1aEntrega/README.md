@@ -99,8 +99,15 @@ Software para programar e controlar o ESP32:
 
 **Planeamento** 
 ![Imagem planeamento](https://github.com/RuiOuteiro/AquaSense/blob/main/Documentacao/1aEntrega/Ficheiros/Planeamento.png "Planeamento")
+
 Link para o planeamento (gráfico de gantt): [link](https://github.com/RuiOuteiro/AquaSense/blob/main/Documentacao/1aEntrega/Ficheiros/Planeamento_PBL.xlsx)
 
 **Esboço do artefacto físico a construir** 
 ![Imagem do artefacto](https://github.com/RuiOuteiro/AquaSense/blob/main/Documentacao/1aEntrega/Ficheiros/Diagrama%20PBL.png "Esboço")
+
 Link para o esboço (feito no DrawIO): [link](https://github.com/RuiOuteiro/AquaSense/blob/main/Documentacao/1aEntrega/Ficheiros/Diagrama%20PBL.drawio)
+
+**Infraestrutura computacional** 
+![Imagem da infraestrutura](https://github.com/RuiOuteiro/AquaSense/blob/main/Documentacao/1aEntrega/Ficheiros/Infraestrutura%20computacional.png "Infraestrutura computacional")
+
+Link para a Infraestrutura computacional (feito no DrawIO): [link](https://github.com/RuiOuteiro/AquaSense/blob/main/Documentacao/1aEntrega/Ficheiros/Infraestrutura%20computacional.drawio)
