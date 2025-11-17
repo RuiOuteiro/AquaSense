@@ -1,0 +1,76 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36" version="29.0.3">
+  <diagram name="Página-1" id="6WVqmMib-DK5mL17OVYz">
+    <mxGraphModel dx="829" dy="582" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="K1ExKCFOnv_IAdawStXz-2" value="&lt;b&gt;Aplicação Web&lt;/b&gt;&lt;div&gt;&lt;ul&gt;&lt;li style=&quot;text-align: left;&quot;&gt;Frontend: HTML/CSS/JS&lt;/li&gt;&lt;li style=&quot;text-align: left;&quot;&gt;Dashboard + Gestão do Sistema&lt;/li&gt;&lt;li style=&quot;text-align: left;&quot;&gt;Comunicação Fetch API (REST)&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="259" y="60" width="310" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="K1ExKCFOnv_IAdawStXz-3" value="&lt;b style=&quot;text-align: left; background-color: transparent;&quot;&gt;Backend PHP&lt;br&gt;&lt;br&gt;&lt;/b&gt;&lt;div&gt;&lt;div style=&quot;text-align: left;&quot;&gt;&lt;ul&gt;&lt;li&gt;Servidor Web (Apache)&lt;/li&gt;&lt;li&gt;Endpoints REST (API)&lt;/li&gt;&lt;li&gt;Processamento da Lógica&lt;/li&gt;&lt;li&gt;Base de Dados MySQL&lt;/li&gt;&lt;li&gt;Módulo de IA (previsão energia)&lt;/li&gt;&lt;li&gt;Módulo de IA (regulação do fotoperiodo)&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="259" y="240" width="310" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="K1ExKCFOnv_IAdawStXz-4" value="HTTP/JSON (REST)" style="text;whiteSpace=wrap;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="420" y="190" width="140" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="K1ExKCFOnv_IAdawStXz-5" value="" style="endArrow=classic;html=1;rounded=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" target="K1ExKCFOnv_IAdawStXz-2">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="414" y="240" as="sourcePoint" />
+            <mxPoint x="464" y="190" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="K1ExKCFOnv_IAdawStXz-24" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="K1ExKCFOnv_IAdawStXz-8" target="K1ExKCFOnv_IAdawStXz-23">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="K1ExKCFOnv_IAdawStXz-26" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="K1ExKCFOnv_IAdawStXz-8" target="K1ExKCFOnv_IAdawStXz-25">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="K1ExKCFOnv_IAdawStXz-8" value="&lt;b&gt;ESP32&lt;/b&gt;&lt;div&gt;&lt;b&gt;&lt;br&gt;&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;Sensores ligados:&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;ul&gt;&lt;li style=&quot;text-align: left;&quot;&gt;Sonda de PH + Módulo PH-4502C&lt;/li&gt;&lt;li style=&quot;text-align: left;&quot;&gt;Sensor DS18B20 (Temp. Água)&lt;/li&gt;&lt;li style=&quot;text-align: left;&quot;&gt;DHT11 (Temp. Ambiente)&lt;/li&gt;&lt;li style=&quot;text-align: left;&quot;&gt;LDR (Claridade da Água)&lt;/li&gt;&lt;/ul&gt;&lt;div&gt;&lt;b&gt;Actuadores Controlados:&lt;/b&gt;&lt;/div&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;&lt;br&gt;&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;ul&gt;&lt;li style=&quot;text-align: left;&quot;&gt;PWM para a Fita LED 12v&lt;/li&gt;&lt;li style=&quot;text-align: left;&quot;&gt;PWM/ON-OFF para Ventoinha 5v&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;&lt;br&gt;&lt;/b&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="259" y="500" width="310" height="250" as="geometry" />
+        </mxCell>
+        <mxCell id="K1ExKCFOnv_IAdawStXz-9" value="Wi-Fi&#xa;HTTP POST/GET" style="text;whiteSpace=wrap;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="420" y="430" width="280" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="K1ExKCFOnv_IAdawStXz-11" value="" style="endArrow=classic;html=1;rounded=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" target="K1ExKCFOnv_IAdawStXz-3">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="414" y="500" as="sourcePoint" />
+            <mxPoint x="464" y="450" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="K1ExKCFOnv_IAdawStXz-23" value="&lt;b&gt;MOSFET IRLZ44N&lt;/b&gt;&lt;div&gt;Driver para LED&lt;/div&gt;" style="whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="180" y="840" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="K1ExKCFOnv_IAdawStXz-25" value="&lt;b&gt;MOSFET IRLZ44N&lt;/b&gt;&lt;div&gt;Driver para Ventoinha&lt;/div&gt;" style="whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="510" y="840" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="K1ExKCFOnv_IAdawStXz-27" value="&lt;b&gt;FITA LED 12V&lt;/b&gt;&lt;div&gt;Iluminação PWM&lt;/div&gt;" style="whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="190" y="980" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="K1ExKCFOnv_IAdawStXz-29" value="&lt;b&gt;Ventoinha 5V&lt;/b&gt;&lt;div&gt;Arrefecimento Automático&lt;/div&gt;" style="whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="520" y="980" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="K1ExKCFOnv_IAdawStXz-32" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="K1ExKCFOnv_IAdawStXz-27" target="K1ExKCFOnv_IAdawStXz-23">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="225" y="980" as="sourcePoint" />
+            <mxPoint x="250" y="910" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="K1ExKCFOnv_IAdawStXz-33" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="579.6" y="980" as="sourcePoint" />
+            <mxPoint x="579.6" y="900" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="K1ExKCFOnv_IAdawStXz-34" value="&lt;b&gt;&amp;nbsp;Fonte 12V 2A&lt;/b&gt;" style="whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="190" y="1080" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="K1ExKCFOnv_IAdawStXz-35" value="" style="endArrow=classic;html=1;rounded=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="250" y="1080" as="sourcePoint" />
+            <mxPoint x="249.6" y="1040" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
