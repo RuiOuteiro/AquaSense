@@ -96,3 +96,7 @@ Software para programar e controlar o ESP32:
  - Postman - testar endpoints REST
  - VSCode - desenvolvimento de backend, frontend e scripts para Python
  - EasyEDA - esquemas elétricos
+
+**Planeamento**
+![Imagem planeamento](https://github.com/RuiOuteiro/AquaSense/blob/main/Documentacao/1aEntrega/Ficheiros/Planeamento.png "Planeamento")
+Link para o planeamento: [link](https://github.com/RuiOuteiro/AquaSense/blob/main/Documentacao/1aEntrega/Ficheiros/Planeamento_PBL.xlsx)
