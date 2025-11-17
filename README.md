@@ -1,4 +1,6 @@
-# AquaSense
+<p align="center">
+  <img src="https://github.com/RuiOuteiro/AquaSense/blob/main/Documentacao/Ficheiros/Logo_AquaSense.png" />
+</p>
 
 ## Descrição
 
