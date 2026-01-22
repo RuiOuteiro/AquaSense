@@ -1,0 +1,660 @@
+<template>
+  <div class="min-h-screen bg-slate-900 text-white font-sans">
+    <!-- Cabeçalho -->
+    <header class="bg-slate-800 sticky top-0 z-10">
+      <div
+        class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between"
+      >
+        <div class="flex items-center gap-3">
+          <div
+            class="w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl flex items-center justify-center shadow-lg shadow-cyan-500/30"
+          >
+            <span class="material-icons-outlined text-white text-2xl"
+              >waves</span
+            >
+          </div>
+          <div>
+            <h1 class="text-xl font-bold text-white">AquaSense</h1>
+            <p class="text-xs text-slate-400">
+              Sistema Inteligente de Manutenção de Aquário
+            </p>
+          </div>
+        </div>
+        <div class="flex items-center gap-4">
+          <div
+            class="flex items-center gap-2 bg-slate-700/50 px-3 py-1.5 rounded-full"
+          >
+            <span class="relative flex h-2.5 w-2.5">
+              <span
+                class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+                :class="isConnected ? 'bg-emerald-400' : 'bg-red-400'"
+              ></span>
+              <span
+                class="relative inline-flex rounded-full h-2.5 w-2.5"
+                :class="isConnected ? 'bg-emerald-500' : 'bg-red-500'"
+              ></span>
+            </span>
+            <span class="text-xs text-slate-300">{{
+              isConnected ? "Conectado" : "Desconectado"
+            }}</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-8">
+      <!-- Cards de Sensores -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <!-- Card Temperatura da Água -->
+        <div class="bg-slate-800 rounded-2xl p-6">
+          <div
+            class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-500/20 to-transparent rounded-full -mr-16 -mt-16"
+          ></div>
+          <div class="relative">
+            <div class="flex items-center gap-3 mb-4">
+              <div
+                class="w-12 h-12 bg-gradient-to-br from-orange-400 to-red-500 rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/20"
+              >
+                <span class="material-icons-outlined text-white"
+                  >thermostat</span
+                >
+              </div>
+              <div>
+                <h3 class="text-slate-400 text-sm font-medium">
+                  Temperatura da Água
+                </h3>
+                <p class="text-xs text-slate-500">Sensor Subaquático</p>
+              </div>
+            </div>
+            <div class="mb-4">
+              <span
+                class="text-5xl font-bold"
+                :class="getTemperatureColor(currentTemp)"
+              >
+                {{ currentTemp !== null ? currentTemp.toFixed(1) : "--" }}
+              </span>
+              <span class="text-2xl text-slate-400 ml-1">°C</span>
+            </div>
+            <div class="flex items-center justify-between text-xs">
+              <div class="flex items-center gap-4">
+                <span class="text-red-400"
+                  ><span class="material-icons-outlined text-xs align-middle"
+                    >arrow_upward</span
+                  >
+                  Liga ≥{{ config.tempLigar }}°C</span
+                >
+                <span class="text-cyan-400"
+                  ><span class="material-icons-outlined text-xs align-middle"
+                    >arrow_downward</span
+                  >
+                  Desliga ≤{{ config.tempDesligar }}°C</span
+                >
+              </div>
+            </div>
+            <p class="text-xs text-slate-500 mt-3">
+              {{
+                currentTempTime
+                  ? formatDate(currentTempTime)
+                  : "A aguardar dados..."
+              }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Card pH da Água -->
+        <div class="bg-slate-800 rounded-2xl p-6">
+          <div
+            class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-violet-500/20 to-transparent rounded-full -mr-16 -mt-16"
+          ></div>
+          <div class="relative">
+            <div class="flex items-center gap-3 mb-4">
+              <div
+                class="w-12 h-12 bg-gradient-to-br from-violet-400 to-purple-500 rounded-xl flex items-center justify-center shadow-lg shadow-violet-500/20"
+              >
+                <span class="material-icons-outlined text-white">science</span>
+              </div>
+              <div>
+                <h3 class="text-slate-400 text-sm font-medium">Nível de pH</h3>
+                <p class="text-xs text-slate-500">Qualidade da Água</p>
+              </div>
+            </div>
+            <div class="mb-4">
+              <span class="text-5xl font-bold" :class="getPhColor(currentPh)">
+                {{ currentPh !== null ? currentPh.toFixed(2) : "--" }}
+              </span>
+              <span class="text-2xl text-slate-400 ml-1">pH</span>
+            </div>
+            <div
+              class="w-full h-2 bg-gradient-to-r from-red-500 via-green-500 to-blue-500 rounded-full mb-2"
+            ></div>
+            <div class="flex justify-between text-xs text-slate-500">
+              <span>Ácido</span>
+              <span>Neutro</span>
+              <span>Alcalino</span>
+            </div>
+            <p class="text-xs text-slate-500 mt-3">
+              {{
+                currentPhTime
+                  ? formatDate(currentPhTime)
+                  : "A aguardar dados..."
+              }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Card Ventoinha/Arrefecimento -->
+        <div
+          class="rounded-2xl p-6"
+          :class="fanOn ? 'bg-emerald-900/50' : 'bg-slate-800'"
+        >
+          <div class="relative">
+            <div class="flex items-center gap-3 mb-4">
+              <div
+                class="w-12 h-12 rounded-xl flex items-center justify-center"
+                :class="fanOn ? 'bg-emerald-500' : 'bg-slate-600'"
+              >
+                <span class="material-icons-outlined text-white text-2xl"
+                  >air</span
+                >
+              </div>
+              <div>
+                <h3 class="text-slate-300 text-sm font-medium">
+                  Arrefecimento
+                </h3>
+                <p
+                  class="text-xs"
+                  :class="fanOn ? 'text-emerald-400' : 'text-slate-500'"
+                >
+                  {{ config.modoManual ? "Modo Manual" : "Modo Automático" }}
+                </p>
+              </div>
+            </div>
+            <div class="mb-4">
+              <span
+                class="text-4xl font-bold"
+                :class="fanOn ? 'text-emerald-400' : 'text-slate-500'"
+              >
+                {{ fanOn ? "LIGADA" : "DESLIGADA" }}
+              </span>
+            </div>
+            <div class="h-2 rounded-full overflow-hidden bg-slate-700">
+              <div
+                class="h-full rounded-full transition-all duration-300"
+                :class="fanOn ? 'bg-emerald-500 w-full' : 'w-0'"
+              ></div>
+            </div>
+            <p class="text-xs text-slate-500 mt-3">
+              {{
+                fanStatusTime
+                  ? formatDate(fanStatusTime)
+                  : "A aguardar dados..."
+              }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Painel de Controlo -->
+      <div class="bg-slate-800 rounded-2xl p-6 mb-8">
+        <h2 class="text-lg font-semibold text-white mb-6">
+          Painel de Controlo
+        </h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <!-- Modo de Operação -->
+          <div class="bg-slate-700/50 rounded-xl p-4">
+            <p class="text-sm text-slate-400 mb-3">Modo de Operação</p>
+            <div class="flex gap-2">
+              <button
+                @click="setModoManual(false)"
+                class="flex-1 py-3 px-4 rounded-lg text-sm font-medium"
+                :class="
+                  !config.modoManual
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-slate-600 text-slate-300'
+                "
+              >
+                Automático
+              </button>
+              <button
+                @click="setModoManual(true)"
+                class="flex-1 py-3 px-4 rounded-lg text-sm font-medium"
+                :class="
+                  config.modoManual
+                    ? 'bg-orange-600 text-white'
+                    : 'bg-slate-600 text-slate-300'
+                "
+              >
+                Manual
+              </button>
+            </div>
+          </div>
+
+          <!-- Controlo Manual da Ventoinha -->
+          <div
+            class="bg-slate-700/50 rounded-xl p-4"
+            :class="{ 'opacity-40': !config.modoManual }"
+          >
+            <p class="text-sm text-slate-400 mb-3">Ventoinha Manual</p>
+            <div class="flex gap-2">
+              <button
+                @click="setVentoinhaManual(true)"
+                :disabled="!config.modoManual"
+                class="flex-1 py-3 px-4 rounded-lg text-sm font-medium disabled:cursor-not-allowed"
+                :class="
+                  config.ventoinhaManual && config.modoManual
+                    ? 'bg-emerald-600 text-white'
+                    : 'bg-slate-600 text-slate-300'
+                "
+              >
+                Ligar
+              </button>
+              <button
+                @click="setVentoinhaManual(false)"
+                :disabled="!config.modoManual"
+                class="flex-1 py-3 px-4 rounded-lg text-sm font-medium disabled:cursor-not-allowed"
+                :class="
+                  !config.ventoinhaManual && config.modoManual
+                    ? 'bg-red-600 text-white'
+                    : 'bg-slate-600 text-slate-300'
+                "
+              >
+                Desligar
+              </button>
+            </div>
+          </div>
+
+          <!-- Temperaturas Automáticas -->
+          <div
+            class="bg-slate-700/50 rounded-xl p-4"
+            :class="{ 'opacity-40': config.modoManual }"
+          >
+            <p class="text-sm text-slate-400 mb-3">Limites de Temperatura</p>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="text-xs text-slate-400 block mb-1"
+                  >Liga (°C)</label
+                >
+                <input
+                  type="number"
+                  v-model.number="config.tempLigar"
+                  @change="guardarConfig"
+                  :disabled="config.modoManual"
+                  step="0.5"
+                  min="0"
+                  max="40"
+                  class="w-full bg-slate-700 rounded-lg px-3 py-2 text-white text-sm"
+                />
+              </div>
+              <div>
+                <label class="text-xs text-slate-400 block mb-1"
+                  >Desliga (°C)</label
+                >
+                <input
+                  type="number"
+                  v-model.number="config.tempDesligar"
+                  @change="guardarConfig"
+                  :disabled="config.modoManual"
+                  step="0.5"
+                  min="0"
+                  max="40"
+                  class="w-full bg-slate-700 rounded-lg px-3 py-2 text-white text-sm"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Histórico -->
+      <div class="bg-slate-800 rounded-2xl overflow-hidden">
+        <div
+          class="px-6 py-4 bg-slate-700/50 flex items-center justify-between"
+        >
+          <h2 class="text-lg font-semibold text-white">
+            Histórico de Leituras
+          </h2>
+          <span
+            class="text-xs text-slate-400 bg-slate-700 px-3 py-1 rounded-full"
+          >
+            Últimas {{ readings.length }} leituras
+          </span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-slate-700/50">
+              <tr>
+                <th
+                  class="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-6 py-3"
+                >
+                  Data/Hora
+                </th>
+                <th
+                  class="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-6 py-3"
+                >
+                  Sensor
+                </th>
+                <th
+                  class="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-6 py-3"
+                >
+                  Valor
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-700">
+              <tr
+                v-for="reading in readings.slice(0, 20)"
+                :key="reading.id"
+                class="hover:bg-slate-700/30 transition-colors"
+              >
+                <td class="px-6 py-4 text-sm text-slate-400">
+                  {{ formatDate(reading.created_at) }}
+                </td>
+                <td class="px-6 py-4">
+                  <span
+                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                    :class="getSensorBadgeClass(reading.sensor_type)"
+                  >
+                    {{ translateSensorType(reading.sensor_type) }}
+                  </span>
+                </td>
+                <td
+                  class="px-6 py-4 text-sm font-semibold"
+                  :class="getValueColor(reading.sensor_type)"
+                >
+                  {{ formatValue(reading) }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div
+          v-if="readings.length === 0"
+          class="text-slate-400 text-center py-12"
+        >
+          <svg
+            class="w-12 h-12 mx-auto mb-4 text-slate-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+            ></path>
+          </svg>
+          <p>A aguardar dados do ESP32...</p>
+        </div>
+      </div>
+
+      <!-- Rodapé -->
+      <div class="mt-6 text-center text-xs text-slate-500">
+        Atualização automática a cada 2 segundos · Última atualização:
+        {{ lastUpdate }}
+      </div>
+    </main>
+  </div>
+</template>
+
+<script setup lang="ts">
+interface SensorReading {
+  id: number;
+  device_id: string;
+  sensor_type: string;
+  value: number;
+  unit: string | null;
+  created_at: string;
+}
+
+const readings = ref<SensorReading[]>([]);
+const lastUpdate = ref("");
+
+const currentTemp = ref<number | null>(null);
+const currentTempTime = ref<string | null>(null);
+const currentPh = ref<number | null>(null);
+const currentPhTime = ref<string | null>(null);
+const fanOn = ref(false);
+const fanStatusTime = ref<string | null>(null);
+const isConnected = ref(false);
+
+const config = reactive({
+  modoManual: false,
+  ventoinhaManual: false,
+  tempLigar: 14.0,
+  tempDesligar: 13.0,
+});
+
+const carregarConfig = async () => {
+  try {
+    const res = await $fetch<{ success: boolean; data: any }>("/api/config");
+    if (res.success && res.data) {
+      config.modoManual = res.data.modo_manual;
+      config.ventoinhaManual = res.data.ventoinha_manual;
+      config.tempLigar = parseFloat(res.data.temp_ligar);
+      config.tempDesligar = parseFloat(res.data.temp_desligar);
+    }
+  } catch (error) {
+    console.error("Erro ao carregar configurações:", error);
+  }
+};
+
+const guardarConfig = async () => {
+  try {
+    await $fetch("/api/config", {
+      method: "POST",
+      body: {
+        modo_manual: config.modoManual,
+        ventoinha_manual: config.ventoinhaManual,
+        temp_ligar: config.tempLigar,
+        temp_desligar: config.tempDesligar,
+      },
+    });
+  } catch (error) {
+    console.error("Erro ao guardar configurações:", error);
+  }
+};
+
+const setModoManual = async (manual: boolean) => {
+  config.modoManual = manual;
+  await guardarConfig();
+};
+
+const setVentoinhaManual = async (ligada: boolean) => {
+  config.ventoinhaManual = ligada;
+  await guardarConfig();
+};
+
+const formatDate = (date: string) => {
+  return new Date(date).toLocaleString("pt-PT");
+};
+
+const translateSensorType = (type: string) => {
+  const translations: Record<string, string> = {
+    temperature: "Temperatura",
+    pH: "pH",
+    fan_status: "Ventoinha",
+  };
+  return translations[type] || type;
+};
+
+const getTemperatureColor = (temp: number | null) => {
+  if (temp === null) return "text-gray-400";
+  if (temp >= 14) return "text-red-400";
+  if (temp <= 13) return "text-blue-400";
+  return "text-orange-400";
+};
+
+const getPhColor = (ph: number | null) => {
+  if (ph === null) return "text-gray-400";
+  if (ph < 6.5) return "text-red-400";
+  if (ph > 7.5) return "text-blue-400";
+  return "text-green-400";
+};
+
+const getValueColor = (sensorType: string) => {
+  if (sensorType === "temperature") return "text-orange-400";
+  if (sensorType === "pH") return "text-violet-400";
+  return "text-emerald-400";
+};
+
+const getSensorBadgeClass = (sensorType: string) => {
+  if (sensorType === "temperature") return "bg-orange-500/20 text-orange-400";
+  if (sensorType === "pH") return "bg-violet-500/20 text-violet-400";
+  return "bg-emerald-500/20 text-emerald-400";
+};
+
+const formatValue = (reading: SensorReading) => {
+  if (reading.sensor_type === "fan_status") {
+    return reading.value >= 1 ? "LIGADA" : "DESLIGADA";
+  }
+  if (reading.sensor_type === "temperature") {
+    return `${reading.value.toFixed(1)}°C`;
+  }
+  if (reading.sensor_type === "pH") {
+    return reading.value.toFixed(2);
+  }
+  return `${reading.value} ${reading.unit || ""}`;
+};
+
+const fetchData = async () => {
+  try {
+    const res = await $fetch<{ success: boolean; data: SensorReading[] }>(
+      "/api/sensor?limit=100",
+    );
+
+    if (res.success && res.data.length > 0) {
+      readings.value = res.data.map((r) => ({
+        ...r,
+        value: parseFloat(String(r.value)),
+      }));
+      isConnected.value = true;
+
+      const tempReading = res.data.find((r) => r.sensor_type === "temperature");
+      if (tempReading) {
+        currentTemp.value = parseFloat(String(tempReading.value));
+        currentTempTime.value = tempReading.created_at;
+      }
+
+      const phReading = res.data.find((r) => r.sensor_type === "pH");
+      if (phReading) {
+        currentPh.value = parseFloat(String(phReading.value));
+        currentPhTime.value = phReading.created_at;
+      }
+
+      const fanReading = res.data.find((r) => r.sensor_type === "fan_status");
+      if (fanReading) {
+        fanOn.value = parseFloat(String(fanReading.value)) >= 1;
+        fanStatusTime.value = fanReading.created_at;
+      }
+    }
+    lastUpdate.value = new Date().toLocaleTimeString("pt-PT");
+  } catch (error) {
+    console.error("Erro ao obter dados:", error);
+    isConnected.value = false;
+  }
+};
+
+onMounted(() => {
+  carregarConfig();
+  fetchData();
+  setInterval(fetchData, 2000);
+});
+</script>
+
+<style>
+@import url("https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css");
+
+* {
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  background-color: #0f172a !important;
+  color: #e2e8f0 !important;
+  margin: 0;
+  padding: 0;
+}
+
+.material-icons-outlined {
+  font-family: "Material Icons Outlined";
+  font-size: 24px;
+  line-height: 1;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* Remove all default borders */
+*,
+*::before,
+*::after {
+  border-color: transparent;
+}
+
+/* Cards */
+.card {
+  background: #1e293b;
+  border-radius: 16px;
+  padding: 24px;
+  border: 1px solid #334155;
+}
+
+/* Buttons */
+button {
+  cursor: pointer;
+  border: none !important;
+  outline: none !important;
+  transition: all 0.2s ease;
+}
+
+button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Inputs */
+input[type="number"] {
+  background: #334155 !important;
+  border: none !important;
+  border-radius: 8px;
+  padding: 12px;
+  color: white;
+  outline: none;
+}
+
+input[type="number"]:focus {
+  box-shadow: 0 0 0 2px #3b82f6;
+}
+
+input[type="number"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Status indicator animation */
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.status-dot {
+  animation: pulse 2s ease-in-out infinite;
+}
+</style>
