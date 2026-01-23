@@ -19,6 +19,10 @@
 -- Table structure for table `configuracoes`
 --
 
+--CREATE DATABASE IF NOT EXISTS
+CREATE DATABASE IF NOT EXISTS AquaSense;
+USE AquaSense;
+
 DROP TABLE IF EXISTS `configuracoes`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
