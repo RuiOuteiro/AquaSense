@@ -19,8 +19,10 @@ mysql -u root -P 3309 < schema_dump.sql
 ```
 
 ### 2. Dashboard Web
+For windows Node.js is [required](https://nodejs.org/en/download).
 
 ```bash
+
 cd esp32-dashboard
 npm install        # Só na primeira vez
 npm run dev        # Inicia em http://localhost:3001
