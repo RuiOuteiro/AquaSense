@@ -511,7 +511,7 @@ void loop() {
   int leituraPH = soma / 10;
   float tensaoPH = leituraPH * (3.3 / 4095.0);
   float ph = 7.0 + (TENSAO_PH7 - tensaoPH) / DECLIVE;
-  String phLog = "[pH DEBUG] Tensão: " + String(tensaoPH, 3) + "V | ADC: " + String(leituraPH);
+  String phLog = "[pH DEBUG] Tensão: " + String(tensaoPH, 3) + "V | ADC: " + String(leituraPH) + " | pH:" + String(ph);
   Serial.println(phLog);
   addLog(phLog, "info");
 
