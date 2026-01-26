@@ -23,7 +23,7 @@ For windows Node.js is [required](https://nodejs.org/en/download).
 
 ```bash
 
-cd esp32-dashboard
+cd esp32-dashboard/app
 npm install        # Só na primeira vez
 npm run dev        # Inicia em http://localhost:3001
 ```
