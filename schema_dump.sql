@@ -20,8 +20,8 @@
 --
 
 --CREATE DATABASE IF NOT EXISTS
-CREATE DATABASE IF NOT EXISTS AquaSense;
-USE AquaSense;
+CREATE DATABASE IF NOT EXISTS esp32_data;
+USE esp32_data;
 
 DROP TABLE IF EXISTS `configuracoes`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
