@@ -38,7 +38,7 @@ DB_CONFIG = {
 # ==============================
 INPUT_DIM = 4       # Média 24h, turbidez actual, tendência, fotoperíodo base
 HIDDEN_DIM = 32     # Neurónios na camada oculta
-OUTPUT_DIM = 1      # Ajuste de fotoperíodo (horas)
+OUTPUT_DIM = 3      # [ajuste fotoperíodo, TPA%, alimentação]
 
 # ==============================
 # TREINO
@@ -71,6 +71,26 @@ TURBIDITY_RULES = {
     0: 0        # Normal: sem ajuste
 }
 
+TPA_RULES = {
+    90: 80,     # Crítico: 80%
+    80: 70,     # Muito alto: 70%
+    70: 60,     # Alto: 60%
+    60: 50,     # Elevado: 50%
+    50: 40,     # Moderado-alto: 40%
+    40: 30,     # Moderado: 30%
+    25: 20,     # Ligeiro: 20%
+    0: 15       # Normal: 15% rotina
+}
+
+FEEDING_RULES = {
+    90: 0,      # Crítico: suspender (0%)
+    80: 0,      # Muito alto: suspender
+    70: 0,      # Alto: suspender
+    60: 50,     # Elevado: 50%
+    40: 75,     # Moderado: 75%
+    0: 100      # Normal: 100%
+}
+
 def get_expected_adjustment(turbidity: float, trend: float = 0) -> float:
     """Calcula o ajuste esperado com base nas regras definidas."""
     adjustment = 0
@@ -86,3 +106,37 @@ def get_expected_adjustment(turbidity: float, trend: float = 0) -> float:
         adjustment -= 1
     
     return max(-12, adjustment)
+
+
+def get_expected_tpa(turbidity: float, trend: float = 0) -> float:
+    """Calcula a percentagem de TPA esperada."""
+    tpa = 15
+    for threshold, pct in sorted(TPA_RULES.items(), reverse=True):
+        if turbidity > threshold:
+            tpa = pct
+            break
+    
+    # Ajuste por tendência
+    if trend > 15:
+        tpa = min(100, tpa + 10)
+    elif trend > 5:
+        tpa = min(100, tpa + 5)
+    
+    return tpa
+
+
+def get_expected_feeding(turbidity: float, trend: float = 0) -> float:
+    """Calcula a percentagem de alimentação esperada (100=normal, 0=suspender)."""
+    feeding = 100
+    for threshold, pct in sorted(FEEDING_RULES.items(), reverse=True):
+        if turbidity > threshold:
+            feeding = pct
+            break
+    
+    # Ajuste por tendência
+    if trend > 15 and feeding > 0:
+        feeding = max(0, feeding - 25)
+    elif trend > 5 and feeding > 0:
+        feeding = max(0, feeding - 10)
+    
+    return feeding

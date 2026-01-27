@@ -2,7 +2,7 @@
 Módulo de inferência para previsões em produção.
 
 Fornece interface simples para obter sugestões de ajuste
-de fotoperíodo baseado em dados de turbidez.
+de fotoperíodo, TPA e alimentação baseado em dados de turbidez.
 """
 from pathlib import Path
 from typing import Dict, Tuple, Optional
@@ -11,19 +11,19 @@ import numpy as np
 import torch
 
 from .config import DEVICE, MODEL_PATH, SCALER_PATH
-from .model import PhotoperiodNet
+from .model import AquaSenseNet, PhotoperiodNet
 from .data_loader import StandardScaler
 from .suggestions import get_full_suggestions
 
 
-class PhotoperiodPredictor:
+class AquaSensePredictor:
     """
-    Classe para previsões de ajuste de fotoperíodo.
+    Classe para previsões de ajuste de fotoperíodo, TPA e alimentação.
     
     Uso:
-        predictor = PhotoperiodPredictor()
-        result = predictor.predict(turbidity_24h=30, turbidity_now=45, trend=15)
-        print(result['adjustment_hours'])
+        predictor = AquaSensePredictor()
+        result = predictor.predict(turbidity_24h=30, turbidity_now=45)
+        print(result['adjustment_hours'], result['tpa_percentagem'], result['alimentacao_percentagem'])
     """
     
     def __init__(self, model_path: Path = MODEL_PATH, scaler_path: Path = SCALER_PATH):
@@ -39,7 +39,7 @@ class PhotoperiodPredictor:
         if not path.exists():
             raise FileNotFoundError(f"Modelo não encontrado: {path}")
         
-        self.model = PhotoperiodNet().to(self.device)
+        self.model = AquaSenseNet().to(self.device)
         self.model.load_state_dict(
             torch.load(path, map_location=self.device, weights_only=True)
         )
@@ -94,11 +94,17 @@ class PhotoperiodPredictor:
         x = torch.tensor(features, dtype=torch.float32).to(self.device)
         
         with torch.no_grad():
-            normalized_output = self.model(x).item()
+            output = self.model(x)
         
-        # Desnormalizar: [-1, 1] -> [-12, 12] (mas limitamos a [-12, 0])
-        adjustment = normalized_output * 12
+        # Desnormalizar as 3 saídas
+        adjustment = output[0, 0].item() * 12  # [-1, 1] -> [-12, 12]
         adjustment = max(-12, min(0, adjustment))
+        
+        tpa_pct = output[0, 1].item() * 100  # [0, 1] -> [0, 100]
+        tpa_pct = max(0, min(100, tpa_pct))
+        
+        feeding_pct = output[0, 2].item() * 100  # [0, 1] -> [0, 100]
+        feeding_pct = max(0, min(100, feeding_pct))
         
         # Calcular novo fotoperíodo sugerido
         suggested_photoperiod = max(2, base_photoperiod + adjustment)
@@ -107,11 +113,13 @@ class PhotoperiodPredictor:
         urgency = self._determine_urgency(turbidity_now, trend)
         
         # Sugestões adicionais
-        recommendations = self._get_recommendations(turbidity_now, trend, adjustment)
+        recommendations = self._get_recommendations(turbidity_now, trend, adjustment, tpa_pct, feeding_pct)
         
         return {
             'adjustment_hours': round(adjustment, 1),
             'suggested_photoperiod': round(suggested_photoperiod, 1),
+            'tpa_percentagem': round(tpa_pct, 0),
+            'alimentacao_percentagem': round(feeding_pct, 0),
             'urgency': urgency,
             'turbidity_level': self._classify_turbidity(turbidity_now),
             'recommendations': recommendations,
@@ -148,36 +156,42 @@ class PhotoperiodPredictor:
         return 'clear'
     
     def _get_recommendations(
-        self, turbidity: float, trend: float, adjustment: float
+        self, turbidity: float, trend: float, adjustment: float,
+        tpa_pct: float = None, feeding_pct: float = None
     ) -> list:
-        """Gera lista de recomendações."""
+        """Gera lista de recomendações baseada nas previsões do modelo."""
         recs = []
         
+        # Usar valores do modelo se disponíveis
+        if tpa_pct is not None:
+            if tpa_pct >= 70:
+                recs.append(f"TPA urgente de {tpa_pct:.0f}%")
+            elif tpa_pct >= 40:
+                recs.append(f"TPA de {tpa_pct:.0f}% recomendada")
+            elif tpa_pct >= 20:
+                recs.append(f"TPA preventiva de {tpa_pct:.0f}%")
+        
+        if feeding_pct is not None:
+            if feeding_pct == 0:
+                recs.append("Suspender alimentação")
+            elif feeding_pct < 50:
+                recs.append(f"Reduzir alimentação para {feeding_pct:.0f}%")
+            elif feeding_pct < 100:
+                recs.append(f"Alimentação a {feeding_pct:.0f}% do normal")
+        
         if turbidity > 80:
-            recs.extend([
-                "TPA urgente de 70-80%",
-                "Suspender alimentação por 3 dias",
-                "Desligar luz azul/noturna",
-                "Verificar filtração"
-            ])
+            recs.append("Desligar luz azul/noturna")
+            recs.append("Verificar filtração")
         elif turbidity > 60:
-            recs.extend([
-                "TPA de 50-60%",
-                "Reduzir alimentação em 50%",
-                "Considerar desligar luz noturna"
-            ])
-        elif turbidity > 40:
-            recs.extend([
-                "TPA de 30-40%",
-                "Reduzir alimentação ligeiramente"
-            ])
-        elif trend > 15:
-            recs.append("Monitorizar evolução - tendência de aumento")
+            recs.append("Considerar desligar luz noturna")
         
         if adjustment < -6:
             recs.append(f"Reduzir fotoperíodo em {abs(adjustment):.0f}h")
         elif adjustment < -2:
             recs.append(f"Ajustar fotoperíodo em {adjustment:.0f}h")
+        
+        if trend > 15 and not recs:
+            recs.append("Monitorizar evolução - tendência de aumento")
         
         if not recs:
             recs.append("Manter configurações actuais")
@@ -193,24 +207,33 @@ class PhotoperiodPredictor:
     ) -> Dict[str, any]:
         """
         Previsão completa com todas as sugestões (TPA, luz noturna, alimentação).
+        Usa o modelo neural para fotoperíodo, TPA e alimentação.
         
         Returns:
             Dict com ajuste + sugestões completas de TPA, luz noturna, alimentação
         """
-        # Obter ajuste do modelo neural
-        basic_result = self.predict(turbidity_24h, turbidity_now, None, base_photoperiod)
-        adjustment = basic_result['adjustment_hours']
+        # Obter previsões do modelo neural (fotoperíodo, TPA, alimentação)
+        ai_result = self.predict(turbidity_24h, turbidity_now, None, base_photoperiod)
+        adjustment = ai_result['adjustment_hours']
+        tpa_pct = ai_result['tpa_percentagem']
+        feeding_pct = ai_result['alimentacao_percentagem']
         
-        # Obter sugestões completas
+        # Obter sugestões completas (luz noturna, intensidade, etc.)
         full = get_full_suggestions(
             turbidity_now=turbidity_now,
             turbidity_24h=turbidity_24h,
             current_intensity=current_intensity,
             base_photoperiod=int(base_photoperiod),
-            adjustment_hours=adjustment
+            adjustment_hours=adjustment,
+            ai_tpa_pct=tpa_pct,
+            ai_feeding_pct=feeding_pct
         )
         
         return full
+
+
+# Alias para retrocompatibilidade
+PhotoperiodPredictor = AquaSensePredictor
 
 
 def predict_adjustment(
@@ -231,17 +254,17 @@ def predict_adjustment(
     Returns:
         Dict com resultado da previsão
     """
-    predictor = PhotoperiodPredictor()
+    predictor = AquaSensePredictor()
     return predictor.predict(turbidity_24h, turbidity_now, trend, base_photoperiod)
 
 
 if __name__ == "__main__":
     print("=" * 60)
-    print("TESTE DE INFERÊNCIA")
+    print("TESTE DE INFERÊNCIA - AquaSenseNet")
     print("=" * 60)
     
     try:
-        predictor = PhotoperiodPredictor()
+        predictor = AquaSensePredictor()
         
         test_cases = [
             ("Água limpa", 10, 12, 2),
@@ -251,23 +274,27 @@ if __name__ == "__main__":
             ("Piorando rápido", 30, 55, 25),
         ]
         
-        print(f"\n{'Cenário':<20} {'Turbidez':>10} {'Ajuste':>10} {'Urgência':>12}")
-        print("-" * 55)
+        print(f"\n{'Cenário':<18} {'Turb':>6} {'Ajuste':>8} {'TPA':>6} {'Alim':>6} {'Urgência':>10}")
+        print("-" * 60)
         
         for name, t24h, t_now, trend in test_cases:
             result = predictor.predict(t24h, t_now, trend)
             print(
-                f"{name:<20} "
-                f"{t_now:>9.0f}% "
-                f"{result['adjustment_hours']:>+9.1f}h "
-                f"{result['urgency']:>12}"
+                f"{name:<18} "
+                f"{t_now:>5.0f}% "
+                f"{result['adjustment_hours']:>+7.1f}h "
+                f"{result['tpa_percentagem']:>5.0f}% "
+                f"{result['alimentacao_percentagem']:>5.0f}% "
+                f"{result['urgency']:>10}"
             )
         
         print("\n--- Exemplo detalhado ---")
         result = predictor.predict(50, 65, 15, 10)
         print(f"\nInput: turbidez_24h=50%, turbidez_now=65%, trend=+15, base=10h")
-        print(f"Ajuste: {result['adjustment_hours']}h")
+        print(f"Ajuste fotoperíodo: {result['adjustment_hours']}h")
         print(f"Fotoperíodo sugerido: {result['suggested_photoperiod']}h")
+        print(f"TPA sugerida: {result['tpa_percentagem']}%")
+        print(f"Alimentação: {result['alimentacao_percentagem']}%")
         print(f"Urgência: {result['urgency']}")
         print(f"Recomendações:")
         for rec in result['recommendations']:

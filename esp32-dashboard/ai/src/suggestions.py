@@ -256,7 +256,9 @@ def get_full_suggestions(
     turbidity_24h: float,
     current_intensity: int = 100,
     base_photoperiod: int = 8,
-    adjustment_hours: float = 0
+    adjustment_hours: float = 0,
+    ai_tpa_pct: float = None,
+    ai_feeding_pct: float = None
 ) -> Dict:
     """
     Gera sugestões completas para o aquário.
@@ -267,6 +269,8 @@ def get_full_suggestions(
         current_intensity: Intensidade actual da luz (0-100%)
         base_photoperiod: Fotoperíodo base configurado
         adjustment_hours: Ajuste de horas (do modelo neural)
+        ai_tpa_pct: TPA% prevista pelo modelo (se None, usa regras)
+        ai_feeding_pct: Alimentação% prevista pelo modelo (se None, usa regras)
     
     Returns:
         Dict com todas as sugestões
@@ -277,11 +281,22 @@ def get_full_suggestions(
     min_photoperiod = 2 if turbidity_now > 90 else 4
     suggested_photoperiod = max(min_photoperiod, base_photoperiod + int(adjustment_hours))
     
-    # Calcular sugestões
+    # Calcular sugestões de intensidade e luz noturna (sempre regras)
     intensity = calculate_intensity(turbidity_now, current_intensity)
-    tpa = calculate_tpa(turbidity_now, trend)
     night_light = calculate_night_light(turbidity_now, trend)
-    feeding = calculate_feeding(turbidity_now, trend)
+    
+    # TPA: usar previsão do modelo se disponível
+    if ai_tpa_pct is not None:
+        tpa = _build_tpa_from_ai(ai_tpa_pct, turbidity_now)
+    else:
+        tpa = calculate_tpa(turbidity_now, trend)
+    
+    # Alimentação: usar previsão do modelo se disponível
+    if ai_feeding_pct is not None:
+        feeding = _build_feeding_from_ai(ai_feeding_pct)
+    else:
+        feeding = calculate_feeding(turbidity_now, trend)
+    
     reason, actions = determine_actions(turbidity_now, trend, tpa, night_light)
     
     return {
@@ -297,8 +312,74 @@ def get_full_suggestions(
         "turbidez_media_24h": turbidity_24h,
         "tendencia": round(trend, 1),
         "razao": reason,
-        "accoes": actions
+        "accoes": actions,
+        "fonte": "ai" if ai_tpa_pct is not None else "regras"
     }
+
+
+def _build_tpa_from_ai(tpa_pct: float, turbidity: float) -> Dict:
+    """Constrói estrutura de TPA a partir da previsão do modelo."""
+    tpa_pct = round(tpa_pct)
+    
+    if tpa_pct >= 70:
+        urgencia = "critico" if turbidity > 90 else "urgente"
+        frequencia = "diário"
+        dias = 3 if tpa_pct >= 80 else 2
+    elif tpa_pct >= 50:
+        urgencia = "recomendado"
+        frequencia = "48h"
+        dias = 2
+    elif tpa_pct >= 30:
+        urgencia = "sugerido"
+        frequencia = "semanal"
+        dias = 1
+    elif tpa_pct >= 20:
+        urgencia = "preventivo"
+        frequencia = "semanal"
+        dias = 1
+    else:
+        urgencia = "rotina"
+        frequencia = "semanal"
+        dias = 1
+    
+    return {
+        "percentagem": tpa_pct,
+        "urgencia": urgencia,
+        "frequencia": frequencia,
+        "dias": dias,
+        "descricao": f"TPA de {tpa_pct}% ({urgencia})"
+    }
+
+
+def _build_feeding_from_ai(feeding_pct: float) -> Dict:
+    """Constrói estrutura de alimentação a partir da previsão do modelo."""
+    feeding_pct = round(feeding_pct)
+    
+    if feeding_pct == 0:
+        return {
+            "accao": "suspender",
+            "dias": 3,
+            "percentagem": 0,
+            "descricao": "Suspender alimentação"
+        }
+    elif feeding_pct < 50:
+        return {
+            "accao": "reduzir",
+            "percentagem": feeding_pct,
+            "descricao": f"Reduzir alimentação para {feeding_pct}%"
+        }
+    elif feeding_pct < 100:
+        return {
+            "accao": "reduzir",
+            "percentagem": feeding_pct,
+            "descricao": f"Alimentação a {feeding_pct}% do normal"
+        }
+    else:
+        return {
+            "accao": "manter",
+            "percentagem": 100,
+            "descricao": "Manter alimentação normal"
+        }
 
 
 if __name__ == "__main__":

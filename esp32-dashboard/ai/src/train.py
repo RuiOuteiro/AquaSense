@@ -22,7 +22,7 @@ from .config import (
     DEVICE, EPOCHS, LEARNING_RATE, PATIENCE, K_FOLDS,
     MODEL_PATH, METRICS_PATH, RANDOM_SEED
 )
-from .model import PhotoperiodNet, BaselineModel
+from .model import AquaSenseNet, PhotoperiodNet, BaselineModel
 from .data_loader import (
     prepare_data, create_dataloaders, StandardScaler,
     AquaSenseDataset
@@ -101,14 +101,14 @@ def validate(
             total_loss += loss.item() * X_batch.size(0)
             n_samples += X_batch.size(0)
             
-            all_preds.extend(outputs.cpu().numpy().flatten())
-            all_labels.extend(y_batch.cpu().numpy().flatten())
+            all_preds.append(outputs.cpu().numpy())
+            all_labels.append(y_batch.cpu().numpy())
     
     avg_loss = total_loss / n_samples
     
-    # Calcular métricas adicionais
-    preds = np.array(all_preds) * 12  # Desnormalizar
-    labels = np.array(all_labels) * 12
+    # Calcular métricas adicionais (já normalizados, calculate_metrics desnormaliza)
+    preds = np.vstack(all_preds)
+    labels = np.vstack(all_labels)
     
     metrics = calculate_metrics(preds, labels)
     metrics['loss'] = avg_loss
@@ -117,32 +117,58 @@ def validate(
 
 
 def calculate_metrics(preds: np.ndarray, labels: np.ndarray) -> Dict[str, float]:
-    """Calcula métricas de regressão."""
-    # MSE - Mean Squared Error
+    """
+    Calcula métricas de regressão para as 3 saídas.
+    
+    preds/labels shape: (n_samples, 3)
+    [0] fotoperíodo (desnormalizado para horas)
+    [1] TPA% (desnormalizado para 0-100)
+    [2] alimentação% (desnormalizado para 0-100)
+    """
+    # Desnormalizar
+    preds_photo = preds[:, 0] * 12
+    labels_photo = labels[:, 0] * 12
+    preds_tpa = preds[:, 1] * 100
+    labels_tpa = labels[:, 1] * 100
+    preds_feed = preds[:, 2] * 100
+    labels_feed = labels[:, 2] * 100
+    
+    # Métricas globais (média das 3 saídas normalizadas)
     mse = np.mean((preds - labels) ** 2)
-    
-    # MAE - Mean Absolute Error
     mae = np.mean(np.abs(preds - labels))
-    
-    # RMSE - Root Mean Squared Error
     rmse = np.sqrt(mse)
     
-    # R² - Coefficient of Determination
+    # R² global
     ss_res = np.sum((labels - preds) ** 2)
-    ss_tot = np.sum((labels - np.mean(labels)) ** 2)
+    ss_tot = np.sum((labels - np.mean(labels, axis=0)) ** 2)
     r2 = 1 - (ss_res / ss_tot) if ss_tot > 0 else 0
     
-    # Accuracy com tolerâncias
-    acc_1h = np.mean(np.abs(preds - labels) < 1) * 100
-    acc_2h = np.mean(np.abs(preds - labels) < 2) * 100
+    # Métricas por saída
+    # Fotoperíodo
+    mae_photo = np.mean(np.abs(preds_photo - labels_photo))
+    acc_1h = np.mean(np.abs(preds_photo - labels_photo) < 1) * 100
+    acc_2h = np.mean(np.abs(preds_photo - labels_photo) < 2) * 100
+    
+    # TPA
+    mae_tpa = np.mean(np.abs(preds_tpa - labels_tpa))
+    acc_tpa_5 = np.mean(np.abs(preds_tpa - labels_tpa) < 5) * 100
+    
+    # Alimentação
+    mae_feed = np.mean(np.abs(preds_feed - labels_feed))
+    acc_feed_10 = np.mean(np.abs(preds_feed - labels_feed) < 10) * 100
     
     return {
         'mse': float(mse),
         'mae': float(mae),
         'rmse': float(rmse),
         'r2': float(r2),
+        'mae_photoperiod': float(mae_photo),
         'accuracy_1h': float(acc_1h),
-        'accuracy_2h': float(acc_2h)
+        'accuracy_2h': float(acc_2h),
+        'mae_tpa': float(mae_tpa),
+        'accuracy_tpa_5pct': float(acc_tpa_5),
+        'mae_feeding': float(mae_feed),
+        'accuracy_feed_10pct': float(acc_feed_10)
     }
 
 
@@ -174,7 +200,7 @@ def train_model(
     train_loader, val_loader = create_dataloaders(X_tr, y_tr, X_val, y_val)
     
     # Modelo
-    model = PhotoperiodNet().to(DEVICE)
+    model = AquaSenseNet().to(DEVICE)
     print(f"\n{model.summary()}")
     print(f"Device: {DEVICE}")
     
@@ -270,12 +296,18 @@ def train_model(
     print(f"Tempo de treino: {elapsed:.1f}s")
     print(f"Melhor Val Loss: {best_val_loss:.4f}")
     print(f"\nMétricas no Test Set:")
-    print(f"  MSE:  {test_metrics['mse']:.4f}")
-    print(f"  MAE:  {test_metrics['mae']:.2f}h")
-    print(f"  RMSE: {test_metrics['rmse']:.2f}h")
-    print(f"  R²:   {test_metrics['r2']:.3f}")
-    print(f"  Accuracy (<1h erro): {test_metrics['accuracy_1h']:.1f}%")
-    print(f"  Accuracy (<2h erro): {test_metrics['accuracy_2h']:.1f}%")
+    print(f"  MSE global:  {test_metrics['mse']:.4f}")
+    print(f"  R² global:   {test_metrics['r2']:.3f}")
+    print(f"\n  Fotoperíodo:")
+    print(f"    MAE: {test_metrics['mae_photoperiod']:.2f}h")
+    print(f"    Accuracy (<1h): {test_metrics['accuracy_1h']:.1f}%")
+    print(f"    Accuracy (<2h): {test_metrics['accuracy_2h']:.1f}%")
+    print(f"\n  TPA:")
+    print(f"    MAE: {test_metrics['mae_tpa']:.1f}%")
+    print(f"    Accuracy (<5%): {test_metrics['accuracy_tpa_5pct']:.1f}%")
+    print(f"\n  Alimentação:")
+    print(f"    MAE: {test_metrics['mae_feeding']:.1f}%")
+    print(f"    Accuracy (<10%): {test_metrics['accuracy_feed_10pct']:.1f}%")
     print(f"\nModelo guardado: {MODEL_PATH}")
     print(f"Métricas guardadas: {METRICS_PATH}")
     
@@ -321,7 +353,7 @@ def cross_validate(k_folds: int = K_FOLDS) -> Dict[str, any]:
         train_loader, val_loader = create_dataloaders(X_tr, y_tr, X_val, y_val)
         
         # Modelo novo para cada fold
-        model = PhotoperiodNet().to(DEVICE)
+        model = AquaSenseNet().to(DEVICE)
         criterion = nn.MSELoss()
         optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
         early_stopping = EarlyStopping(patience=PATIENCE)
@@ -377,7 +409,7 @@ def compare_with_baseline() -> Dict[str, any]:
     print("=" * 60)
     
     # Carregar modelo
-    model = PhotoperiodNet().to(DEVICE)
+    model = AquaSenseNet().to(DEVICE)
     model.load_state_dict(torch.load(MODEL_PATH, weights_only=True))
     model.eval()
     
@@ -405,7 +437,8 @@ def compare_with_baseline() -> Dict[str, any]:
         ]], dtype=torch.float32).to(DEVICE)
         
         with torch.no_grad():
-            nn_pred = model(x).item() * 12
+            output = model(x)
+            nn_pred = output[0, 0].item() * 12  # Apenas fotoperíodo para comparação
         
         # Baseline
         baseline_pred = BaselineModel.predict(turbidity, trend)

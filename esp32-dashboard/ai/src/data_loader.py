@@ -24,7 +24,8 @@ except ImportError:
 
 from .config import (
     DB_CONFIG, BATCH_SIZE, TEST_SIZE, RANDOM_SEED,
-    DATA_DIR, SCALER_PATH, get_expected_adjustment
+    DATA_DIR, SCALER_PATH, get_expected_adjustment,
+    get_expected_tpa, get_expected_feeding
 )
 
 
@@ -195,12 +196,19 @@ def generate_synthetic_data(n_samples: int = 2000) -> Tuple[np.ndarray, np.ndarr
             base_photoperiod / 16.0
         ]
         
-        # Label: ajuste esperado baseado nas regras
+        # Labels: ajuste, TPA%, alimentação% baseados nas regras
         adjustment = get_expected_adjustment(turbidity_now, trend)
-        label = adjustment / 12.0  # Normalizar para [-1, 0]
+        tpa = get_expected_tpa(turbidity_now, trend)
+        feeding = get_expected_feeding(turbidity_now, trend)
+        
+        labels = [
+            adjustment / 12.0,  # Normalizar para [-1, 0]
+            tpa / 100.0,        # Normalizar para [0, 1]
+            feeding / 100.0     # Normalizar para [0, 1]
+        ]
         
         X.append(features)
-        y.append([label])
+        y.append(labels)
     
     return np.array(X, dtype=np.float32), np.array(y, dtype=np.float32)
 
@@ -245,12 +253,19 @@ def process_real_data(rows: List[Tuple]) -> Tuple[Optional[np.ndarray], Optional
             base_photoperiod / 16.0
         ]
         
-        # Label
+        # Labels: ajuste, TPA%, alimentação%
         adjustment = get_expected_adjustment(turbidity_now, trend)
-        label = adjustment / 12.0
+        tpa = get_expected_tpa(turbidity_now, trend)
+        feeding = get_expected_feeding(turbidity_now, trend)
+        
+        labels = [
+            adjustment / 12.0,
+            tpa / 100.0,
+            feeding / 100.0
+        ]
         
         X.append(features)
-        y.append([label])
+        y.append(labels)
     
     print(f"[DB] Amostras geradas de dados reais: {len(X)}")
     

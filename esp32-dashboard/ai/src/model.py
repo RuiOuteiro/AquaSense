@@ -1,8 +1,8 @@
 """
 Definição da arquitectura da rede neural.
 
-PhotoperiodNet: Rede neural para previsão de ajuste de fotoperíodo
-com base nos níveis de turbidez da água do aquário.
+AquaSenseNet: Rede neural para previsão de ajuste de fotoperíodo,
+TPA e alimentação com base nos níveis de turbidez da água do aquário.
 """
 import torch
 import torch.nn as nn
@@ -10,18 +10,18 @@ import torch.nn as nn
 from .config import INPUT_DIM, HIDDEN_DIM, OUTPUT_DIM
 
 
-class PhotoperiodNet(nn.Module):
+class AquaSenseNet(nn.Module):
     """
-    Rede Neural para ajuste de fotoperíodo.
+    Rede Neural para sugestões de aquário.
     
     Arquitectura:
         - Entrada: 4 características (média 24h, turbidez actual, tendência, fotoperíodo base)
         - Camada oculta 1: 32 neurónios + ReLU + Dropout(0.2)
         - Camada oculta 2: 16 neurónios + ReLU + Dropout(0.2)
-        - Saída: 1 valor (ajuste em horas, normalizado [-1, 1])
-    
-    A saída passa por Tanh para limitar a [-1, 1], sendo depois
-    desnormalizada para [-12, 0] horas.
+        - Saída: 3 valores:
+            [0] ajuste fotoperíodo: Tanh [-1, 1] -> [-12, 0] horas
+            [1] TPA%: Sigmoid [0, 1] -> [0, 100]%
+            [2] Alimentação%: Sigmoid [0, 1] -> [0, 100]%
     """
     
     def __init__(self, input_dim: int = INPUT_DIM, hidden_dim: int = HIDDEN_DIM):
@@ -29,8 +29,10 @@ class PhotoperiodNet(nn.Module):
         
         self.input_dim = input_dim
         self.hidden_dim = hidden_dim
+        self.output_dim = OUTPUT_DIM
         
-        self.net = nn.Sequential(
+        # Backbone partilhado
+        self.backbone = nn.Sequential(
             # Camada 1
             nn.Linear(input_dim, hidden_dim),
             nn.BatchNorm1d(hidden_dim),
@@ -42,10 +44,22 @@ class PhotoperiodNet(nn.Module):
             nn.BatchNorm1d(hidden_dim // 2),
             nn.ReLU(),
             nn.Dropout(0.2),
-            
-            # Output
-            nn.Linear(hidden_dim // 2, OUTPUT_DIM),
-            nn.Tanh()  # Limita output a [-1, 1]
+        )
+        
+        # Cabeças separadas para cada saída
+        self.head_photoperiod = nn.Sequential(
+            nn.Linear(hidden_dim // 2, 1),
+            nn.Tanh()  # [-1, 1] -> [-12, 0] horas
+        )
+        
+        self.head_tpa = nn.Sequential(
+            nn.Linear(hidden_dim // 2, 1),
+            nn.Sigmoid()  # [0, 1] -> [0, 100]%
+        )
+        
+        self.head_feeding = nn.Sequential(
+            nn.Linear(hidden_dim // 2, 1),
+            nn.Sigmoid()  # [0, 1] -> [0, 100]%
         )
         
         # Inicialização de pesos Xavier
@@ -69,21 +83,31 @@ class PhotoperiodNet(nn.Module):
                Todos normalizados para [0, 1]
         
         Returns:
-            Tensor de shape (batch_size, 1)
-            Ajuste normalizado [-1, 1], onde -1 = -12h e 0 = 0h
+            Tensor de shape (batch_size, 3)
+            [ajuste_fotoperiodo, tpa, alimentacao] - todos normalizados
         """
-        return self.net(x)
+        features = self.backbone(x)
+        
+        photoperiod = self.head_photoperiod(features)  # [-1, 1]
+        tpa = self.head_tpa(features)                   # [0, 1]
+        feeding = self.head_feeding(features)           # [0, 1]
+        
+        return torch.cat([photoperiod, tpa, feeding], dim=1)
     
-    def predict_hours(self, x: torch.Tensor) -> torch.Tensor:
+    def predict_values(self, x: torch.Tensor) -> dict:
         """
-        Previsão desnormalizada em horas.
+        Previsão desnormalizada com valores reais.
         
         Returns:
-            Ajuste em horas [-12, 0]
+            Dict com ajuste_horas, tpa_percentagem, alimentacao_percentagem
         """
         with torch.no_grad():
-            normalized = self.forward(x)
-            return normalized * 12  # Desnormaliza: [-1,1] -> [-12,12], mas só usamos [-12,0]
+            output = self.forward(x)
+            return {
+                'ajuste_horas': output[:, 0] * 12,           # [-12, 12] (usamos [-12, 0])
+                'tpa_percentagem': output[:, 1] * 100,       # [0, 100]%
+                'alimentacao_percentagem': output[:, 2] * 100  # [0, 100]%
+            }
     
     def count_parameters(self) -> int:
         """Devolve o número de parâmetros treináveis."""
@@ -92,12 +116,12 @@ class PhotoperiodNet(nn.Module):
     def summary(self) -> str:
         """Devolve resumo da arquitectura."""
         return (
-            f"PhotoperiodNet(\n"
+            f"AquaSenseNet(\n"
             f"  Input: {self.input_dim} features\n"
             f"  Hidden: {self.hidden_dim} → {self.hidden_dim // 2} neurónios\n"
-            f"  Output: 1 (ajuste fotoperíodo)\n"
+            f"  Output: {self.output_dim} (fotoperíodo, TPA%, alimentação%)\n"
             f"  Parâmetros: {self.count_parameters():,}\n"
-            f"  Activação: ReLU + Tanh(output)\n"
+            f"  Activações: ReLU, Tanh(fotoperíodo), Sigmoid(TPA/alimentação)\n"
             f"  Regularização: BatchNorm + Dropout(0.2)\n"
             f")"
         )
@@ -149,9 +173,13 @@ class BaselineModel:
         return max(-12, adjustment)
 
 
+# Alias para retrocompatibilidade
+PhotoperiodNet = AquaSenseNet
+
+
 if __name__ == "__main__":
     # Teste rápido
-    model = PhotoperiodNet()
+    model = AquaSenseNet()
     print(model.summary())
     
     # Teste forward
@@ -159,4 +187,12 @@ if __name__ == "__main__":
     y = model(x)
     print(f"\nInput shape: {x.shape}")
     print(f"Output shape: {y.shape}")
-    print(f"Output values: {y.squeeze().tolist()}")
+    print(f"Output columns: [fotoperíodo, TPA%, alimentação%]")
+    print(f"Output values:\n{y}")
+    
+    # Teste predict_values
+    values = model.predict_values(x)
+    print(f"\nValores desnormalizados:")
+    print(f"  Ajuste horas: {values['ajuste_horas'].tolist()}")
+    print(f"  TPA%: {values['tpa_percentagem'].tolist()}")
+    print(f"  Alimentação%: {values['alimentacao_percentagem'].tolist()}")
