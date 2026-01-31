@@ -8,11 +8,11 @@
 #define CONFIG_H
 
 // ========== CONFIGURAÇÃO WiFi ==========
-#define WIFI_SSID "NOS-6F36"
-#define WIFI_PASSWORD "2SJU5FG7"
+#define WIFI_SSID "Vodafone-93D0B8_EXT"
+#define WIFI_PASSWORD "b2n78846nM"
 
 // ========== CONFIGURAÇÃO DO SERVIDOR ==========
-#define SERVER_IP "192.168.1.8"
+#define SERVER_IP "192.168.1.139"
 #define SERVER_PORT 3001
 
 // Macro auxiliar para converter número em string

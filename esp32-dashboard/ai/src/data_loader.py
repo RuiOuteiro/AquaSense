@@ -1,334 +1,178 @@
 """
-Módulo de carregamento e preparação de dados.
+Carregamento e preparação de dados para treino do modelo AquaSense.
 
-Suporta:
-- Dados reais da base de dados MySQL
-- Dados sintéticos para treino inicial
-- Normalização com StandardScaler
-- DataLoaders para treino em lotes
+Gera dataset sintético baseado em regras (turbidez + pH + temperatura)
+e prepara para treino com normalização adequada.
 """
-import json
-from pathlib import Path
-from typing import Tuple, Optional, List
-
 import numpy as np
+import pickle
+from typing import Tuple
+from pathlib import Path
 import torch
-from torch.utils.data import Dataset, DataLoader, TensorDataset
-import joblib
-
-try:
-    import mysql.connector
-    HAS_MYSQL = True
-except ImportError:
-    HAS_MYSQL = False
+from torch.utils.data import DataLoader, TensorDataset
 
 from .config import (
-    DB_CONFIG, BATCH_SIZE, TEST_SIZE, RANDOM_SEED,
-    DATA_DIR, SCALER_PATH, get_expected_adjustment,
-    get_expected_tpa, get_expected_feeding
+    RANDOM_SEED, TEST_SIZE, BATCH_SIZE, DEVICE,
+    get_expected_adjustment, get_expected_tpa, get_expected_feeding,
+    SCALER_PATH
 )
 
 
 class StandardScaler:
-    """
-    Normalizador de características (alternativa ao sklearn).
-    Normaliza para média=0, desvio padrão=1.
-    """
+    """Scaler simples para normalização de features."""
     
     def __init__(self):
         self.mean_ = None
         self.std_ = None
-        self.fitted = False
     
     def fit(self, X: np.ndarray) -> 'StandardScaler':
-        """Calcula média e desvio padrão dos dados."""
+        """Calcula média e desvio padrão."""
         self.mean_ = np.mean(X, axis=0)
         self.std_ = np.std(X, axis=0)
-        self.std_[self.std_ == 0] = 1  # Evitar divisão por zero
-        self.fitted = True
+        # Evitar divisão por zero
+        self.std_[self.std_ == 0] = 1.0
         return self
     
     def transform(self, X: np.ndarray) -> np.ndarray:
-        """Aplica a normalização aos dados."""
-        if not self.fitted:
-            raise RuntimeError("Scaler não foi fitted. Chama fit() primeiro.")
+        """Normaliza os dados."""
+        if self.mean_ is None or self.std_ is None:
+            raise ValueError("Scaler não foi ajustado. Execute fit() primeiro.")
         return (X - self.mean_) / self.std_
     
     def fit_transform(self, X: np.ndarray) -> np.ndarray:
-        """Ajusta e transforma num único passo."""
+        """Fit e transform em um passo."""
         return self.fit(X).transform(X)
     
-    def inverse_transform(self, X: np.ndarray) -> np.ndarray:
-        """Reverte a normalização aplicada."""
-        return X * self.std_ + self.mean_
-    
     def save(self, path: Path):
-        """Guarda o normalizador em ficheiro."""
-        joblib.dump({'mean': self.mean_, 'std': self.std_}, path)
+        """Guarda scaler em ficheiro."""
+        with open(path, 'wb') as f:
+            pickle.dump({'mean': self.mean_, 'std': self.std_}, f)
+        return self
     
-    def load(self, path: Path) -> 'StandardScaler':
-        """Carrega o normalizador de ficheiro."""
-        data = joblib.load(path)
-        self.mean_ = data['mean']
-        self.std_ = data['std']
-        self.fitted = True
+    def load(self, path: Path):
+        """Carrega scaler de ficheiro."""
+        with open(path, 'rb') as f:
+            data = pickle.load(f)
+            self.mean_ = data['mean']
+            self.std_ = data['std']
         return self
 
 
-class AquaSenseDataset(Dataset):
-    """Conjunto de dados personalizado para o aquário."""
-    
-    def __init__(self, X: np.ndarray, y: np.ndarray):
-        self.X = torch.tensor(X, dtype=torch.float32)
-        self.y = torch.tensor(y, dtype=torch.float32)
-    
-    def __len__(self) -> int:
-        return len(self.X)
-    
-    def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
-        return self.X[idx], self.y[idx]
-
-
-def fetch_real_data() -> List[Tuple]:
+def generate_synthetic_data(n_samples: int = 10000, seed: int = RANDOM_SEED) -> Tuple[np.ndarray, np.ndarray]:
     """
-    Obtém dados reais de turbidez da base de dados.
+    Gera dataset sintético para treino.
+    
+    Features (3):
+        - turbidez (0-100)
+        - pH (6.0-8.5)
+        - temperatura (20-31°C)
+    
+    Labels (3) NORMALIZADOS:
+        - ajuste fotoperíodo / 12  -> [-1, 0]
+        - TPA / 100                -> [0, 1]
+        - alimentação / 100        -> [0, 1]
     
     Returns:
-        Lista de tuplos (dia, hora, turbidez_média)
+        X: (n_samples, 3) - features
+        y: (n_samples, 3) - labels normalizados
     """
-    if not HAS_MYSQL:
-        print("[WARN] mysql-connector não instalado, a usar apenas dados sintéticos")
-        return []
+    np.random.seed(seed)
     
-    try:
-        conn = mysql.connector.connect(**DB_CONFIG)
-        cursor = conn.cursor()
-        
-        # Contar total de registos
-        cursor.execute(
-            "SELECT COUNT(*) FROM leituras_sensores WHERE tipo_sensor = 'turbidity'"
+    # Gerar features com distribuições realistas
+    # Beta(2,5) concentra mais amostras em valores baixos de turbidez (realista)
+    turbidity = np.random.beta(2, 5, n_samples) * 100
+    
+    # pH centrado em neutro com distribuição normal
+    ph = np.random.normal(7.0, 0.4, n_samples)
+    ph = np.clip(ph, 6.0, 8.5)
+    
+    # Temperatura típica de aquário tropical
+    temperature = np.random.normal(25.5, 2.0, n_samples)
+    temperature = np.clip(temperature, 20.0, 31.0)
+    
+    X = np.column_stack([turbidity, ph, temperature])
+    
+    # Gerar labels usando as regras
+    y = np.zeros((n_samples, 3), dtype=np.float32)
+    
+    for i in range(n_samples):
+        # Calcular labels reais
+        adj = get_expected_adjustment(
+            turbidity=turbidity[i],
+            ph=ph[i],
+            temperature=temperature[i]
         )
-        total = cursor.fetchone()[0]
-        print(f"[DB] Total de registos de turbidez: {total}")
+        tpa = get_expected_tpa(
+            turbidity=turbidity[i],
+            ph=ph[i],
+            temperature=temperature[i]
+        )
+        feed = get_expected_feeding(
+            turbidity=turbidity[i],
+            ph=ph[i],
+            temperature=temperature[i]
+        )
         
-        if total == 0:
-            cursor.close()
-            conn.close()
-            return []
-        
-        # Obter dados agrupados por hora
-        cursor.execute("""
-            SELECT 
-                DATE(data_hora) as dia,
-                HOUR(data_hora) as hora,
-                AVG(valor) as turbidez_media
-            FROM leituras_sensores 
-            WHERE tipo_sensor = 'turbidity'
-            AND data_hora >= DATE_SUB(NOW(), INTERVAL 90 DAY)
-            GROUP BY DATE(data_hora), HOUR(data_hora)
-            ORDER BY dia, hora
-        """)
-        
-        rows = cursor.fetchall()
-        print(f"[DB] Registos agrupados (últimos 90 dias): {len(rows)}")
-        
-        cursor.close()
-        conn.close()
-        
-        return rows
-        
-    except Exception as e:
-        print(f"[WARN] Erro ao conectar à BD: {e}")
-        return []
-
-
-def generate_synthetic_data(n_samples: int = 2000) -> Tuple[np.ndarray, np.ndarray]:
-    """
-    Gera dados sintéticos para treino.
+        # Normalizar labels
+        y[i, 0] = adj / 12.0    # [-12, 0] -> [-1, 0]
+        y[i, 1] = tpa / 100.0   # [0, 100] -> [0, 1]
+        y[i, 2] = feed / 100.0  # [0, 100] -> [0, 1]
     
-    Simula diferentes cenários de turbidez com variação realista.
+    # Adicionar ruído pequeno para variabilidade (±2%)
+    noise = np.random.normal(0, 0.02, y.shape)
+    y = y + noise
     
-    Args:
-        n_samples: Número de amostras a gerar
+    # Clamp para garantir ranges corretos
+    y[:, 0] = np.clip(y[:, 0], -1.0, 0.0)   # ajuste
+    y[:, 1] = np.clip(y[:, 1], 0.0, 1.0)    # TPA
+    y[:, 2] = np.clip(y[:, 2], 0.0, 1.0)    # feeding
     
-    Returns:
-        X: Features (n_samples, 4)
-        y: Labels (n_samples, 1)
-    """
-    np.random.seed(RANDOM_SEED)
-    
-    X = []
-    y = []
-    
-    for _ in range(n_samples):
-        # Simular cenário
-        scenario = np.random.choice(['clean', 'moderate', 'dirty', 'critical'], 
-                                    p=[0.3, 0.35, 0.25, 0.1])
-        
-        if scenario == 'clean':
-            turbidity_24h = np.random.uniform(0, 25)
-            turbidity_now = turbidity_24h + np.random.normal(0, 5)
-        elif scenario == 'moderate':
-            turbidity_24h = np.random.uniform(20, 50)
-            turbidity_now = turbidity_24h + np.random.normal(0, 10)
-        elif scenario == 'dirty':
-            turbidity_24h = np.random.uniform(45, 75)
-            turbidity_now = turbidity_24h + np.random.normal(5, 10)
-        else:  # critical
-            turbidity_24h = np.random.uniform(70, 100)
-            turbidity_now = turbidity_24h + np.random.normal(5, 8)
-        
-        # Limitar a 0-100
-        turbidity_24h = np.clip(turbidity_24h, 0, 100)
-        turbidity_now = np.clip(turbidity_now, 0, 100)
-        
-        # Calcular tendência
-        trend = turbidity_now - turbidity_24h
-        
-        # Fotoperíodo base (variado)
-        base_photoperiod = np.random.choice([6, 8, 10, 12])
-        
-        # Features normalizadas
-        features = [
-            turbidity_24h / 100.0,
-            turbidity_now / 100.0,
-            (trend + 50) / 100.0,  # Normalizar tendência [-50, 50] -> [0, 1]
-            base_photoperiod / 16.0
-        ]
-        
-        # Labels: ajuste, TPA%, alimentação% baseados nas regras
-        adjustment = get_expected_adjustment(turbidity_now, trend)
-        tpa = get_expected_tpa(turbidity_now, trend)
-        feeding = get_expected_feeding(turbidity_now, trend)
-        
-        labels = [
-            adjustment / 12.0,  # Normalizar para [-1, 0]
-            tpa / 100.0,        # Normalizar para [0, 1]
-            feeding / 100.0     # Normalizar para [0, 1]
-        ]
-        
-        X.append(features)
-        y.append(labels)
-    
-    return np.array(X, dtype=np.float32), np.array(y, dtype=np.float32)
-
-
-def process_real_data(rows: List[Tuple]) -> Tuple[Optional[np.ndarray], Optional[np.ndarray]]:
-    """
-    Processa dados reais da BD para formato de treino.
-    
-    Args:
-        rows: Lista de (dia, hora, turbidez_média)
-    
-    Returns:
-        X, y: Arrays de features e labels, ou (None, None) se insuficiente
-    """
-    if len(rows) < 7:
-        print(f"[DB] Dados insuficientes: {len(rows)} < 7")
-        return None, None
-    
-    X = []
-    y = []
-    
-    # Janela deslizante de 6 leituras
-    for i in range(6, len(rows)):
-        # Média das últimas 6 leituras
-        recent = [float(rows[j][2]) for j in range(i-6, i)]
-        avg_recent = np.mean(recent)
-        
-        # Leitura actual
-        turbidity_now = float(rows[i][2])
-        
-        # Tendência
-        trend = turbidity_now - avg_recent
-        
-        # Fotoperíodo base (assumir 8h)
-        base_photoperiod = 8
-        
-        # Features
-        features = [
-            avg_recent / 100.0,
-            turbidity_now / 100.0,
-            (trend + 50) / 100.0,
-            base_photoperiod / 16.0
-        ]
-        
-        # Labels: ajuste, TPA%, alimentação%
-        adjustment = get_expected_adjustment(turbidity_now, trend)
-        tpa = get_expected_tpa(turbidity_now, trend)
-        feeding = get_expected_feeding(turbidity_now, trend)
-        
-        labels = [
-            adjustment / 12.0,
-            tpa / 100.0,
-            feeding / 100.0
-        ]
-        
-        X.append(features)
-        y.append(labels)
-    
-    print(f"[DB] Amostras geradas de dados reais: {len(X)}")
-    
-    return np.array(X, dtype=np.float32), np.array(y, dtype=np.float32)
+    return X.astype(np.float32), y.astype(np.float32)
 
 
 def prepare_data(
-    use_real_data: bool = True,
-    synthetic_samples: int = 2000
+    n_samples: int = 10000,
+    test_size: float = TEST_SIZE,
+    seed: int = RANDOM_SEED
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, StandardScaler]:
     """
-    Prepara dados para treino.
-    
-    Args:
-        use_real_data: Se deve tentar usar dados reais da BD
-        synthetic_samples: Número de amostras sintéticas
+    Prepara dados completos para treino e teste.
     
     Returns:
-        X_train, X_test, y_train, y_test, scaler
+        X_train: Features de treino (normalizadas)
+        X_test: Features de teste (normalizadas)
+        y_train: Labels de treino (normalizadas)
+        y_test: Labels de teste (normalizadas)
+        scaler: Scaler ajustado (para usar em produção)
     """
-    X_real, y_real = None, None
+    # Gerar dados
+    X, y = generate_synthetic_data(n_samples, seed)
     
-    # Tentar carregar dados reais
-    if use_real_data:
-        real_rows = fetch_real_data()
-        if len(real_rows) >= 7:
-            X_real, y_real = process_real_data(real_rows)
+    # Split treino/teste
+    np.random.seed(seed)
+    indices = np.random.permutation(n_samples)
+    n_test = int(n_samples * test_size)
     
-    # Gerar dados sintéticos
-    print(f"[SYNTH] A gerar {synthetic_samples} amostras sintéticas...")
-    X_synth, y_synth = generate_synthetic_data(synthetic_samples)
+    test_indices = indices[:n_test]
+    train_indices = indices[n_test:]
     
-    # Combinar dados
-    if X_real is not None and len(X_real) > 0:
-        print(f"[DATA] Combinando {len(X_real)} reais + {len(X_synth)} sintéticos")
-        X = np.vstack([X_real, X_synth])
-        y = np.vstack([y_real, y_synth])
-    else:
-        print(f"[DATA] Usando apenas {len(X_synth)} amostras sintéticas")
-        X = X_synth
-        y = y_synth
+    X_train_raw = X[train_indices]
+    X_test_raw = X[test_indices]
+    y_train = y[train_indices]
+    y_test = y[test_indices]
     
-    # Shuffle
-    np.random.seed(RANDOM_SEED)
-    indices = np.random.permutation(len(X))
-    X = X[indices]
-    y = y[indices]
-    
-    # Train/Test split
-    split_idx = int(len(X) * (1 - TEST_SIZE))
-    X_train, X_test = X[:split_idx], X[split_idx:]
-    y_train, y_test = y[:split_idx], y[split_idx:]
-    
-    # Normalização
+    # Normalizar features (importante: fit APENAS no treino!)
     scaler = StandardScaler()
-    X_train = scaler.fit_transform(X_train)
-    X_test = scaler.transform(X_test)
+    X_train = scaler.fit_transform(X_train_raw)
+    X_test = scaler.transform(X_test_raw)
     
-    # Guardar scaler
+    # Guardar scaler para produção
     scaler.save(SCALER_PATH)
-    print(f"[SCALER] Guardado em: {SCALER_PATH}")
     
-    print(f"[DATA] Train: {len(X_train)} | Test: {len(X_test)}")
+    print(f"[✓] Dataset preparado:")
+    print(f"    Treino: {X_train.shape[0]} amostras")
+    print(f"    Teste:  {X_test.shape[0]} amostras")
+    print(f"[✓] Scaler guardado: {SCALER_PATH}")
     
     return X_train, X_test, y_train, y_test, scaler
 
@@ -339,47 +183,63 @@ def create_dataloaders(
     X_val: np.ndarray = None,
     y_val: np.ndarray = None,
     batch_size: int = BATCH_SIZE
-) -> Tuple[DataLoader, Optional[DataLoader]]:
+) -> Tuple[DataLoader, DataLoader]:
     """
-    Cria DataLoaders para treino.
+    Cria DataLoaders para treino e validação.
+    
+    Args:
+        X_train: Features de treino
+        y_train: Labels de treino
+        X_val: Features de validação (opcional)
+        y_val: Labels de validação (opcional)
+        batch_size: Tamanho do batch
     
     Returns:
-        train_loader, val_loader (ou None se não houver validação)
+        train_loader: DataLoader de treino
+        val_loader: DataLoader de validação (ou None)
     """
-    train_dataset = AquaSenseDataset(X_train, y_train)
+    # Dataset de treino
+    train_dataset = TensorDataset(
+        torch.tensor(X_train, dtype=torch.float32),
+        torch.tensor(y_train, dtype=torch.float32)
+    )
     train_loader = DataLoader(
         train_dataset,
         batch_size=batch_size,
         shuffle=True,
         num_workers=0,
-        pin_memory=True
+        pin_memory=(DEVICE.type == "cuda")
     )
     
+    # Dataset de validação
     val_loader = None
     if X_val is not None and y_val is not None:
-        val_dataset = AquaSenseDataset(X_val, y_val)
+        val_dataset = TensorDataset(
+            torch.tensor(X_val, dtype=torch.float32),
+            torch.tensor(y_val, dtype=torch.float32)
+        )
         val_loader = DataLoader(
             val_dataset,
             batch_size=batch_size,
             shuffle=False,
             num_workers=0,
-            pin_memory=True
+            pin_memory=(DEVICE.type == "cuda")
         )
     
     return train_loader, val_loader
 
 
 if __name__ == "__main__":
-    # Teste
-    print("=== Teste de Data Loading ===\n")
-    
+    print("Gerando dataset sintético...")
     X_train, X_test, y_train, y_test, scaler = prepare_data()
     
-    print(f"\nShapes:")
-    print(f"  X_train: {X_train.shape}")
-    print(f"  y_train: {y_train.shape}")
-    print(f"  X_test: {X_test.shape}")
-    print(f"  y_test: {y_test.shape}")
-    
-    train_loader, _ = create_dataloaders(X_train, y_train)
-    print(f"\nBatches no train_loader: {len(train_loader)}")
+    print(f"\n✓ Dataset gerado:")
+    print(f"  Treino: {X_train.shape[0]} amostras")
+    print(f"  Teste:  {X_test.shape[0]} amostras")
+    print(f"  Features: {X_train.shape[1]} (turbidez, pH, temperatura)")
+    print(f"  Labels: {y_train.shape[1]} (ajuste, TPA, alimentação)")
+    print(f"\n✓ Ranges dos dados:")
+    print(f"  Turbidez: {X_train[:, 0].min():.1f} - {X_train[:, 0].max():.1f}")
+    print(f"  pH: {X_train[:, 1].min():.2f} - {X_train[:, 1].max():.2f}")
+    print(f"  Temp: {X_train[:, 2].min():.1f} - {X_train[:, 2].max():.1f}°C")
+    print(f"\n✓ Scaler guardado: {SCALER_PATH}")

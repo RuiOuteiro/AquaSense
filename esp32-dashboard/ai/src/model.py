@@ -1,198 +1,143 @@
 """
-Definição da arquitectura da rede neural.
+Modelo de rede neural e baseline para o AquaSense.
 
-AquaSenseNet: Rede neural para previsão de ajuste de fotoperíodo,
-TPA e alimentação com base nos níveis de turbidez da água do aquário.
+INPUT (3):
+  0) turbidez (0-100)
+  1) pH (0-14)
+  2) temperatura (°C)
+
+OUTPUT (3):
+  0) ajuste fotoperíodo normalizado  -> [-1, 0]   (multiplicar por 12 => horas em [-12, 0])
+  1) TPA normalizado                -> [0, 1]    (multiplicar por 100 => %)
+  2) alimentação normalizado         -> [0, 1]    (multiplicar por 100 => %)
 """
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Dict
+
 import torch
 import torch.nn as nn
 
-from .config import INPUT_DIM, HIDDEN_DIM, OUTPUT_DIM
+from .config import (
+    INPUT_DIM, HIDDEN_DIM, OUTPUT_DIM,
+    get_expected_adjustment, get_expected_tpa, get_expected_feeding
+)
 
 
-class AquaSenseNet(nn.Module):
+class PhotoperiodNet(nn.Module):
     """
-    Rede Neural para sugestões de aquário.
-    
-    Arquitectura:
-        - Entrada: 4 características (média 24h, turbidez actual, tendência, fotoperíodo base)
-        - Camada oculta 1: 32 neurónios + ReLU + Dropout(0.2)
-        - Camada oculta 2: 16 neurónios + ReLU + Dropout(0.2)
-        - Saída: 3 valores:
-            [0] ajuste fotoperíodo: Tanh [-1, 1] -> [-12, 0] horas
-            [1] TPA%: Sigmoid [0, 1] -> [0, 100]%
-            [2] Alimentação%: Sigmoid [0, 1] -> [0, 100]%
+    Rede neural multi-output.
+
+    Inputs (3):
+      [turbidez, pH, temperatura]
+    Outputs (3) normalizados:
+      [ajuste/12, tpa/100, feeding/100]
     """
-    
-    def __init__(self, input_dim: int = INPUT_DIM, hidden_dim: int = HIDDEN_DIM):
+
+    def __init__(self, input_dim: int = INPUT_DIM, hidden_dim: int = HIDDEN_DIM, output_dim: int = OUTPUT_DIM):
         super().__init__()
-        
-        self.input_dim = input_dim
-        self.hidden_dim = hidden_dim
-        self.output_dim = OUTPUT_DIM
-        
-        # Backbone partilhado
-        self.backbone = nn.Sequential(
-            # Camada 1
+        if output_dim != 3:
+            raise ValueError(f"Este modelo foi desenhado para output_dim=3, recebido: {output_dim}")
+
+        self.feature_extractor = nn.Sequential(
             nn.Linear(input_dim, hidden_dim),
-            nn.BatchNorm1d(hidden_dim),
             nn.ReLU(),
-            nn.Dropout(0.2),
-            
-            # Camada 2
+            nn.Dropout(0.10),
+
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Dropout(0.10),
+        )
+
+        self.shared = nn.Sequential(
             nn.Linear(hidden_dim, hidden_dim // 2),
-            nn.BatchNorm1d(hidden_dim // 2),
             nn.ReLU(),
-            nn.Dropout(0.2),
         )
-        
-        # Cabeças separadas para cada saída
-        self.head_photoperiod = nn.Sequential(
+
+        # Head 0: ajuste fotoperíodo (normalizado)
+        # Queremos intervalo [-1, 0] porque o ajuste é sempre <= 0 nas regras.
+        # Sigmoid => [0,1]  -> negando => [-1,0]
+        self.head_adjustment = nn.Sequential(
             nn.Linear(hidden_dim // 2, 1),
-            nn.Tanh()  # [-1, 1] -> [-12, 0] horas
+            nn.Sigmoid()
         )
-        
+
+        # Head 1: TPA (normalizado em [0,1])
         self.head_tpa = nn.Sequential(
             nn.Linear(hidden_dim // 2, 1),
-            nn.Sigmoid()  # [0, 1] -> [0, 100]%
+            nn.Sigmoid()
         )
-        
+
+        # Head 2: alimentação (normalizado em [0,1])
         self.head_feeding = nn.Sequential(
             nn.Linear(hidden_dim // 2, 1),
-            nn.Sigmoid()  # [0, 1] -> [0, 100]%
+            nn.Sigmoid()
         )
-        
-        # Inicialização de pesos Xavier
-        self._init_weights()
-    
-    def _init_weights(self):
-        """Inicialização Xavier para melhor convergência do treino."""
-        for m in self.modules():
-            if isinstance(m, nn.Linear):
-                nn.init.xavier_uniform_(m.weight)
-                if m.bias is not None:
-                    nn.init.zeros_(m.bias)
-    
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Forward pass.
-        
-        Args:
-            x: Tensor de shape (batch_size, 4)
-               [média_24h, turbidez_actual, tendência, fotoperíodo_base]
-               Todos normalizados para [0, 1]
-        
-        Returns:
-            Tensor de shape (batch_size, 3)
-            [ajuste_fotoperiodo, tpa, alimentacao] - todos normalizados
+        x: (batch, 3)
+        return: (batch, 3)  -> [adj_norm, tpa_norm, feeding_norm]
         """
-        features = self.backbone(x)
-        
-        photoperiod = self.head_photoperiod(features)  # [-1, 1]
-        tpa = self.head_tpa(features)                   # [0, 1]
-        feeding = self.head_feeding(features)           # [0, 1]
-        
-        return torch.cat([photoperiod, tpa, feeding], dim=1)
-    
-    def predict_values(self, x: torch.Tensor) -> dict:
-        """
-        Previsão desnormalizada com valores reais.
-        
-        Returns:
-            Dict com ajuste_horas, tpa_percentagem, alimentacao_percentagem
-        """
-        with torch.no_grad():
-            output = self.forward(x)
-            return {
-                'ajuste_horas': output[:, 0] * 12,           # [-12, 12] (usamos [-12, 0])
-                'tpa_percentagem': output[:, 1] * 100,       # [0, 100]%
-                'alimentacao_percentagem': output[:, 2] * 100  # [0, 100]%
-            }
-    
-    def count_parameters(self) -> int:
-        """Devolve o número de parâmetros treináveis."""
-        return sum(p.numel() for p in self.parameters() if p.requires_grad)
-    
-    def summary(self) -> str:
-        """Devolve resumo da arquitectura."""
-        return (
-            f"AquaSenseNet(\n"
-            f"  Input: {self.input_dim} features\n"
-            f"  Hidden: {self.hidden_dim} → {self.hidden_dim // 2} neurónios\n"
-            f"  Output: {self.output_dim} (fotoperíodo, TPA%, alimentação%)\n"
-            f"  Parâmetros: {self.count_parameters():,}\n"
-            f"  Activações: ReLU, Tanh(fotoperíodo), Sigmoid(TPA/alimentação)\n"
-            f"  Regularização: BatchNorm + Dropout(0.2)\n"
-            f")"
-        )
+        feats = self.feature_extractor(x)
+        feats = self.shared(feats)
+
+        adj = -self.head_adjustment(feats)  # [-1, 0]
+        tpa = self.head_tpa(feats)          # [0, 1]
+        feed = self.head_feeding(feats)     # [0, 1]
+
+        out = torch.cat([adj, tpa, feed], dim=1)  # (batch, 3)
+        return out
+
+
+# Mantém compatibilidade com o teu inference.py (que estava a instanciar AquaSenseNet)
+# Assim evitas rebentar imports em vários sítios.
+AquaSenseNet = PhotoperiodNet
+
+
+@dataclass
+class BaselinePrediction:
+    adjustment_hours: float
+    tpa_percent: float
+    feeding_percent: float
+
+    def as_dict(self) -> Dict[str, float]:
+        return {
+            "adjustment_hours": float(self.adjustment_hours),
+            "tpa_percent": float(self.tpa_percent),
+            "feeding_percent": float(self.feeding_percent),
+        }
+
+    def as_normalized(self) -> Dict[str, float]:
+        return {
+            "adjustment_norm": float(self.adjustment_hours / 12.0),
+            "tpa_norm": float(self.tpa_percent / 100.0),
+            "feeding_norm": float(self.feeding_percent / 100.0),
+        }
 
 
 class BaselineModel:
     """
-    Modelo de referência baseado em regras.
-    Utilizado para comparação com a rede neural.
+    Baseline baseado nas regras (config.py).
+    Devolve SEMPRE 3 outputs (ajuste, TPA e alimentação).
     """
-    
+
     @staticmethod
-    def predict(turbidity: float, trend: float = 0) -> float:
+    def predict(turbidity: float, ph: float = None, temperature: float = None) -> BaselinePrediction:
+        adj = get_expected_adjustment(turbidity, ph=ph, temperature=temperature)   # horas (<=0)
+        tpa = get_expected_tpa(turbidity, ph=ph, temperature=temperature)          # %
+        feed = get_expected_feeding(turbidity, ph=ph, temperature=temperature)     # %
+        return BaselinePrediction(adj, tpa, feed)
+
+    @staticmethod
+    def predict_dict(turbidity: float, ph: float = None, temperature: float = None) -> Dict[str, float]:
+        return BaselineModel.predict(turbidity, ph, temperature).as_dict()
+
+    @staticmethod
+    def predict_normalized(turbidity: float, ph: float = None, temperature: float = None) -> Dict[str, float]:
         """
-        Previsão com base em regras simples.
-        
-        Args:
-            turbidity: Nível de turbidez (0-100%)
-            trend: Tendência de variação
-        
-        Returns:
-            Ajuste recomendado em horas
+        Útil se quiseres comparar com o output direto do modelo (que está normalizado).
         """
-        if turbidity > 90:
-            adjustment = -10
-        elif turbidity > 80:
-            adjustment = -8
-        elif turbidity > 70:
-            adjustment = -6
-        elif turbidity > 60:
-            adjustment = -5
-        elif turbidity > 50:
-            adjustment = -4
-        elif turbidity > 40:
-            adjustment = -3
-        elif turbidity > 30:
-            adjustment = -2
-        elif turbidity > 20:
-            adjustment = -1
-        else:
-            adjustment = 0
-        
-        # Ajuste por tendência
-        if trend > 15:
-            adjustment -= 2
-        elif trend > 5:
-            adjustment -= 1
-        
-        return max(-12, adjustment)
-
-
-# Alias para retrocompatibilidade
-PhotoperiodNet = AquaSenseNet
-
-
-if __name__ == "__main__":
-    # Teste rápido
-    model = AquaSenseNet()
-    print(model.summary())
-    
-    # Teste forward
-    x = torch.randn(4, INPUT_DIM)
-    y = model(x)
-    print(f"\nInput shape: {x.shape}")
-    print(f"Output shape: {y.shape}")
-    print(f"Output columns: [fotoperíodo, TPA%, alimentação%]")
-    print(f"Output values:\n{y}")
-    
-    # Teste predict_values
-    values = model.predict_values(x)
-    print(f"\nValores desnormalizados:")
-    print(f"  Ajuste horas: {values['ajuste_horas'].tolist()}")
-    print(f"  TPA%: {values['tpa_percentagem'].tolist()}")
-    print(f"  Alimentação%: {values['alimentacao_percentagem'].tolist()}")
+        return BaselineModel.predict(turbidity, ph, temperature).as_normalized()

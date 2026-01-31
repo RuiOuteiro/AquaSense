@@ -24,3 +24,4 @@ logs
 !.env.example
 esp32-dashboard/aquasense/config.h
 esp32-dashboard/aquasense/config.h
+/esp32-dashboard/ai/src/__pycache__

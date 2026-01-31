@@ -1,404 +1,341 @@
 """
-Módulo de sugestões completas para o aquário.
+Módulo de sugestões completas para o sistema AquaSense.
 
-Inclui:
-- Ajuste de fotoperíodo
-- Ajuste de intensidade
-- TPA (Troca Parcial de Água)
-- Luz noturna (azul)
-- Alimentação
+Converte previsões do modelo em recomendações acionáveis.
+Versão: 3 sensores (turbidez + pH + temperatura)
 """
-from typing import Dict, Tuple, List
-
-
-def calculate_intensity(turbidity: float, current_intensity: int) -> int:
-    """Calcula intensidade sugerida baseada na turbidez."""
-    if turbidity > 90:
-        return min(current_intensity, 20)  # Máximo 20% - caso crítico
-    elif turbidity > 80:
-        return min(current_intensity, 30)
-    elif turbidity > 70:
-        return min(current_intensity, 40)
-    elif turbidity > 60:
-        return min(current_intensity, 50)
-    elif turbidity > 50:
-        return min(current_intensity, 70)
-    elif turbidity > 40:
-        return min(current_intensity, 80)
-    return current_intensity
-
-
-def calculate_tpa(turbidity: float, trend: float) -> Dict:
-    """Calcula percentagem, urgência e frequência de TPA sugerida."""
-    if turbidity > 90:
-        return {
-            "percentagem": 80,
-            "urgencia": "critico",
-            "frequencia": "diário",
-            "dias": 3,
-            "descricao": "TPA de 80% imediata + 50% diário por 3 dias"
-        }
-    elif turbidity > 80:
-        return {
-            "percentagem": 70,
-            "urgencia": "urgente",
-            "frequencia": "diário",
-            "dias": 2,
-            "descricao": "TPA de 70% imediata + 40% amanhã"
-        }
-    elif turbidity > 70:
-        return {
-            "percentagem": 60,
-            "urgencia": "urgente",
-            "frequencia": "48h",
-            "dias": 2,
-            "descricao": "TPA de 60% agora + 30% em 48h"
-        }
-    elif turbidity > 60:
-        return {
-            "percentagem": 50,
-            "urgencia": "recomendado",
-            "frequencia": "48h",
-            "dias": 2,
-            "descricao": "TPA de 50% recomendada"
-        }
-    elif turbidity > 50:
-        return {
-            "percentagem": 40,
-            "urgencia": "recomendado",
-            "frequencia": "semanal",
-            "dias": 1,
-            "descricao": "TPA de 40% recomendada"
-        }
-    elif turbidity > 40:
-        return {
-            "percentagem": 30,
-            "urgencia": "sugerido",
-            "frequencia": "semanal",
-            "dias": 1,
-            "descricao": "TPA de 30% sugerida"
-        }
-    elif turbidity > 25 or trend > 10:
-        return {
-            "percentagem": 20,
-            "urgencia": "preventivo",
-            "frequencia": "semanal",
-            "dias": 1,
-            "descricao": "TPA preventiva de 20%"
-        }
-    return {
-        "percentagem": 15,
-        "urgencia": "rotina",
-        "frequencia": "semanal",
-        "dias": 1,
-        "descricao": "TPA de rotina semanal"
-    }
-
-
-def calculate_night_light(turbidity: float, trend: float) -> Dict:
-    """Gera sugestões para a luz noturna (azul)."""
-    if turbidity > 90:
-        return {
-            "accao": "desligar",
-            "razao": "Desligar luz azul completamente - situação crítica de algas",
-            "forcar": True
-        }
-    elif turbidity > 80:
-        return {
-            "accao": "desligar",
-            "razao": "Desligar luz azul para reduzir crescimento de algas",
-            "forcar": False
-        }
-    elif turbidity > 70:
-        return {
-            "accao": "reduzir",
-            "periodo_max": 4,
-            "razao": "Reduzir período da luz azul para máximo 4h",
-            "forcar": False
-        }
-    elif turbidity > 60:
-        return {
-            "accao": "reduzir",
-            "periodo_max": 6,
-            "razao": "Limitar luz azul a 6h por noite",
-            "forcar": False
-        }
-    elif turbidity > 40:
-        return {
-            "accao": "monitorizar",
-            "razao": "Monitorizar - considerar reduzir se piorar",
-            "forcar": False
-        }
-    return {
-        "accao": "manter",
-        "razao": "Luz azul pode manter configuração normal",
-        "forcar": False
-    }
-
-
-def calculate_feeding(turbidity: float, trend: float) -> Dict:
-    """Sugestões de alimentação baseada na turbidez."""
-    if turbidity > 90:
-        return {
-            "accao": "suspender",
-            "dias": 4,
-            "descricao": "Suspender alimentação por 4+ dias"
-        }
-    elif turbidity > 80:
-        return {
-            "accao": "suspender",
-            "dias": 3,
-            "descricao": "Suspender alimentação por 3 dias"
-        }
-    elif turbidity > 70:
-        return {
-            "accao": "suspender",
-            "dias": 2,
-            "descricao": "Suspender alimentação por 2 dias"
-        }
-    elif turbidity > 60:
-        return {
-            "accao": "reduzir",
-            "percentagem": 50,
-            "descricao": "Reduzir alimentação em 50%"
-        }
-    elif turbidity > 40:
-        return {
-            "accao": "reduzir",
-            "percentagem": 25,
-            "descricao": "Reduzir alimentação em 25%"
-        }
-    return {
-        "accao": "manter",
-        "descricao": "Manter alimentação normal"
-    }
-
-
-def determine_actions(
-    turbidity: float,
-    trend: float,
-    tpa: Dict,
-    night_light: Dict
-) -> Tuple[str, List[str]]:
-    """Determina razão principal e lista de acções recomendadas."""
-    actions = []
-    tpa_desc = tpa.get("descricao", "")
-    nl_action = night_light.get("accao", "manter")
-    
-    if turbidity > 90:
-        reason = "CRÍTICO: Turbidez extrema - acção imediata necessária"
-        actions = [
-            tpa_desc,
-            "Suspender alimentação por 3+ dias",
-            "Reduzir fotoperíodo para 2h",
-            "Reduzir intensidade para 20%",
-            "DESLIGAR luz azul completamente",
-            "Verificar filtração e aumentar oxigenação",
-            "Considerar tratamento anti-algas"
-        ]
-    elif turbidity > 80:
-        reason = "ALERTA: Turbidez muito alta - risco de proliferação de algas"
-        actions = [
-            tpa_desc,
-            "Suspender alimentação por 2 dias",
-            "Reduzir fotoperíodo para mínimo (4h)",
-            "Reduzir intensidade da luz para 30%",
-            "Desligar luz azul" if nl_action == "desligar" else "Reduzir luz azul",
-            "Verificar filtração e aumentar oxigenação"
-        ]
-    elif turbidity > 70:
-        reason = "Turbidez alta - proliferação de algas provável"
-        actions = [
-            tpa_desc,
-            "Suspender alimentação por 2 dias",
-            "Reduzir fotoperíodo para 4-6h",
-            "Reduzir intensidade da luz para 40%",
-            night_light.get("razao", "")
-        ]
-    elif turbidity > 60:
-        reason = "Turbidez elevada - possível proliferação de algas"
-        actions = [
-            tpa_desc,
-            "Reduzir alimentação para 50%",
-            "Reduzir fotoperíodo",
-            "Considerar reduzir intensidade da luz",
-            night_light.get("razao", "")
-        ]
-    elif turbidity > 40:
-        reason = "Turbidez moderada - monitorizar situação"
-        actions = [
-            tpa_desc,
-            "Reduzir ligeiramente alimentação",
-            "Ajustar fotoperíodo preventivamente"
-        ]
-    elif trend > 15:
-        reason = "Turbidez a aumentar rapidamente - acção preventiva"
-        actions = [
-            "Monitorizar evolução",
-            "Considerar TPA preventiva",
-            "Reduzir alimentação"
-        ]
-    elif trend > 5:
-        reason = "Turbidez com tendência de aumento"
-        actions = ["Monitorizar nos próximos dias"]
-    else:
-        reason = "Condições normais"
-        actions = ["Manter rotina actual"]
-    
-    # Remover acções vazias
-    actions = [a for a in actions if a]
-    
-    return reason, actions
+from typing import Dict, Optional
 
 
 def get_full_suggestions(
     turbidity_now: float,
-    turbidity_24h: float,
-    current_intensity: int = 100,
-    base_photoperiod: int = 8,
-    adjustment_hours: float = 0,
-    ai_tpa_pct: float = None,
-    ai_feeding_pct: float = None
+    turbidity_24h: Optional[float],
+    current_intensity: int,
+    base_photoperiod: int,
+    adjustment_hours: float,
+    ai_tpa_pct: float,
+    ai_feeding_pct: float,
+    ph: Optional[float] = None,
+    temperature: Optional[float] = None
 ) -> Dict:
     """
-    Gera sugestões completas para o aquário.
+    Gera sugestões completas baseadas nos outputs do modelo + contexto.
     
     Args:
-        turbidity_now: Turbidez actual (0-100%)
-        turbidity_24h: Média de turbidez das últimas 24h
-        current_intensity: Intensidade actual da luz (0-100%)
-        base_photoperiod: Fotoperíodo base configurado
-        adjustment_hours: Ajuste de horas (do modelo neural)
-        ai_tpa_pct: TPA% prevista pelo modelo (se None, usa regras)
-        ai_feeding_pct: Alimentação% prevista pelo modelo (se None, usa regras)
+        turbidity_now: Turbidez actual
+        turbidity_24h: Turbidez média 24h (opcional, pode ser None)
+        current_intensity: Intensidade actual da luz (%)
+        base_photoperiod: Fotoperíodo base (horas)
+        adjustment_hours: Ajuste sugerido pelo modelo (negativo)
+        ai_tpa_pct: TPA sugerido pelo modelo (%)
+        ai_feeding_pct: Alimentação sugerida pelo modelo (%)
+        ph: pH actual (opcional)
+        temperature: Temperatura actual (opcional)
     
     Returns:
-        Dict com todas as sugestões
+        Dict com sugestões completas
     """
-    trend = turbidity_now - turbidity_24h
+    # Fotoperíodo sugerido
+    suggested_photoperiod = max(2.0, min(14.0, base_photoperiod + adjustment_hours))
     
-    # Calcular fotoperíodo sugerido
-    min_photoperiod = 2 if turbidity_now > 90 else 4
-    suggested_photoperiod = max(min_photoperiod, base_photoperiod + int(adjustment_hours))
+    # Determinar severidade
+    severity = _classify_severity(turbidity_now, ph, temperature)
     
-    # Calcular sugestões de intensidade e luz noturna (sempre regras)
-    intensity = calculate_intensity(turbidity_now, current_intensity)
-    night_light = calculate_night_light(turbidity_now, trend)
-    
-    # TPA: usar previsão do modelo se disponível
-    if ai_tpa_pct is not None:
-        tpa = _build_tpa_from_ai(ai_tpa_pct, turbidity_now)
+    # Tendência (se temos média 24h)
+    if turbidity_24h is not None:
+        trend = _calculate_trend(turbidity_24h, turbidity_now)
     else:
-        tpa = calculate_tpa(turbidity_now, trend)
+        trend = "desconhecida"
     
-    # Alimentação: usar previsão do modelo se disponível
-    if ai_feeding_pct is not None:
-        feeding = _build_feeding_from_ai(ai_feeding_pct)
-    else:
-        feeding = calculate_feeding(turbidity_now, trend)
+    # Intensidade sugerida
+    suggested_intensity = _calculate_intensity(
+        current_intensity, adjustment_hours, turbidity_now, severity
+    )
     
-    reason, actions = determine_actions(turbidity_now, trend, tpa, night_light)
+    # Luz noturna
+    nightlight_hours = _calculate_nightlight(severity, trend, suggested_photoperiod)
+    
+    # Descrições detalhadas
+    tpa_desc = _describe_tpa(ai_tpa_pct, severity)
+    feeding_desc = _describe_feeding(ai_feeding_pct, severity)
+    
+    # Razão principal
+    reason = _generate_reason(turbidity_now, ph, temperature, severity, trend)
+    
+    # Ações recomendadas
+    actions = _generate_actions(
+        turbidity_now, ph, temperature,
+        adjustment_hours, ai_tpa_pct, ai_feeding_pct,
+        suggested_intensity, current_intensity,
+        nightlight_hours, severity
+    )
     
     return {
-        "fotoperiodo_base": base_photoperiod,
-        "fotoperiodo_sugerido": suggested_photoperiod,
-        "ajuste_horas": int(adjustment_hours),
-        "intensidade_atual": current_intensity,
-        "intensidade_sugerida": intensity,
-        "tpa": tpa,
-        "luz_noturna": night_light,
-        "alimentacao": feeding,
-        "turbidez_atual": turbidity_now,
-        "turbidez_media_24h": turbidity_24h,
-        "tendencia": round(trend, 1),
+        "fotoperiodo_sugerido": round(suggested_photoperiod, 1),
+        "intensidade_sugerida": suggested_intensity,
+        "luz_noturna_horas": round(nightlight_hours, 1),
+        
+        "tpa": {
+            "percentagem": round(ai_tpa_pct, 0),
+            "descricao": tpa_desc
+        },
+        
+        "alimentacao": {
+            "percentagem": round(ai_feeding_pct, 0),
+            "descricao": feeding_desc
+        },
+        
+        "severidade": severity,
+        "tendencia": trend,
         "razao": reason,
         "accoes": actions,
-        "fonte": "ai" if ai_tpa_pct is not None else "regras"
+        
+        "input": {
+            "turbidez_actual": round(turbidity_now, 1),
+            "turbidez_24h": round(turbidity_24h, 1) if turbidity_24h is not None else None,
+            "intensidade_actual": current_intensity,
+            "fotoperiodo_base": base_photoperiod,
+            "ph": round(ph, 2) if ph is not None else None,
+            "temperatura": round(temperature, 1) if temperature is not None else None
+        }
     }
 
 
-def _build_tpa_from_ai(tpa_pct: float, turbidity: float) -> Dict:
-    """Constrói estrutura de TPA a partir da previsão do modelo."""
-    tpa_pct = round(tpa_pct)
+def _classify_severity(turbidity: float, ph: Optional[float], temp: Optional[float]) -> str:
+    """Classifica severidade global."""
+    # Factores críticos
+    if turbidity >= 80:
+        return "critica"
     
+    if ph is not None:
+        if ph < 6.2 or ph > 8.0:
+            return "critica"
+    
+    if temp is not None:
+        if temp < 20.0 or temp > 30.0:
+            return "critica"
+    
+    # Alta
+    if turbidity >= 60:
+        return "alta"
+    
+    if ph is not None:
+        if ph < 6.5 or ph > 7.8:
+            return "alta"
+    
+    if temp is not None:
+        if temp < 22.0 or temp > 28.5:
+            return "alta"
+    
+    # Moderada
+    if turbidity >= 40:
+        return "moderada"
+    
+    # Baixa
+    if turbidity >= 25:
+        return "baixa"
+    
+    return "normal"
+
+
+def _calculate_trend(turbidity_24h: float, turbidity_now: float) -> str:
+    """Calcula tendência."""
+    diff = turbidity_now - turbidity_24h
+    
+    if diff > 15:
+        return "subida_rapida"
+    elif diff > 5:
+        return "subida"
+    elif diff < -15:
+        return "descida_rapida"
+    elif diff < -5:
+        return "descida"
+    else:
+        return "estavel"
+
+
+def _calculate_intensity(
+    current_intensity: int,
+    adjustment_hours: float,
+    turbidity: float,
+    severity: str
+) -> int:
+    """Calcula intensidade sugerida."""
+    if severity == "critica":
+        return 30
+    elif severity == "alta":
+        return 50
+    elif turbidity >= 60:
+        return max(30, current_intensity - 30)
+    elif adjustment_hours <= -6:
+        return max(40, current_intensity - 25)
+    elif adjustment_hours <= -4:
+        return max(60, current_intensity - 15)
+    elif adjustment_hours <= -2:
+        return max(70, current_intensity - 10)
+    else:
+        return current_intensity
+
+
+def _calculate_nightlight(severity: str, trend: str, photoperiod: float) -> float:
+    """Calcula horas de luz noturna."""
+    # Se fotoperíodo muito baixo, luz noturna ajuda
+    if photoperiod <= 4:
+        if severity == "critica" and trend in ["descida", "descida_rapida"]:
+            return 3.0
+        elif severity == "alta":
+            return 2.0
+        else:
+            return 1.0
+    
+    # Transições
+    if severity == "critica" and trend in ["descida", "descida_rapida"]:
+        return 2.0
+    elif severity == "alta" and trend == "descida_rapida":
+        return 1.0
+    
+    return 0.0
+
+
+def _describe_tpa(tpa_pct: float, severity: str) -> str:
+    """Gera descrição de TPA."""
     if tpa_pct >= 70:
-        urgencia = "critico" if turbidity > 90 else "urgente"
-        frequencia = "diário"
-        dias = 3 if tpa_pct >= 80 else 2
+        return f"TPA URGENTE de {tpa_pct:.0f}% nas próximas 12-24h"
     elif tpa_pct >= 50:
-        urgencia = "recomendado"
-        frequencia = "48h"
-        dias = 2
+        return f"TPA de {tpa_pct:.0f}% recomendada nas próximas 24-48h"
     elif tpa_pct >= 30:
-        urgencia = "sugerido"
-        frequencia = "semanal"
-        dias = 1
+        return f"TPA de {tpa_pct:.0f}% esta semana"
     elif tpa_pct >= 20:
-        urgencia = "preventivo"
-        frequencia = "semanal"
-        dias = 1
+        return f"TPA preventiva de {tpa_pct:.0f}% quando conveniente"
     else:
-        urgencia = "rotina"
-        frequencia = "semanal"
-        dias = 1
-    
-    return {
-        "percentagem": tpa_pct,
-        "urgencia": urgencia,
-        "frequencia": frequencia,
-        "dias": dias,
-        "descricao": f"TPA de {tpa_pct}% ({urgencia})"
-    }
+        return f"TPA de manutenção de {tpa_pct:.0f}% (rotina semanal)"
 
 
-def _build_feeding_from_ai(feeding_pct: float) -> Dict:
-    """Constrói estrutura de alimentação a partir da previsão do modelo."""
-    feeding_pct = round(feeding_pct)
-    
+def _describe_feeding(feeding_pct: float, severity: str) -> str:
+    """Gera descrição de alimentação."""
     if feeding_pct == 0:
-        return {
-            "accao": "suspender",
-            "dias": 3,
-            "percentagem": 0,
-            "descricao": "Suspender alimentação"
-        }
+        if severity == "critica":
+            return "SUSPENDER alimentação por 4-5 dias"
+        else:
+            return "SUSPENDER alimentação por 2-3 dias"
+    elif feeding_pct < 25:
+        return f"Alimentar apenas {feeding_pct:.0f}% do normal por 3-4 dias"
     elif feeding_pct < 50:
-        return {
-            "accao": "reduzir",
-            "percentagem": feeding_pct,
-            "descricao": f"Reduzir alimentação para {feeding_pct}%"
-        }
+        return f"Reduzir alimentação para {feeding_pct:.0f}% por alguns dias"
+    elif feeding_pct < 75:
+        return f"Alimentar a {feeding_pct:.0f}% do normal"
     elif feeding_pct < 100:
-        return {
-            "accao": "reduzir",
-            "percentagem": feeding_pct,
-            "descricao": f"Alimentação a {feeding_pct}% do normal"
-        }
+        return f"Manter alimentação a {feeding_pct:.0f}%"
     else:
-        return {
-            "accao": "manter",
-            "percentagem": 100,
-            "descricao": "Manter alimentação normal"
-        }
+        return "Alimentação normal"
 
 
-if __name__ == "__main__":
-    # Teste
-    print("=== Teste de Sugestões ===\n")
+def _generate_reason(
+    turbidity: float,
+    ph: Optional[float],
+    temp: Optional[float],
+    severity: str,
+    trend: str
+) -> str:
+    """Gera razão principal."""
+    reasons = []
     
-    test_cases = [
-        (15, 12, "Água limpa"),
-        (45, 40, "Moderada"),
-        (65, 55, "Elevada"),
-        (85, 75, "Crítica"),
-    ]
+    if severity == "critica":
+        if turbidity >= 80:
+            reasons.append(f"Turbidez crítica ({turbidity:.0f}%)")
+        if ph is not None and (ph < 6.2 or ph > 8.0):
+            reasons.append(f"pH crítico ({ph:.2f})")
+        if temp is not None and (temp < 20.0 or temp > 30.0):
+            reasons.append(f"Temperatura crítica ({temp:.1f}°C)")
     
-    for t_now, t_24h, name in test_cases:
-        result = get_full_suggestions(t_now, t_24h, adjustment_hours=-2)
-        print(f"--- {name} (turbidez {t_now}%) ---")
-        print(f"  Razão: {result['razao']}")
-        print(f"  TPA: {result['tpa']['descricao']}")
-        print(f"  Luz noturna: {result['luz_noturna']['accao']}")
-        print(f"  Alimentação: {result['alimentacao']['descricao']}")
-        print(f"  Intensidade: {result['intensidade_sugerida']}%")
-        print()
+    elif severity == "alta":
+        if turbidity >= 60:
+            reasons.append(f"Turbidez elevada ({turbidity:.0f}%)")
+        if ph is not None and (ph < 6.5 or ph > 7.8):
+            reasons.append(f"pH fora do ideal ({ph:.2f})")
+        if temp is not None and (temp < 22.0 or temp > 28.5):
+            reasons.append(f"Temperatura elevada ({temp:.1f}°C)")
+    
+    elif severity == "moderada":
+        reasons.append(f"Turbidez moderada ({turbidity:.0f}%)")
+    
+    else:
+        reasons.append(f"Água em boas condições ({turbidity:.0f}%)")
+    
+    if trend == "subida_rapida":
+        reasons.append("tendência de subida rápida")
+    elif trend == "subida":
+        reasons.append("tendência de subida")
+    
+    return "; ".join(reasons) if reasons else "Parâmetros normais"
+
+
+def _generate_actions(
+    turbidity: float, ph: Optional[float], temp: Optional[float],
+    adjustment: float, tpa_pct: float, feeding_pct: float,
+    suggested_intensity: int, current_intensity: int,
+    nightlight: float, severity: str
+) -> list:
+    """Gera lista de ações recomendadas."""
+    actions = []
+    
+    # TPA
+    if tpa_pct >= 70:
+        actions.append(f"🚨 Fazer TPA URGENTE de {tpa_pct:.0f}% nas próximas 12-24h")
+    elif tpa_pct >= 50:
+        actions.append(f"⚡ Fazer TPA de {tpa_pct:.0f}% nas próximas 24-48h")
+    elif tpa_pct >= 30:
+        actions.append(f"💧 Fazer TPA de {tpa_pct:.0f}% esta semana")
+    elif tpa_pct >= 20:
+        actions.append(f"💧 TPA preventiva de {tpa_pct:.0f}%")
+    
+    # Alimentação
+    if feeding_pct == 0:
+        actions.append("🛑 SUSPENDER alimentação completamente")
+    elif feeding_pct < 50:
+        actions.append(f"🍽️ Reduzir alimentação para {feeding_pct:.0f}%")
+    elif feeding_pct < 100:
+        actions.append(f"🍽️ Alimentar a {feeding_pct:.0f}% do normal")
+    
+    # Fotoperíodo
+    if abs(adjustment) >= 6:
+        actions.append(f"💡 Reduzir fotoperíodo em {abs(adjustment):.0f}h")
+    elif abs(adjustment) >= 2:
+        actions.append(f"💡 Ajustar fotoperíodo em {adjustment:.0f}h")
+    
+    # Intensidade
+    if suggested_intensity != current_intensity:
+        diff = suggested_intensity - current_intensity
+        if diff < -20:
+            actions.append(f"🔅 Reduzir intensidade para {suggested_intensity}%")
+        elif diff > 20:
+            actions.append(f"🔆 Aumentar intensidade para {suggested_intensity}%")
+    
+    # Luz noturna
+    if nightlight > 0:
+        actions.append(f"🌙 Ativar luz noturna por {nightlight:.1f}h")
+    
+    # Alertas pH/temp
+    if ph is not None:
+        if ph < 6.2 or ph > 8.0:
+            actions.append(f"⚠️ pH CRÍTICO ({ph:.2f}) - verificar imediatamente")
+        elif ph < 6.5 or ph > 7.8:
+            actions.append(f"⚠️ pH fora do ideal ({ph:.2f}) - monitorizar")
+    
+    if temp is not None:
+        if temp < 20.0 or temp > 30.0:
+            actions.append(f"🌡️ Temperatura CRÍTICA ({temp:.1f}°C) - ajustar urgente")
+        elif temp < 22.0 or temp > 28.5:
+            actions.append(f"🌡️ Temperatura elevada ({temp:.1f}°C) - verificar")
+    
+    # Manutenção geral
+    if severity == "critica":
+        actions.append("🔧 Verificar filtração e limpeza geral do sistema")
+        actions.append("🧪 Testar parâmetros completos (NO3, PO4, GH, KH)")
+    elif severity == "alta":
+        actions.append("🔧 Verificar e limpar filtro")
+    
+    if not actions:
+        actions.append("✅ Manter configurações actuais")
+    
+    return actions

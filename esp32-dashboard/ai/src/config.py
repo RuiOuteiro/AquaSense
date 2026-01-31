@@ -1,5 +1,8 @@
 """
 Configurações centralizadas do módulo de IA AquaSense.
+
+Versão: 3 parâmetros de entrada (turbidez + pH + temperatura)
+Outputs: ajuste fotoperíodo, TPA%, alimentação%
 """
 from pathlib import Path
 import torch
@@ -26,17 +29,17 @@ METRICS_PATH = MODELS_DIR / "metrics.json"
 # BASE DE DADOS
 # ==============================
 DB_CONFIG = {
-    'host': '127.0.0.1',
-    'port': 3309,
-    'user': 'root',
-    'password': '',
-    'database': 'esp32_data'
+    "host": "127.0.0.1",
+    "port": 3309,
+    "user": "root",
+    "password": "",
+    "database": "esp32_data",
 }
 
 # ==============================
 # MODELO
 # ==============================
-INPUT_DIM = 4       # Média 24h, turbidez actual, tendência, fotoperíodo base
+INPUT_DIM = 3       # [turbidez, pH, temperatura]
 HIDDEN_DIM = 32     # Neurónios na camada oculta
 OUTPUT_DIM = 3      # [ajuste fotoperíodo, TPA%, alimentação]
 
@@ -57,8 +60,11 @@ RANDOM_SEED = 42
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # ==============================
-# REGRAS DE TURBIDEZ (para labels)
+# REGRAS (BASELINE) PARA LABELS
 # ==============================
+# Turbidez é o driver principal (algas/partículas).
+# pH e temperatura entram como moderadores (stress/instabilidade).
+
 TURBIDITY_RULES = {
     90: -10,    # Crítico: -10h
     80: -8,     # Muito alto: -8h
@@ -91,52 +97,148 @@ FEEDING_RULES = {
     0: 100      # Normal: 100%
 }
 
-def get_expected_adjustment(turbidity: float, trend: float = 0) -> float:
-    """Calcula o ajuste esperado com base nas regras definidas."""
-    adjustment = 0
-    for threshold, adj in sorted(TURBIDITY_RULES.items(), reverse=True):
-        if turbidity > threshold:
-            adjustment = adj
-            break
-    
+# Ranges "ideais" (genéricos) para justificar moderação
+PH_OK_MIN, PH_OK_MAX = 6.5, 7.5
+PH_WARN_MIN, PH_WARN_MAX = 6.8, 7.2
+TEMP_OK_MIN, TEMP_OK_MAX = 22.0, 28.0
+
+
+def _turbidity_bucket_value(value: float, rules: dict) -> float:
+    """Aplica regras por thresholds (maior threshold que value ultrapassa)."""
+    for threshold, out in sorted(rules.items(), reverse=True):
+        if value > threshold:
+            return float(out)
+    return float(list(rules.values())[-1])
+
+
+def _risk_multiplier(ph: float | None, temperature: float | None) -> float:
+    """
+    Retorna um multiplicador de risco (>=1) com base em pH e temperatura.
+    - normal: 1.0
+    - moderado: 1.1
+    - alto: 1.25
+    - crítico: 1.4
+    """
+    risk = 1.0
+
+    # pH
+    if ph is not None:
+        if ph < 6.2 or ph > 8.0:
+            risk = max(risk, 1.4)
+        elif ph < PH_WARN_MIN or ph > PH_WARN_MAX:
+            risk = max(risk, 1.25)
+        elif ph < PH_OK_MIN or ph > PH_OK_MAX:
+            risk = max(risk, 1.1)
+
+    # temperatura
+    if temperature is not None:
+        if temperature < 20.0 or temperature > 30.0:
+            risk = max(risk, 1.4)
+        elif temperature < 22.0 or temperature > 28.5:
+            risk = max(risk, 1.25)
+        elif temperature < TEMP_OK_MIN or temperature > TEMP_OK_MAX:
+            risk = max(risk, 1.1)
+
+    return float(risk)
+
+
+def get_expected_adjustment(
+    turbidity: float,
+    trend: float = 0.0,
+    ph: float | None = None,
+    temperature: float | None = None
+) -> float:
+    """
+    Ajuste esperado de fotoperíodo (horas <= 0).
+
+    - Base: regras de turbidez
+    - Trend: piorar rápido -> reduz mais
+    - pH/temp: se risco alto -> reduz um pouco mais (evitar algas/stress)
+    """
+    turbidity = float(turbidity)
+    trend = float(trend)
+
+    adjustment = _turbidity_bucket_value(turbidity, TURBIDITY_RULES)
+
     # Ajuste adicional por tendência
     if trend > 15:
         adjustment -= 2
     elif trend > 5:
         adjustment -= 1
-    
-    return max(-12, adjustment)
+
+    # Modulação por risco (pH/temp)
+    risk = _risk_multiplier(ph, temperature)
+    if risk >= 1.4:
+        adjustment -= 2
+    elif risk >= 1.25:
+        adjustment -= 1
+    elif risk >= 1.1:
+        adjustment -= 0.5
+
+    # Clamp final
+    adjustment = max(-12.0, min(0.0, adjustment))
+    return float(adjustment)
 
 
-def get_expected_tpa(turbidity: float, trend: float = 0) -> float:
-    """Calcula a percentagem de TPA esperada."""
-    tpa = 15
-    for threshold, pct in sorted(TPA_RULES.items(), reverse=True):
-        if turbidity > threshold:
-            tpa = pct
-            break
-    
+def get_expected_tpa(
+    turbidity: float,
+    trend: float = 0.0,
+    ph: float | None = None,
+    temperature: float | None = None
+) -> float:
+    """
+    Percentagem de TPA esperada (0..100).
+    """
+    turbidity = float(turbidity)
+    trend = float(trend)
+
+    tpa = _turbidity_bucket_value(turbidity, TPA_RULES)
+
     # Ajuste por tendência
     if trend > 15:
-        tpa = min(100, tpa + 10)
+        tpa = min(100.0, tpa + 10.0)
     elif trend > 5:
-        tpa = min(100, tpa + 5)
-    
-    return tpa
+        tpa = min(100.0, tpa + 5.0)
+
+    # Modulação por risco (pH/temp)
+    risk = _risk_multiplier(ph, temperature)
+    if risk >= 1.4:
+        tpa = min(100.0, tpa + 15.0)
+    elif risk >= 1.25:
+        tpa = min(100.0, tpa + 10.0)
+    elif risk >= 1.1:
+        tpa = min(100.0, tpa + 5.0)
+
+    return float(max(0.0, min(100.0, tpa)))
 
 
-def get_expected_feeding(turbidity: float, trend: float = 0) -> float:
-    """Calcula a percentagem de alimentação esperada (100=normal, 0=suspender)."""
-    feeding = 100
-    for threshold, pct in sorted(FEEDING_RULES.items(), reverse=True):
-        if turbidity > threshold:
-            feeding = pct
-            break
-    
+def get_expected_feeding(
+    turbidity: float,
+    trend: float = 0.0,
+    ph: float | None = None,
+    temperature: float | None = None
+) -> float:
+    """
+    Percentagem de alimentação esperada (0..100).
+    """
+    turbidity = float(turbidity)
+    trend = float(trend)
+
+    feeding = _turbidity_bucket_value(turbidity, FEEDING_RULES)
+
     # Ajuste por tendência
     if trend > 15 and feeding > 0:
-        feeding = max(0, feeding - 25)
+        feeding = max(0.0, feeding - 25.0)
     elif trend > 5 and feeding > 0:
-        feeding = max(0, feeding - 10)
-    
-    return feeding
+        feeding = max(0.0, feeding - 10.0)
+
+    # Modulação por risco (pH/temp): se risco alto, reduz comida
+    risk = _risk_multiplier(ph, temperature)
+    if risk >= 1.4:
+        feeding = max(0.0, feeding - 40.0)
+    elif risk >= 1.25:
+        feeding = max(0.0, feeding - 25.0)
+    elif risk >= 1.1:
+        feeding = max(0.0, feeding - 10.0)
+
+    return float(max(0.0, min(100.0, feeding)))
