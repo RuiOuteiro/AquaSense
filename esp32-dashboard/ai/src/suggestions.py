@@ -281,61 +281,61 @@ def _generate_actions(
     
     # TPA
     if tpa_pct >= 70:
-        actions.append(f"🚨 Fazer TPA URGENTE de {tpa_pct:.0f}% nas próximas 12-24h")
+        actions.append(f"Fazer TPA URGENTE de {tpa_pct:.0f}% nas próximas 12-24h")
     elif tpa_pct >= 50:
-        actions.append(f"⚡ Fazer TPA de {tpa_pct:.0f}% nas próximas 24-48h")
+        actions.append(f"Fazer TPA de {tpa_pct:.0f}% nas próximas 24-48h")
     elif tpa_pct >= 30:
-        actions.append(f"💧 Fazer TPA de {tpa_pct:.0f}% esta semana")
+        actions.append(f"Fazer TPA de {tpa_pct:.0f}% esta semana")
     elif tpa_pct >= 20:
-        actions.append(f"💧 TPA preventiva de {tpa_pct:.0f}%")
+        actions.append(f"TPA preventiva de {tpa_pct:.0f}%")
     
     # Alimentação
     if feeding_pct == 0:
-        actions.append("🛑 SUSPENDER alimentação completamente")
+        actions.append("SUSPENDER alimentação completamente")
     elif feeding_pct < 50:
-        actions.append(f"🍽️ Reduzir alimentação para {feeding_pct:.0f}%")
+        actions.append(f"Reduzir alimentação para {feeding_pct:.0f}%")
     elif feeding_pct < 100:
-        actions.append(f"🍽️ Alimentar a {feeding_pct:.0f}% do normal")
+        actions.append(f"Alimentar a {feeding_pct:.0f}% do normal")
     
     # Fotoperíodo
     if abs(adjustment) >= 6:
-        actions.append(f"💡 Reduzir fotoperíodo em {abs(adjustment):.0f}h")
+        actions.append(f"Reduzir fotoperíodo em {abs(adjustment):.0f}h")
     elif abs(adjustment) >= 2:
-        actions.append(f"💡 Ajustar fotoperíodo em {adjustment:.0f}h")
+        actions.append(f"Ajustar fotoperíodo em {adjustment:.0f}h")
     
     # Intensidade
     if suggested_intensity != current_intensity:
         diff = suggested_intensity - current_intensity
         if diff < -20:
-            actions.append(f"🔅 Reduzir intensidade para {suggested_intensity}%")
+            actions.append(f"Reduzir intensidade para {suggested_intensity}%")
         elif diff > 20:
-            actions.append(f"🔆 Aumentar intensidade para {suggested_intensity}%")
+            actions.append(f"Aumentar intensidade para {suggested_intensity}%")
     
     # Luz noturna
     if nightlight > 0:
-        actions.append(f"🌙 Ativar luz noturna por {nightlight:.1f}h")
+        actions.append(f"Ativar luz noturna por {nightlight:.1f}h")
     
     # Alertas pH/temp
     if ph is not None:
         if ph < 6.2 or ph > 8.0:
-            actions.append(f"⚠️ pH CRÍTICO ({ph:.2f}) - verificar imediatamente")
+            actions.append(f"pH CRÍTICO ({ph:.2f}) - verificar imediatamente")
         elif ph < 6.5 or ph > 7.8:
-            actions.append(f"⚠️ pH fora do ideal ({ph:.2f}) - monitorizar")
+            actions.append(f"pH fora do ideal ({ph:.2f}) - monitorizar")
     
     if temp is not None:
         if temp < 20.0 or temp > 30.0:
-            actions.append(f"🌡️ Temperatura CRÍTICA ({temp:.1f}°C) - ajustar urgente")
+            actions.append(f"Temperatura CRÍTICA ({temp:.1f}°C) - ajustar urgente")
         elif temp < 22.0 or temp > 28.5:
-            actions.append(f"🌡️ Temperatura elevada ({temp:.1f}°C) - verificar")
+            actions.append(f"Temperatura elevada ({temp:.1f}°C) - verificar")
     
     # Manutenção geral
     if severity == "critica":
-        actions.append("🔧 Verificar filtração e limpeza geral do sistema")
-        actions.append("🧪 Testar parâmetros completos (NO3, PO4, GH, KH)")
+        actions.append("Verificar filtração e limpeza geral do sistema")
+        actions.append("Testar parâmetros completos (NO3, PO4, GH, KH)")
     elif severity == "alta":
-        actions.append("🔧 Verificar e limpar filtro")
+        actions.append("Verificar e limpar filtro")
     
     if not actions:
-        actions.append("✅ Manter configurações actuais")
+        actions.append("Manter configurações actuais")
     
     return actions
