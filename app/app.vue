@@ -820,10 +820,10 @@
                       <!-- Alerta -->
                       <div
                         class="ai-alert"
-                        :class="getAlertClass(aiSuggestion.turbidez_atual)"
+                        :class="getAlertClass(aiSuggestion.input?.turbidez_actual, aiSuggestion.severidade)"
                       >
                         <span class="material-icons-outlined">{{
-                          aiSuggestion.turbidez_atual > 60 ? "warning" : "info"
+                          aiSuggestion.severidade === 'critica' || aiSuggestion.severidade === 'alta' ? "warning" : "info"
                         }}</span>
                         <span>{{ aiSuggestion.razao }}</span>
                       </div>
@@ -836,11 +836,11 @@
                             class="value"
                             :class="
                               getTurbidityAlertClass(
-                                aiSuggestion.turbidez_atual,
+                                aiSuggestion.input.turbidez_actual,
                               )
                             "
                             >{{
-                              aiSuggestion.turbidez_atual?.toFixed(0)
+                              aiSuggestion.input.turbidez_actual?.toFixed(0)
                             }}%</span
                           >
                         </div>
@@ -1233,8 +1233,18 @@ const aiSuggestion = ref<{
   fotoperiodo_sugerido: number;
   ajuste_horas: number;
   razao: string;
-  turbidez_atual: number;
   intensidade_sugerida?: number;
+  severidade: string;
+  tendencia: string;
+
+  input: {
+    fotoperiodo_base: number; 
+    intensidade_actual: number;
+    ph: number;
+    temperatura: number;
+    turbidez_24h: number;
+    turbidez_actual: number;
+  }
   tpa?: {
     percentagem: number;
     urgencia: string;
@@ -1258,7 +1268,12 @@ const aiSuggestion = ref<{
 } | null>(null);
 
 // Funções auxiliares para classes de alerta
-const getAlertClass = (turbidez: number) => {
+const getAlertClass = (turbidez: number, severidade?: string) => {
+  // Prioridade: severidade da IA (inclui pH/temp críticos)
+  if (severidade === "critica") return "alert-critical";
+  if (severidade === "alta") return "alert-warning";
+  if (severidade === "moderada") return "alert-moderate";
+  // Fallback para turbidez
   if (turbidez > 80) return "alert-critical";
   if (turbidez > 60) return "alert-warning";
   if (turbidez > 40) return "alert-moderate";
@@ -1368,6 +1383,7 @@ const translateSensorType = (type: string) => {
     turbidity_voltage: "Tensão Turbidez",
     light_status: "Luz Branca",
     night_light_status: "Luz Noturna",
+    light_brightness: "Brilho Luz"
   };
   return t[type] || type;
 };
@@ -2932,6 +2948,11 @@ td {
   background: rgba(99, 102, 241, 0.2);
   color: #a5b4fc;
 }
+.sensor-badge.light_brightness {
+  background: rgba(227, 99, 241, 0.2);
+  color: #a5b4fc;
+}
+
 
 .value-cell {
   font-weight: 600;
@@ -3689,12 +3710,49 @@ td {
 }
 
 /* ========== RESPONSIVO ========== */
+
+/* Tablets e ecrãs médios */
+@media (max-width: 1024px) {
+  .main {
+    padding: 1.5rem 1rem;
+  }
+  .sensors-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Telemóveis - modo paisagem e tablets pequenos */
 @media (max-width: 768px) {
   .header-content {
     padding: 0 1rem;
   }
+  .logo-icon {
+    width: 40px;
+    height: 40px;
+  }
+  .logo-icon span {
+    font-size: 22px;
+  }
+  .logo-text h1 {
+    font-size: 1.1rem;
+  }
+  .logo-text span {
+    font-size: 0.65rem;
+  }
+  .status-badge {
+    padding: 6px 10px;
+    font-size: 0.7rem;
+  }
+  .settings-btn,
+  .console-btn {
+    width: 38px;
+    height: 38px;
+  }
   .main {
     padding: 1rem;
+  }
+  .section-title {
+    font-size: 1.1rem;
   }
   .lighting-cards {
     grid-template-columns: 1fr;
@@ -3702,12 +3760,374 @@ td {
   .sensors-grid {
     grid-template-columns: 1fr;
   }
+  .light-card {
+    padding: 1.25rem;
+  }
+  .sensor-card {
+    padding: 1rem;
+  }
   .auto-info {
     flex-direction: column;
     gap: 0.75rem;
   }
   .modal-container {
+    width: 95vw;
+    max-width: 95vw;
     max-height: 90vh;
+    margin: 1rem;
+  }
+  .modal-content {
+    padding: 1rem;
+  }
+  .console-panel {
+    width: calc(100vw - 24px);
+    right: 12px;
+    left: 12px;
+    top: 70px;
+  }
+  /* Tabela histórico responsiva */
+  .history-table {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .history-table table {
+    min-width: 400px;
+  }
+  .history-table th,
+  .history-table td {
+    padding: 0.6rem 0.5rem;
+    font-size: 0.75rem;
+  }
+  /* Fan section */
+  .fan-header {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+  .fan-info h3 {
+    font-size: 1rem;
+  }
+  /* Toggle buttons no modal */
+  .toggle-buttons {
+    flex-wrap: wrap;
+  }
+  .toggle-buttons button {
+    flex: 1;
+    min-width: 80px;
+    font-size: 0.8rem;
+    padding: 0.6rem;
+  }
+  .input-row {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .input-field {
+    width: 100%;
+  }
+}
+
+/* Telemóveis pequenos - modo retrato */
+@media (max-width: 480px) {
+  .header {
+    padding: 0.75rem 0;
+  }
+  .header-content {
+    padding: 0 0.75rem;
+    gap: 8px;
+  }
+  .header-actions {
+    gap: 6px;
+  }
+  .logo {
+    gap: 8px;
+  }
+  .logo-icon {
+    width: 36px;
+    height: 36px;
+  }
+  .logo-icon span {
+    font-size: 20px;
+  }
+  .logo-text h1 {
+    font-size: 1rem;
+  }
+  .logo-text span {
+    display: none;
+  }
+  .status-badge {
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 0.75rem;
+    gap: 6px;
+  }
+  .settings-btn,
+  .console-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+  }
+  .main {
+    padding: 0.75rem;
+  }
+  .section-title {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+  }
+  .section-title span {
+    font-size: 20px;
+  }
+  /* Cards de luz */
+  .light-card {
+    padding: 1rem;
+    border-radius: 16px;
+  }
+  .light-card-header {
+    gap: 10px;
+  }
+  .light-icon {
+    width: 42px;
+    height: 42px;
+  }
+  .light-icon span {
+    font-size: 22px;
+  }
+  .light-info h3 {
+    font-size: 1rem;
+  }
+  .power-btn {
+    width: 42px;
+    height: 42px;
+  }
+  .schedule-display {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 0.6rem;
+  }
+  .schedule-item {
+    font-size: 0.85rem;
+  }
+  .schedule-separator {
+    display: none;
+  }
+  /* Cards de sensor */
+  .sensor-card {
+    padding: 1rem;
+    border-radius: 14px;
+  }
+  .sensor-icon {
+    width: 40px;
+    height: 40px;
+  }
+  .sensor-icon span {
+    font-size: 20px;
+  }
+  .sensor-info h3 {
+    font-size: 0.95rem;
+  }
+  .sensor-info span {
+    font-size: 0.7rem;
+  }
+  .sensor-value .value {
+    font-size: 2rem;
+  }
+  .sensor-value .unit {
+    font-size: 1rem;
+  }
+  .sensor-footer {
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .threshold {
+    font-size: 0.7rem;
+  }
+  /* Fan section */
+  .fan-card {
+    padding: 1rem;
+    border-radius: 16px;
+  }
+  .fan-header {
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+  }
+  .fan-icon {
+    width: 42px;
+    height: 42px;
+  }
+  .fan-info {
+    width: 100%;
+  }
+  .fan-info h3 {
+    font-size: 0.95rem;
+  }
+  .fan-status-indicator {
+    align-self: flex-start;
+    margin-top: 0.5rem;
+  }
+  .quick-controls {
+    flex-direction: column;
+  }
+  .quick-btn {
+    width: 100%;
+  }
+  /* Histórico */
+  .history {
+    padding: 1rem;
+    border-radius: 16px;
+  }
+  .history-header h2 {
+    font-size: 1rem;
+  }
+  .badge {
+    font-size: 0.7rem;
+    padding: 4px 8px;
+  }
+  /* Modal */
+  .modal-container {
+    width: 100vw;
+    max-width: 100vw;
+    height: 100vh;
+    max-height: 100vh;
+    margin: 0;
+    border-radius: 0;
+  }
+  .modal-header {
+    padding: 1rem;
+  }
+  .modal-header h2 {
+    font-size: 1.1rem;
+  }
+  .close-btn {
+    width: 36px;
+    height: 36px;
+  }
+  .settings-section {
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    border-radius: 12px;
+  }
+  .settings-section h3 {
+    font-size: 0.95rem;
+    padding-bottom: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+  .setting-group {
+    margin-bottom: 0.75rem;
+  }
+  .setting-group label {
+    font-size: 0.8rem;
+    margin-bottom: 0.4rem;
+  }
+  .mode-buttons {
+    gap: 0.4rem;
+  }
+  .mode-buttons button {
+    min-width: 70px;
+    padding: 0.6rem 0.5rem;
+    font-size: 0.8rem;
+    border-radius: 8px;
+  }
+  .cycle-buttons {
+    gap: 0.4rem;
+  }
+  .cycle-btn {
+    min-width: 45px;
+    padding: 0.6rem 0.5rem;
+    font-size: 0.8rem;
+  }
+  /* AI section in modal */
+  .ai-card {
+    padding: 1rem;
+    border-radius: 12px;
+  }
+  .ai-header {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+  }
+  .ai-desc {
+    font-size: 0.8rem;
+    line-height: 1.4;
+    margin-bottom: 0.75rem;
+  }
+  .ai-fetch-btn {
+    padding: 0.75rem;
+    font-size: 0.9rem;
+    border-radius: 10px;
+  }
+  /* Console */
+  .console-panel {
+    top: 60px;
+    left: 8px;
+    right: 8px;
+    width: auto;
+    max-height: 50vh;
+  }
+  .console-header {
+    padding: 10px 12px;
+  }
+  .console-header h3 {
+    font-size: 0.8rem;
+  }
+  .console-body {
+    padding: 8px;
+    font-size: 0.7rem;
+  }
+  /* Hora atual */
+  .current-time-display {
+    font-size: 0.85rem;
+    padding: 0.5rem 1rem;
+  }
+  /* Footer */
+  .footer {
+    font-size: 0.7rem;
+    padding: 1rem;
+  }
+  /* AI Section */
+  .ai-card {
+    padding: 0.85rem;
+  }
+  .ai-header {
+    font-size: 0.9rem;
+  }
+  .ai-desc {
+    font-size: 0.75rem;
+  }
+  .ai-fetch-btn {
+    padding: 0.65rem;
+    font-size: 0.85rem;
+  }
+  .ai-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+  .ai-stat-card {
+    padding: 0.6rem;
+  }
+  .ai-stat-card .label {
+    font-size: 0.65rem;
+  }
+  .ai-stat-card .value {
+    font-size: 1rem;
+  }
+  .ai-actions-list li {
+    font-size: 0.75rem;
+    padding: 0.5rem;
+  }
+  .ai-apply-btn {
+    padding: 0.65rem;
+    font-size: 0.85rem;
+  }
+  /* Intensity slider */
+  .intensity-control.premium {
+    padding: 0.75rem;
+  }
+  .intensity-header {
+    margin-bottom: 0.5rem;
+  }
+  .intensity-label {
+    font-size: 0.75rem;
+  }
+  .intensity-value {
+    font-size: 1rem;
   }
 }
 </style>
