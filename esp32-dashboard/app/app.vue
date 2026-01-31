@@ -820,10 +820,10 @@
                       <!-- Alerta -->
                       <div
                         class="ai-alert"
-                        :class="getAlertClass(aiSuggestion.turbidez_atual)"
+                        :class="getAlertClass(aiSuggestion.input?.turbidez_actual)"
                       >
                         <span class="material-icons-outlined">{{
-                          aiSuggestion.turbidez_atual > 60 ? "warning" : "info"
+                          aiSuggestion.input.turbidez_actual > 60 ? "warning" : "info"
                         }}</span>
                         <span>{{ aiSuggestion.razao }}</span>
                       </div>
@@ -836,11 +836,11 @@
                             class="value"
                             :class="
                               getTurbidityAlertClass(
-                                aiSuggestion.turbidez_atual,
+                                aiSuggestion.input.turbidez_actual,
                               )
                             "
                             >{{
-                              aiSuggestion.turbidez_atual?.toFixed(0)
+                              aiSuggestion.input.turbidez_actual?.toFixed(0)
                             }}%</span
                           >
                         </div>
@@ -1233,8 +1233,16 @@ const aiSuggestion = ref<{
   fotoperiodo_sugerido: number;
   ajuste_horas: number;
   razao: string;
-  turbidez_atual: number;
   intensidade_sugerida?: number;
+
+  input: {
+    fotoperiodo_base: number; 
+    intensidade_actual: number;
+    ph: number;
+    temperatura: number;
+    turbidez_24h: number;
+    turbidez_actual: number;
+  }
   tpa?: {
     percentagem: number;
     urgencia: string;
