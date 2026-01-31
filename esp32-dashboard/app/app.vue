@@ -1376,6 +1376,7 @@ const translateSensorType = (type: string) => {
     turbidity_voltage: "Tensão Turbidez",
     light_status: "Luz Branca",
     night_light_status: "Luz Noturna",
+    light_brightness: "Brilho Luz"
   };
   return t[type] || type;
 };
@@ -2940,6 +2941,11 @@ td {
   background: rgba(99, 102, 241, 0.2);
   color: #a5b4fc;
 }
+.sensor-badge.light_brightness {
+  background: rgba(227, 99, 241, 0.2);
+  color: #a5b4fc;
+}
+
 
 .value-cell {
   font-weight: 600;
