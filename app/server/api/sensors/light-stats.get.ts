@@ -5,7 +5,7 @@ export default defineEventHandler(async (event) => {
   const days = parseInt(query.days as string) || 7
 
   try {
-    // Buscar todas as leituras de luz branca com timestamps
+    // Obter todas as leituras de luz branca com timestamps
     const [whiteLightRows] = await pool.execute(`
       SELECT 
         DATE(data_hora) as dia,
@@ -17,7 +17,7 @@ export default defineEventHandler(async (event) => {
       ORDER BY data_hora ASC
     `, [days])
 
-    // Buscar todas as leituras de luz azul com timestamps
+    // Obter todas as leituras de luz azul com timestamps
     const [blueLightRows] = await pool.execute(`
       SELECT 
         DATE(data_hora) as dia,

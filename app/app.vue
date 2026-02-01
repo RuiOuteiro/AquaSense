@@ -5,9 +5,9 @@
   através de ESP32. Inclui sensores de temperatura, pH, turbidez, humidade
   e controlo de iluminação e ventoinha.
   
-  Autor: AquaSense Team
-  Versão: 2.0.0
-  Última Atualização: Janeiro 2026
+  Autores: Rui Outeiro, Emanuel Carvalho e Paulo Jadaugy
+  Versão: 1.0.0
+  Última Actualização: Fevereiro 2026
 -->
 <template>
   <div class="app">
@@ -627,7 +627,7 @@
 
     <!-- ========== RODAPÉ ========== -->
     <footer class="footer">
-      <span>Última atualização: {{ lastUpdate }}</span>
+      <span>Última actualização: {{ lastUpdate }}</span>
     </footer>
 
     <!-- ========== MODAL DE DEFINIÇÕES ========== -->
@@ -1288,7 +1288,7 @@ interface SensorReading {
 
 // ========== ESTADO DOS SENSORES ==========
 const readings = ref<SensorReading[]>([]); // Histórico de leituras
-const lastUpdate = ref(""); // Última atualização
+const lastUpdate = ref(""); // Última actualização
 const currentTemp = ref<number | null>(null); // Temperatura da água
 const currentTempTime = ref<string | null>(null); // Timestamp da temperatura
 const currentPh = ref<number | null>(null); // Valor do pH
@@ -2083,7 +2083,7 @@ const fetchData = async () => {
   }
 };
 
-// Buscar logs do ESP32
+// Obter registos do ESP32
 let lastLogTimestamp = 0;
 const fetchESP32Logs = async () => {
   try {
@@ -2123,10 +2123,10 @@ onMounted(() => {
   fetchData();
   setInterval(fetchData, 5000);
   
-  // Buscar logs do ESP32 a cada 2 segundos
+  // Obter registos do ESP32 a cada 2 segundos
   setInterval(fetchESP32Logs, 2000);
 
-  // Atualizar hora atual
+  // Actualizar hora actual
   const updateTime = () => {
     currentTime.value = new Date().toLocaleTimeString("pt-PT", {
       hour: "2-digit",
@@ -3084,6 +3084,12 @@ onMounted(() => {
 .sensor-value .value.murky {
   color: #ef4444;
 }
+.sensor-value .value.ambient-value {
+  color: #06b6d4;
+}
+.sensor-value .value.humidity-value {
+  color: #6366f1;
+}
 .sensor-value .unit {
   font-size: 1.25rem;
   color: #64748b;
@@ -3385,7 +3391,14 @@ td {
   background: rgba(227, 99, 241, 0.2);
   color: #a5b4fc;
 }
-
+.sensor-badge.humidity {
+  background: rgba(99, 102, 241, 0.2);
+  color: #818cf8;
+}
+.sensor-badge.ambient_temp {
+  background: rgba(6, 182, 212, 0.2);
+  color: #22d3ee;
+}
 
 .value-cell {
   font-weight: 600;
