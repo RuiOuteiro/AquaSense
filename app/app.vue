@@ -33,15 +33,29 @@
             {{ isConnected ? "Conectado" : "Desconectado" }}
           </div>
 
-          <!-- Botão de consola -->
-          <button class="console-btn" @click="toggleConsole" :class="{ active: showConsole }">
-            <span class="material-icons-outlined">terminal</span>
-          </button>
-
-          <!-- Botão de definições -->
-          <button class="settings-btn" @click="openSettings">
-            <span class="material-icons-outlined">settings</span>
-          </button>
+          <!-- Burger Menu -->
+          <div class="burger-menu">
+            <button class="burger-btn" @click="toggleBurgerMenu" :class="{ active: showBurgerMenu }">
+              <span class="material-icons-outlined">{{ showBurgerMenu ? 'close' : 'menu' }}</span>
+            </button>
+            
+            <Transition name="dropdown">
+              <div class="burger-dropdown" v-if="showBurgerMenu" @click.stop>
+                <button class="dropdown-item" @click="openCharts(); closeBurgerMenu()">
+                  <span class="material-icons-outlined">show_chart</span>
+                  Gráficos
+                </button>
+                <button class="dropdown-item" @click="toggleConsole(); closeBurgerMenu()">
+                  <span class="material-icons-outlined">terminal</span>
+                  Consola
+                </button>
+                <button class="dropdown-item" @click="openSettings(); closeBurgerMenu()">
+                  <span class="material-icons-outlined">settings</span>
+                  Definições
+                </button>
+              </div>
+            </Transition>
+          </div>
         </div>
       </div>
     </header>
@@ -124,21 +138,27 @@
 
               <!-- Luz ligada - Modo Horário -->
               <div
-                class="schedule-display"
+                class="schedule-display-wrap"
                 v-else-if="config.luzModo === 'horario'"
               >
-                <div class="schedule-item">
-                  <span class="material-icons-outlined">wb_twilight</span>
-                  <span>{{
-                    formatTime(config.luzHoraLigar, config.luzMinutoLigar)
-                  }}</span>
+                <div class="schedule-display">
+                  <div class="schedule-item">
+                    <span class="material-icons-outlined">wb_twilight</span>
+                    <span>{{
+                      formatTime(config.luzHoraLigar, config.luzMinutoLigar)
+                    }}</span>
+                  </div>
+                  <span class="schedule-separator">→</span>
+                  <div class="schedule-item">
+                    <span class="material-icons-outlined">nights_stay</span>
+                    <span>{{
+                      formatTime(config.luzHoraDesligar, config.luzMinutoDesligar)
+                    }}</span>
+                  </div>
                 </div>
-                <span class="schedule-separator">→</span>
-                <div class="schedule-item">
-                  <span class="material-icons-outlined">nights_stay</span>
-                  <span>{{
-                    formatTime(config.luzHoraDesligar, config.luzMinutoDesligar)
-                  }}</span>
+                <div class="intensity-display">
+                  <span class="material-icons-outlined">light_mode</span>
+                  <span>{{ config.luzIntensidade }}%</span>
                 </div>
               </div>
 
@@ -164,6 +184,10 @@
                       )
                     }}</span>
                   </div>
+                </div>
+                <div class="intensity-display">
+                  <span class="material-icons-outlined">light_mode</span>
+                  <span>{{ config.luzIntensidade }}%</span>
                 </div>
               </div>
 
@@ -1108,6 +1132,136 @@
           </div>
         </div>
       </Transition>
+
+      <!-- ========== MODAL DE GRÁFICOS ========== -->
+      <Transition name="modal-fade">
+        <div
+          class="modal-overlay"
+          v-if="showCharts"
+          @click.self="closeCharts"
+        >
+          <div class="modal-container charts-modal">
+            <!-- Cabeçalho do modal -->
+            <div class="modal-header">
+              <h2>
+                <span class="material-icons-outlined">show_chart</span>
+                Gráficos
+              </h2>
+              <button class="close-btn" @click="closeCharts">
+                <span class="material-icons-outlined">close</span>
+              </button>
+            </div>
+
+            <!-- Seletor de período -->
+            <div class="chart-period-selector">
+              <button 
+                v-for="hours in [6, 12, 24, 48, 168]" 
+                :key="hours"
+                @click="changeChartPeriod(hours)"
+                :class="{ active: chartPeriod === hours }"
+              >
+                {{ hours < 24 ? `${hours}h` : hours === 24 ? '1 dia' : hours === 48 ? '2 dias' : '7 dias' }}
+              </button>
+            </div>
+
+            <!-- Conteúdo do modal -->
+            <div class="modal-content custom-scroll">
+              <div v-if="chartLoading" class="chart-loading">
+                <span class="material-icons-outlined spinning">sync</span>
+                A carregar dados...
+              </div>
+
+              <div v-else class="charts-grid">
+                <!-- Gráfico de Temperatura (Line) -->
+                <div class="chart-card full-width" v-if="chartData['temperature']">
+                  <div class="chart-title">
+                    <span class="material-icons-outlined">device_thermostat</span>
+                    Temperatura da Água
+                  </div>
+                  <ClientOnly>
+                    <apexchart
+                      type="area"
+                      height="200"
+                      :options="tempChartOptions"
+                      :series="tempChartSeries"
+                    />
+                  </ClientOnly>
+                </div>
+
+                <!-- Gráfico de pH (Line) -->
+                <div class="chart-card full-width" v-if="chartData['pH']">
+                  <div class="chart-title">
+                    <span class="material-icons-outlined">science</span>
+                    pH
+                  </div>
+                  <ClientOnly>
+                    <apexchart
+                      type="line"
+                      height="200"
+                      :options="phChartOptions"
+                      :series="phChartSeries"
+                    />
+                  </ClientOnly>
+                </div>
+
+                <!-- Gráfico de Turbidez (Area) -->
+                <div class="chart-card full-width" v-if="chartData['turbidity']">
+                  <div class="chart-title">
+                    <span class="material-icons-outlined">blur_on</span>
+                    Turbidez
+                  </div>
+                  <ClientOnly>
+                    <apexchart
+                      type="area"
+                      height="200"
+                      :options="turbidityChartOptions"
+                      :series="turbidityChartSeries"
+                    />
+                  </ClientOnly>
+                </div>
+
+                <!-- Gráfico de Horas de Luz (Bar) -->
+                <div class="chart-card" v-if="lightStats?.whiteLight?.length">
+                  <div class="chart-title">
+                    <span class="material-icons-outlined">lightbulb</span>
+                    Horas de Luz Branca
+                  </div>
+                  <ClientOnly>
+                    <apexchart
+                      type="bar"
+                      height="180"
+                      :options="whiteLightChartOptions"
+                      :series="whiteLightChartSeries"
+                    />
+                  </ClientOnly>
+                </div>
+
+                <!-- Gráfico de Horas de Luz Azul (Bar) -->
+                <div class="chart-card" v-if="lightStats?.blueLight?.length">
+                  <div class="chart-title">
+                    <span class="material-icons-outlined">nights_stay</span>
+                    Horas de Luz Azul
+                  </div>
+                  <ClientOnly>
+                    <apexchart
+                      type="bar"
+                      height="180"
+                      :options="blueLightChartOptions"
+                      :series="blueLightChartSeries"
+                    />
+                  </ClientOnly>
+                </div>
+
+                <!-- Mensagem se não houver dados -->
+                <div v-if="Object.keys(chartData).length === 0 && !lightStats" class="no-data">
+                  <span class="material-icons-outlined">info</span>
+                  <p>Sem dados para o período selecionado</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
     </Teleport>
   </div>
 </template>
@@ -1157,6 +1311,21 @@ const lastSeenMs = ref<number | null>(null); // Último contacto com ESP32
 // ========== ESTADO DA INTERFACE ==========
 const showSettings = ref(false); // Visibilidade do modal de definições
 const showConsole = ref(false); // Visibilidade da consola
+const showCharts = ref(false); // Visibilidade do modal de gráficos
+const showBurgerMenu = ref(false); // Visibilidade do burger menu
+
+// Funções do burger menu
+const toggleBurgerMenu = () => {
+  showBurgerMenu.value = !showBurgerMenu.value;
+};
+const closeBurgerMenu = () => {
+  showBurgerMenu.value = false;
+};
+
+// ========== DADOS DOS GRÁFICOS ==========
+const chartPeriod = ref(24); // Período em horas
+const chartData = ref<Record<string, { value: number; created_at: string }[]>>({});
+const chartLoading = ref(false);
 const currentTime = ref(""); // Hora actual formatada
 
 // ========== CONSOLA ESP32 ==========
@@ -1583,7 +1752,8 @@ const iniciarCicloLuzNoturna = async (horas: number) => {
 const fetchAISuggestion = async () => {
   addConsoleLog('A obter sugestão da IA...', 'info');
   try {
-    const res = await $fetch<any>("http://localhost:5000/api/ai/photoperiod");
+    const aiHost = window.location.hostname;
+    const res = await $fetch<any>(`http://${aiHost}:5000/api/ai/photoperiod`);
     aiSuggestion.value = res;
     addConsoleLog(`IA: Fotoperíodo ${res.fotoperiodo_sugerido}h, Intensidade ${res.intensidade_sugerida}%`, 'success');
   } catch (e) {
@@ -1646,6 +1816,172 @@ const closeSettings = () => {
   showSettings.value = false;
   document.body.style.overflow = ""; // Restaurar scroll do body
 };
+
+// ========== FUNÇÕES DO MODAL DE GRÁFICOS ==========
+// Abrir modal de gráficos
+const openCharts = async () => {
+  showCharts.value = true;
+  document.body.style.overflow = "hidden";
+  await fetchChartData();
+};
+
+// Fechar modal de gráficos
+const closeCharts = () => {
+  showCharts.value = false;
+  document.body.style.overflow = "";
+};
+
+// Buscar dados para gráficos
+const fetchChartData = async () => {
+  chartLoading.value = true;
+  try {
+    const [sensorRes, lightRes] = await Promise.all([
+      $fetch<{ success: boolean; data: Record<string, { value: number; created_at: string }[]> }>(
+        `/api/sensors/history?hours=${chartPeriod.value}`
+      ),
+      $fetch<{ success: boolean; data: any }>(`/api/sensors/light-stats?days=${Math.ceil(chartPeriod.value / 24) || 7}`)
+    ]);
+    
+    if (sensorRes.success) {
+      chartData.value = sensorRes.data;
+    }
+    if (lightRes.success) {
+      lightStats.value = lightRes.data;
+    }
+  } catch (error) {
+    console.error('Erro ao buscar dados dos gráficos:', error);
+  } finally {
+    chartLoading.value = false;
+  }
+};
+
+// Mudar período dos gráficos
+const changeChartPeriod = async (hours: number) => {
+  chartPeriod.value = hours;
+  await fetchChartData();
+};
+
+// Dados de estatísticas de luz
+const lightStats = ref<any>(null);
+
+// ========== OPÇÕES E SÉRIES DOS GRÁFICOS APEXCHARTS ==========
+const baseChartOptions = {
+  chart: {
+    toolbar: { show: false },
+    zoom: { enabled: false },
+    background: 'transparent',
+    fontFamily: 'Inter, sans-serif'
+  },
+  theme: { mode: 'dark' as const },
+  grid: {
+    borderColor: 'rgba(255,255,255,0.1)',
+    strokeDashArray: 3
+  },
+  xaxis: {
+    type: 'datetime' as const,
+    labels: {
+      style: { colors: '#94a3b8', fontSize: '10px' },
+      datetimeFormatter: { hour: 'HH:mm', day: 'dd MMM' }
+    },
+    axisBorder: { show: false },
+    axisTicks: { show: false }
+  },
+  yaxis: {
+    labels: { 
+      style: { colors: '#94a3b8', fontSize: '10px' },
+      formatter: (val: number) => val?.toFixed(1)
+    }
+  },
+  tooltip: {
+    theme: 'dark',
+    x: { format: 'dd MMM HH:mm' },
+    y: { formatter: (val: number) => val?.toFixed(1) }
+  },
+  stroke: { curve: 'smooth' as const, width: 2 },
+  dataLabels: { enabled: false }
+};
+
+// Temperatura
+const tempChartOptions = computed(() => ({
+  ...baseChartOptions,
+  colors: ['#ff6b6b'],
+  fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.1 } },
+  yaxis: { ...baseChartOptions.yaxis, title: { text: '°C', style: { color: '#94a3b8' } } }
+}));
+
+const tempChartSeries = computed(() => [{
+  name: 'Temperatura',
+  data: (chartData.value['temperature'] || []).map(d => ({ x: new Date(d.created_at).getTime(), y: Math.round(d.value * 10) / 10 }))
+}]);
+
+// pH
+const phChartOptions = computed(() => ({
+  ...baseChartOptions,
+  colors: ['#4ecdc4'],
+  yaxis: { ...baseChartOptions.yaxis, min: 5, max: 10, title: { text: 'pH', style: { color: '#94a3b8' } } }
+}));
+
+const phChartSeries = computed(() => [{
+  name: 'pH',
+  data: (chartData.value['pH'] || []).map(d => ({ x: new Date(d.created_at).getTime(), y: Math.round(d.value * 10) / 10 }))
+}]);
+
+// Turbidez
+const turbidityChartOptions = computed(() => ({
+  ...baseChartOptions,
+  colors: ['#ffe66d'],
+  fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.1 } },
+  yaxis: { ...baseChartOptions.yaxis, min: 0, max: 100, title: { text: '%', style: { color: '#94a3b8' } } }
+}));
+
+const turbidityChartSeries = computed(() => [{
+  name: 'Turbidez',
+  data: (chartData.value['turbidity'] || []).map(d => ({ x: new Date(d.created_at).getTime(), y: Math.round(d.value * 10) / 10 }))
+}]);
+
+// Luz Branca (barras)
+const whiteLightChartOptions = computed(() => ({
+  chart: { toolbar: { show: false }, background: 'transparent', fontFamily: 'Inter, sans-serif' },
+  theme: { mode: 'dark' as const },
+  colors: ['#fbbf24'],
+  plotOptions: { bar: { borderRadius: 4, columnWidth: '60%' } },
+  grid: { borderColor: 'rgba(255,255,255,0.1)', strokeDashArray: 3 },
+  xaxis: {
+    categories: (lightStats.value?.whiteLight || []).map((d: any) => new Date(d.date).toLocaleDateString('pt-PT', { day: '2-digit', month: 'short' })),
+    labels: { style: { colors: '#94a3b8', fontSize: '10px' } },
+    axisBorder: { show: false }
+  },
+  yaxis: { max: 24, labels: { style: { colors: '#94a3b8', fontSize: '10px' } }, title: { text: 'Horas', style: { color: '#94a3b8' } } },
+  dataLabels: { enabled: false },
+  tooltip: { theme: 'dark' }
+}));
+
+const whiteLightChartSeries = computed(() => [{
+  name: 'Horas',
+  data: (lightStats.value?.whiteLight || []).map((d: any) => Math.round(d.hours * 10) / 10)
+}]);
+
+// Luz Azul (barras)
+const blueLightChartOptions = computed(() => ({
+  chart: { toolbar: { show: false }, background: 'transparent', fontFamily: 'Inter, sans-serif' },
+  theme: { mode: 'dark' as const },
+  colors: ['#60a5fa'],
+  plotOptions: { bar: { borderRadius: 4, columnWidth: '60%' } },
+  grid: { borderColor: 'rgba(255,255,255,0.1)', strokeDashArray: 3 },
+  xaxis: {
+    categories: (lightStats.value?.blueLight || []).map((d: any) => new Date(d.date).toLocaleDateString('pt-PT', { day: '2-digit', month: 'short' })),
+    labels: { style: { colors: '#94a3b8', fontSize: '10px' } },
+    axisBorder: { show: false }
+  },
+  yaxis: { max: 24, labels: { style: { colors: '#94a3b8', fontSize: '10px' } }, title: { text: 'Horas', style: { color: '#94a3b8' } } },
+  dataLabels: { enabled: false },
+  tooltip: { theme: 'dark' }
+}));
+
+const blueLightChartSeries = computed(() => [{
+  name: 'Horas',
+  data: (lightStats.value?.blueLight || []).map((d: any) => Math.round(d.hours * 10) / 10)
+}]);
 
 // ========== FUNÇÕES DE CONTROLO RÁPIDO DE LUZES ==========
 // Alternar luz branca (liga/desliga)
@@ -1928,6 +2264,103 @@ onMounted(() => {
 .settings-btn:hover {
   background: rgba(51, 65, 85, 0.8);
   color: #f1f5f9;
+}
+
+.charts-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(51, 65, 85, 0.5);
+  color: #94a3b8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.charts-btn:hover {
+  background: rgba(51, 65, 85, 0.8);
+  color: #f1f5f9;
+}
+
+/* Burger Menu */
+.burger-menu {
+  position: relative;
+}
+
+.burger-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(51, 65, 85, 0.5);
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.burger-btn:hover,
+.burger-btn.active {
+  background: rgba(51, 65, 85, 0.8);
+  color: #f1f5f9;
+}
+
+.burger-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: rgba(30, 41, 59, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+  min-width: 180px;
+  overflow: hidden;
+  z-index: 1000;
+}
+
+.dropdown-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: transparent;
+  border: none;
+  color: #e2e8f0;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.dropdown-item:hover {
+  background: rgba(51, 65, 85, 0.5);
+}
+
+.dropdown-item .material-icons-outlined {
+  font-size: 20px;
+  color: #94a3b8;
+}
+
+.dropdown-item:hover .material-icons-outlined {
+  color: #f1f5f9;
+}
+
+/* Dropdown transition */
+.dropdown-enter-active,
+.dropdown-leave-active {
+  transition: all 0.2s ease;
+}
+
+.dropdown-enter-from,
+.dropdown-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
 }
 
 .status-badge {
@@ -3084,6 +3517,177 @@ td {
   background: rgba(99, 102, 241, 0.7);
 }
 
+/* ========== MODAL DE GRÁFICOS ========== */
+.charts-modal {
+  max-width: 900px;
+  width: 95vw;
+  max-height: 90vh;
+  margin: 1rem;
+}
+
+@media (max-width: 600px) {
+  .charts-modal {
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    max-height: 100%;
+    margin: 0;
+    border-radius: 0;
+  }
+}
+
+.chart-period-selector {
+  display: flex;
+  gap: 8px;
+  padding: 0 1rem 1rem;
+  border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+  flex-wrap: wrap;
+}
+
+.chart-period-selector button {
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: rgba(51, 65, 85, 0.3);
+  border: none;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex: 1;
+  min-width: 50px;
+}
+
+.chart-period-selector button:hover {
+  background: rgba(51, 65, 85, 0.5);
+}
+
+.chart-period-selector button.active {
+  background: rgba(99, 102, 241, 0.3);
+  color: #a5b4fc;
+}
+
+.chart-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  color: #94a3b8;
+  gap: 1rem;
+}
+
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+@media (max-width: 600px) {
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .chart-card {
+    padding: 0.75rem;
+  }
+  
+  .chart-title {
+    font-size: 0.85rem;
+  }
+}
+
+.chart-card {
+  background: rgba(51, 65, 85, 0.3);
+  border-radius: 12px;
+  padding: 1rem;
+  overflow: hidden;
+}
+
+.chart-card.full-width {
+  grid-column: 1 / -1;
+}
+
+.chart-header {
+  margin-bottom: 0.75rem;
+}
+
+.chart-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #f1f5f9;
+  margin-bottom: 0.75rem;
+}
+
+.chart-title .material-icons-outlined {
+  font-size: 1.1rem;
+}
+
+.chart-title .chart-avg {
+  margin-left: auto;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #94a3b8;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+.chart-stats {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.chart-stats .stat {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.chart-stats .min { color: #74b9ff; }
+.chart-stats .avg { color: #a29bfe; }
+.chart-stats .max { color: #ff6b6b; }
+
+.chart-area {
+  height: 80px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.chart-svg {
+  width: 100%;
+  height: 100%;
+}
+
+.no-data {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  color: #64748b;
+  gap: 0.5rem;
+}
+
+.no-data .material-icons-outlined {
+  font-size: 2.5rem;
+}
+
 /* Secções do modal */
 .settings-section {
   background: rgba(51, 65, 85, 0.3);
@@ -3595,11 +4199,11 @@ td {
 
 /* ========== CONSOLA ESP32 ========== */
 .console-btn {
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  background: rgba(30, 41, 59, 0.8);
-  border: 1px solid rgba(148, 163, 184, 0.2);
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(51, 65, 85, 0.5);
+  border: none;
   color: #94a3b8;
   cursor: pointer;
   display: flex;
@@ -3609,7 +4213,7 @@ td {
 }
 .console-btn:hover {
   background: rgba(51, 65, 85, 0.8);
-  color: #e2e8f0;
+  color: #f1f5f9;
 }
 .console-btn.active {
   background: rgba(59, 130, 246, 0.2);
@@ -3744,7 +4348,8 @@ td {
     font-size: 0.7rem;
   }
   .settings-btn,
-  .console-btn {
+  .console-btn,
+  .charts-btn {
     width: 38px;
     height: 38px;
   }
@@ -3860,7 +4465,8 @@ td {
     gap: 6px;
   }
   .settings-btn,
-  .console-btn {
+  .console-btn,
+  .charts-btn {
     width: 36px;
     height: 36px;
     border-radius: 10px;
@@ -4141,5 +4747,16 @@ body {
   border: none !important;
   outline: none !important;
   background: #0c1222 !important;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+button:active,
+.btn:active,
+[role="button"]:active {
+  filter: brightness(0.8);
 }
 </style>

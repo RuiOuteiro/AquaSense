@@ -24,7 +24,14 @@ export default defineEventHandler(async (event) => {
     try {
       let inserted = 0
       for (const sensor of sensors) {
-        const { type, value, unit } = sensor
+        const { type, unit } = sensor
+        let { value } = sensor
+        
+        // Correcção de calibração do pH (-2.5 para compensar erro do sensor)
+        if (type === 'pH' && typeof value === 'number') {
+          value = value - 2.5
+        }
+        
         if (type && value !== undefined) {
           await connection.execute(
             'INSERT INTO leituras_sensores (id_dispositivo, tipo_sensor, valor, unidade) VALUES (?, ?, ?, ?)',
