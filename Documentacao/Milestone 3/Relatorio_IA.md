@@ -8,73 +8,54 @@ Rede Neural Multi-Output para Optimização Automática de Aquários
 
 **Versão:** 1.0.0 
 
-- [Sistema de Inteligência Artificial AquaSense](#sistema-de-inteligência-artificial-aquasense)
-  - [1. Introdução](#1-introdução)
-    - [Problema](#problema)
-    - [Solução Proposta](#solução-proposta)
-  - [2. Fundamentos Teóricos de Redes Neurais](#2-fundamentos-teóricos-de-redes-neurais)
-    - [2.1 Neurónio Artificial](#21-neurónio-artificial)
-    - [2.2 Camadas Lineares (Fully Connected)](#22-camadas-lineares-fully-connected)
-    - [2.3 Funções de Activação](#23-funções-de-activação)
-      - [2.3.1 ReLU (Rectified Linear Unit)](#231-relu-rectified-linear-unit)
-        - [Vantagens da ReLU:](#vantagens-da-relu)
-        - [Desvantagens:](#desvantagens)
-      - [2.3.2 Função Sigmoid](#232-função-sigmoid)
-        - [Uso no PhotoperiodNet:](#uso-no-photoperiodnet)
-      - [2.3.3 Comparação de Funções de Activação](#233-comparação-de-funções-de-activação)
-    - [2.4 Backpropagation e Gradiente Descendente](#24-backpropagation-e-gradiente-descendente)
-      - [Variantes do Gradient Descent](#variantes-do-gradient-descent)
-  - [3. Arquitectura do Modelo PhotoperiodNet](#3-arquitectura-do-modelo-photoperiodnet)
-    - [Detalhes das Camadas](#detalhes-das-camadas)
-    - [Dropout como Regularização](#dropout-como-regularização)
-    - [Multi-Head Output](#multi-head-output)
-  - [4. Dados e Processo de Treino](#4-dados-e-processo-de-treino)
-    - [4.1 Geração de Dados Sintéticos](#41-geração-de-dados-sintéticos)
-      - [Distribuições das Features](#distribuições-das-features)
-    - [4.2 Regras Base (Ground Truth)](#42-regras-base-ground-truth)
-    - [4.3 Normalização (StandardScaler)](#43-normalização-standardscaler)
-    - [4.4 Divisão Train/Test](#44-divisão-traintest)
-  - [5. Optimização e Treino](#5-optimização-e-treino)
-    - [5.1 Função de Perda: MSE](#51-função-de-perda-mse)
-    - [5.2 Optimizador Adam](#52-optimizador-adam)
-      - [5.2.1 Motivação e Contexto Histórico](#521-motivação-e-contexto-histórico)
-      - [5.2.2 Algoritmo Completo](#522-algoritmo-completo)
-      - [5.2.3 Fórmulas Matemáticas Detalhadas](#523-fórmulas-matemáticas-detalhadas)
-      - [5.2.4 Hiperparâmetros do Adam](#524-hiperparâmetros-do-adam)
-      - [5.2.5 Comparação com Outros Optimizadores](#525-comparação-com-outros-optimizadores)
-      - [5.2.6 Porque Usamos Adam no PhotoperiodNet](#526-porque-usamos-adam-no-photoperiodnet)
-      - [5.2.7 Implementação em PyTorch](#527-implementação-em-pytorch)
-      - [5.2.8 Variantes do Adam](#528-variantes-do-adam)
-    - [5.3 Learning Rate Scheduling](#53-learning-rate-scheduling)
-    - [5.4 Early Stopping](#54-early-stopping)
-    - [5.5 Validação Cruzada K-Fold](#55-validação-cruzada-k-fold)
-    - [Hiperparâmetros do Treino](#hiperparâmetros-do-treino)
-  - [6. Métricas de Avaliação](#6-métricas-de-avaliação)
-    - [6.1 MAE (Mean Absolute Error)](#61-mae-mean-absolute-error)
-    - [6.2 MSE (Mean Squared Error)](#62-mse-mean-squared-error)
-    - [6.3 RMSE (Root Mean Squared Error)](#63-rmse-root-mean-squared-error)
-    - [6.4 R² (Coeficiente de Determinação)](#64-r-coeficiente-de-determinação)
-    - [6.5 Accuracy por Threshold](#65-accuracy-por-threshold)
-    - [Resumo das Métricas](#resumo-das-métricas)
-  - [7. Resultados Experimentais](#7-resultados-experimentais)
-    - [7.1 Distribuição dos dados](#71-distribuição-dos-dados)
-    - [7.2 Métricas Finais](#72-métricas-finais)
-    - [Resultados do Modelo](#resultados-do-modelo)
-    - [7.3 Detalhes do Treino](#73-detalhes-do-treino)
-    - [7.4 Comparação do modelo neural vs baseline (regras)](#74-comparação-do-modelo-neural-vs-baseline-regras)
-  - [8. Conclusões](#8-conclusões)
-    - [Objectivos Alcançados](#objectivos-alcançados)
-    - [Limitações](#limitações)
-    - [Trabalho Futuro](#trabalho-futuro)
+# Índice
+   [1. Introdução](#introdução)
+   [2. Fundamentos Teóricos de Redes Neurais](#fundamentosteóricosderedesneurais)
+     [2.1 Neurónio Artificial](#21neurónioartificial)
+     [2.2 Camadas Lineares (Fully Connected)](#22camadaslinearesfullyconnected)
+     [2.3 Funções de Activação](#23funçõesdeactivação)
+     [2.4 Backpropagation e Gradiente Descendente](#24backpropagationegradientedescendente)
+   [3. Arquitectura do Modelo PhotoperiodNet](#arquitecturadomodelophotoperiodnet)
+     [Detalhes das Camadas](#detalhesdascamadas)
+     [Dropout como Regularização](#dropoutcomoregularização)
+     [MultiHead Output](#multiheadoutput)
+   [4. Dados e Processo de Treino](#dadoseprocessodetreino)
+     [4.1 Geração de Dados Sintéticos](#41geraçãodedadossintéticos)
+     [4.2 Regras Base (Ground Truth)](#42regrasbasegroundtruth)
+     [4.3 Normalização (StandardScaler)](#43normalizaçãostandardscaler)
+     [4.4 Divisão Train/Test](#44divisãotraintest)
+   [5. Optimização e Treino](#optimizaçãoetreino)
+     [5.1 Função de Perda: MSE](#51funçãodeperdamse)
+     [5.2 Optimizador Adam](#52optimizadoradam)
+     [5.3 Learning Rate Scheduling](#53learningratescheduling)
+     [5.4 Early Stopping](#54earlystopping)
+     [5.5 Validação Cruzada KFold](#55validaçãocruzadakfold)
+   [6. Métricas de Avaliação](#métricasdeavaliação)
+     [6.1 MAE (Mean Absolute Error)](#61maemeanabsoluteerror)
+     [6.2 MSE (Mean Squared Error)](#62msemeansquarederror)
+     [6.3 RMSE (Root Mean Squared Error)](#63rmserootmeansquarederror)
+     [6.4 R² (Coeficiente de Determinação)](#64rcoeficientededeterminação)
+     [6.5 Accuracy por Threshold](#65accuracyporthreshold)
+   [7. Resultados Experimentais](#resultadosexperimentais)
+     [7.1 Distribuição dos dados](#71distribuiçãodosdados)
+     [7.2 Métricas Finais](#72métricasfinais)
+     [7.3 Detalhes do Treino](#73detalhesdotreino)
+     [7.4 Comparação do modelo neural vs baseline (regras)](#74comparaçãodomodeloneuralvsbaselineregras)
+   [8. Conclusões](#conclusões)
+     [8.1 Objectivos Alcançados](#objectivosalcançados)
+     [8.2 Limitações](#limitações)
+     [8.3 Trabalho Futuro](#trabalhofuturo)
 
-## 1. Introdução
+## Introdução
 
 O módulo de IA do AquaSense foi desenvolvido para **optimizar automaticamente as condições do aquário** através da análise de dados de sensores em tempo real. O sistema recebe três entradas (turbidez, pH, temperatura) e produz três saídas accionáveis (ajuste de fotoperíodo, TPA recomendada, ajuste de alimentação).
 
+<!-- no toc -->
 ### Problema
 
 Utilizadores sem experiência enfrentam dificuldades em correlacionar múltiplos parâmetros interdependentes. A turbidez elevada pode indicar excesso de luz (algas), mas também excesso de alimentação ou necessidade de TPA. A IA resolve este problema analisando todos os parâmetros simultaneamente.
 
+<!-- no toc -->
 ### Solução Proposta
 
 Uma **rede neural multi-output** treinada com dados sintéticos baseados em regras de aquariofilia. O modelo aprende relações não-lineares entre os parâmetros e generaliza para cenários não vistos durante o treino.
@@ -91,8 +72,9 @@ Uma **rede neural multi-output** treinada com dados sintéticos baseados em regr
 | TPA | 0-100% | Troca parcial de água recomendada |
 | Alimentação | 0-100% | Percentagem da alimentação normal |
 
-## 2. Fundamentos Teóricos de Redes Neurais
+## Fundamentos Teóricos de Redes Neurais
 
+<!-- no toc -->
 ### 2.1 Neurónio Artificial
 
 O **neurónio artificial** (perceptrão) é a unidade básica das redes neurais. Inspirado no neurónio biológico, realiza uma soma ponderada das entradas, adiciona um bias e aplica uma função de activação.
@@ -107,6 +89,7 @@ O **neurónio artificial** (perceptrão) é a unidade básica das redes neurais.
 >
 > **Onde:** y = saída, xi = entradas, wi = pesos, b = bias, f = função de activação
 
+<!-- no toc -->
 ### 2.2 Camadas Lineares (Fully Connected)
 
 Uma **camada linear** (ou _dense layer_) é uma transformação afim que mapeia um vector de entrada para um vector de saída através de uma matriz de pesos W e um vector de bias b.
@@ -124,10 +107,12 @@ Uma **camada linear** (ou _dense layer_) é uma transformação afim que mapeia 
 
 **Exemplo:** A primeira camada do PhotoperiodNet é `Linear(3, 32)`, com 3×32 + 32 = **128 parâmetros**.
 
+<!-- no toc -->
 ### 2.3 Funções de Activação
 
 As funções de activação introduzem **não-linearidade**, permitindo que a rede aprenda relações complexas. Sem elas, múltiplas camadas lineares seriam equivalentes a uma única transformação linear.
 
+<!-- no toc -->
 #### 2.3.1 ReLU (Rectified Linear Unit)
 
 A função **ReLU** é a activação mais usada em camadas ocultas devido à sua simplicidade e eficácia.
@@ -158,6 +143,7 @@ A função **ReLU** é a activação mais usada em camadas ocultas devido à sua
 >
 > A derivada simples ($0$ ou $1$) evita o *vanishing gradient problem* que afecta sigmoid/tanh em redes profundas.
 
+<!-- no toc -->
 ##### Vantagens da ReLU:
 
 *   **Esparsidade:** Neurónios negativos = 0, criando representações esparsas eficientes
@@ -165,11 +151,13 @@ A função **ReLU** é a activação mais usada em camadas ocultas devido à sua
 *   **Computacionalmente eficiente:** Apenas uma comparação (vs. exponenciais na sigmoid)
 *   **Convergência 6x mais rápida** que tanh (Krizhevsky et al., 2012)
 
+<!-- no toc -->
 ##### Desvantagens:
 
 *   **Dying ReLU:** Neurónios com entrada sempre negativa "morrem" (gradiente = 0 permanente)
 *   **Não centrada em zero:** Saídas ≥ 0 podem causar zig-zagging na optimização
 
+<!-- no toc -->
 #### 2.3.2 Função Sigmoid
 
 A **sigmoid** mapeia valores para (0, 1), ideal para probabilidades ou valores normalizados.
@@ -252,7 +240,7 @@ O **backpropagation** calcula gradientes da loss em relação aos pesos, propaga
 | SGD | 1 amostra | Rápido mas ruidoso |
 | **Mini-batch** | n amostras (32) | Equilíbrio - **usado no PhotoperiodNet** |
 
-## 3. Arquitectura do Modelo PhotoperiodNet
+## Arquitectura do Modelo PhotoperiodNet
 
 
 ```mermaid
@@ -320,7 +308,7 @@ flowchart TD
 
 As três "cabeças" partilham a representação aprendida pelas camadas ocultas, mas especializam-se cada uma na sua tarefa. Isto é mais eficiente que três modelos separados e permite _transfer learning_ implícito entre tarefas relacionadas.
 
-## 4. Dados e Processo de Treino
+## Dados e Processo de Treino
 
 ### 4.1 Geração de Dados Sintéticos
 
@@ -393,7 +381,7 @@ Os labels são gerados por regras especializadas. A turbidez é o driver princip
 *   **20% Teste:** 2,000 amostras (nunca vistas durante treino)
 *   **Seed fixa:** 42 (reprodutibilidade)
 
-## 5. Optimização e Treino
+## Optimização e Treino
 
 ### 5.1 Função de Perda: MSE
 
@@ -623,7 +611,7 @@ Algoritmo: Early Stopping
 | Patience | 50  | Épocas sem melhoria antes de parar |
 | Dropout | 0.1 | Regularização leve para rede pequena |
 
-## 6. Métricas de Avaliação
+## Métricas de Avaliação
 
 ### 6.1 MAE (Mean Absolute Error)
 
@@ -707,7 +695,7 @@ Algoritmo: Early Stopping
 | **R²** | $1 - SS_{res}/SS_{tot}$ | $(-\infty, 1]$ | Maximizar ($\rightarrow 1$) |
 | **Acc@t** | % erros < t | $[0, 100]\%$ | Maximizar |
 
-## 7. Resultados Experimentais
+## Resultados Experimentais
 
 ### 7.1 Distribuição dos dados
 
@@ -754,7 +742,7 @@ Algoritmo: Early Stopping
 
 O modelo mantém boa performance mesmo em condições críticas, com accuracy superior a 96% para erros <1h em todas as faixas.
 
-## 8. Conclusões
+## Conclusões
 
 ### Objectivos Alcançados
 
