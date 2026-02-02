@@ -12,7 +12,7 @@ Rede Neural Multi-Output para Optimização Automática de Aquários
 
 ## Índice
 
-1.  [1\. Introdução](#sec1)
+1.  [1\. Introdução](#1-introdu%C3%A7%C3%A3o)
 2.  [2\. Fundamentos de Redes Neurais](#sec2)
     1.  [2.1 Neurónio Artificial](#sec2-1)
     2.  [2.2 Camadas Lineares](#sec2-2)
@@ -23,7 +23,7 @@ Rede Neural Multi-Output para Optimização Automática de Aquários
 5.  [5\. Optimização (Adam, Loss)](#sec5)
 6.  [6\. Métricas de Avaliação](#sec6)
 7.  [7\. Resultados](#sec7)
-8.  [8\. Conclusões](#sec8)
+8.  [8\. Conclusões](#8-conclus%C3%B5es)
 
 ## 1. Introdução
 
