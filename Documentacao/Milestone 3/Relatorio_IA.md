@@ -669,6 +669,8 @@ Algoritmo: Early Stopping
 
 ### 7.1 Métricas Finais
 
+![Treino feito através do notebook:](/Documentacao/Milestone%203/Ficheiros/metrics_summary.png)
+
 ### Resultados do Modelo
 
 | **MAE Fotoperíodo** | **Accuracy <1h** | **MAE TPA** |  **Acc TPA <10%** |
@@ -686,7 +688,7 @@ Algoritmo: Early Stopping
 >
 > </div>
 >
-> O modelo prevê o ajuste de fotoperíodo com erro médio de **11 minutos** (0.18h). 99.85% das previsões estão dentro de 1 hora do valor ideal. $R^2 = 0.969$ indica que o modelo explica 96.9% da variância dos dados.
+> O modelo prevê o ajuste de fotoperíodo com erro médio de **11 minutos** (0.20h). 99.8% das previsões estão dentro de 1 hora do valor ideal. $R^2 = 0.963$ indica que o modelo explica 96.3% da variância dos dados.
 
 ### 7.2 Detalhes do Treino
 
