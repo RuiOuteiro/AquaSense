@@ -485,13 +485,18 @@ O **Adam** unifica estas técnicas, sendo robusto a hiperparâmetros e eficiente
 
 #### 5.2.6 Porque Usamos Adam no PhotoperiodNet
 
-**Justificação da escolha:**
-
-*   **Convergência rápida:** Modelo pequeno (1,763 parâmetros) beneficia de optimização eficiente
-*   **Robusto a hiperparâmetros:** Valores padrão funcionam bem sem tuning extensivo
-*   **Multi-output:** Diferentes cabeças podem ter gradientes de magnitudes diferentes; Adam adapta automaticamente
-*   **Mini-batch:** Adam funciona bem com batch size pequeno (32) devido ao momentum
-*   **Standard da indústria:** Optimizador mais usado em deep learning moderno
+> [!TIP]
+> <div align="center">
+>
+> **Justificação da escolha:**
+>
+> </div>
+>
+>*   **Convergência rápida:** Modelo pequeno (1,763 parâmetros) beneficia de optimização eficiente
+>*   **Robusto a hiperparâmetros:** Valores padrão funcionam bem sem tuning extensivo
+>*   **Multi-output:** Diferentes cabeças podem ter gradientes de magnitudes diferentes; Adam adapta automaticamente
+>*   **Mini-batch:** Adam funciona bem com batch size pequeno (32) devido ao momentum
+>*   **Standard da indústria:** Optimizador mais usado em deep learning moderno
 
 #### 5.2.7 Implementação em PyTorch
 
@@ -528,12 +533,17 @@ Existem várias extensões do Adam para casos específicos:
 
 ### 5.3 Learning Rate Scheduling
 
-ReduceLROnPlateau
-
-ηnew = ηold × factor (se loss não melhora em patience épocas)
-
-**factor=0.5:** reduz LR para metade  
-**patience=20:** espera 20 épocas sem melhoria antes de reduzir
+> [!NOTE]
+> <div align="center">
+>
+> **REDUCELRONPLATEAU**
+>
+> $$\eta_{new} = \eta_{old} \times \text{factor} \text{ (se loss não melhora em } \text{patience} \text{ épocas)}$$
+> </div>
+>
+> **factor = 0.5:** reduz a taxa de aprendizagem ($\eta$) para metade
+>
+> **patience = 20:** espera 20 épocas sem melhoria antes de reduzir
 
 ### 5.4 Early Stopping
 
