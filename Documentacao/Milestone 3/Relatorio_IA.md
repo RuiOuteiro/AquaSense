@@ -8,9 +8,8 @@ Rede Neural Multi-Output para Optimização Automática de Aquários
 
 **Versão:** 1.0.0 
 
-# Índice
+**Índice**
 - [Sistema de Inteligência Artificial AquaSense](#sistema-de-inteligência-artificial-aquasense)
-- [Índice](#índice)
   - [Introdução](#introdução)
   - [Fundamentos Teóricos de Redes Neurais](#fundamentos-teóricos-de-redes-neurais)
   - [Arquitectura do Modelo PhotoperiodNet](#arquitectura-do-modelo-photoperiodnet)
