@@ -6,8 +6,6 @@ Rede Neural Multi-Output para Optimização Automática de Aquários
 
 **Data:** Fevereiro 2026
 
-**Versão:** 1.0.0 
-
 **Índice**
 - [Sistema de Inteligência Artificial AquaSense](#sistema-de-inteligência-artificial-aquasense)
   - [Introdução](#introdução)
