@@ -413,47 +413,56 @@ O **Adam** unifica estas técnicas, sendo robusto a hiperparâmetros e eficiente
 
 #### 5.2.3 Fórmulas Matemáticas Detalhadas
 
-Passo 1: Cálculo do Gradiente
-
-gt = ∇θL(θt-1) = ∂L/∂θ
-
-O gradiente gt é o vector de derivadas parciais da função de perda L em relação a cada parâmetro θ. Em mini-batch, é estimado sobre um subconjunto de dados.
-
-Passo 2: Actualização do Primeiro Momento (Média)
-
-mt = β1 · mt-1 + (1 - β1) · gt
-
-**mt:** Estimativa da média móvel exponencial do gradiente  
-**β1 = 0.9:** Taxa de decaimento (90% do valor anterior + 10% do novo gradiente)  
-**Intuição:** Funciona como "momentum" - suaviza oscilações e acelera em direcções consistentes
-
-Passo 3: Actualização do Segundo Momento (Variância)
-
-vt = β2 · vt-1 + (1 - β2) · gt²
-
-**vt:** Estimativa da média móvel exponencial do gradiente ao quadrado  
-**β2 = 0.999:** Taxa de decaimento mais lenta (memória mais longa)  
-**Intuição:** Mede a "magnitude histórica" dos gradientes para cada parâmetro
-
-Passo 4: Correcção de Bias (Bias Correction)
-
-m̂t = mt / (1 - β1t)  
-v̂t = vt / (1 - β2t)
-
-**Problema:** Como m₀ = v₀ = 0, os primeiros valores são enviesados para zero  
-**Solução:** Dividir por (1-βt) compensa este viés inicial  
-**Exemplo t=1:** m̂₁ = m₁/(1-0.9¹) = m₁/0.1 = 10·m₁ (amplia 10x)  
-**Quando t→∞:** (1-βt)→1, logo correcção desaparece
-
-Passo 5: Actualização dos Parâmetros
-
-θt = θt-1 - α · m̂t / (√v̂t + ε)
-
-**α (learning rate):** Magnitude base do passo (0.001 no PhotoperiodNet)  
-**m̂t:** Direcção do passo (média dos gradientes)  
-**√v̂t:** Escala adaptativa (normaliza pela magnitude histórica)  
-**ε = 10⁻⁸:** Previne divisão por zero  
-**Intuição:** Parâmetros com gradientes grandes historicamente recebem updates menores
+> [!NOTE]
+> <div align="center">
+>
+> **PASSO 1: CÁLCULO DO GRADIENTE**
+>
+> $$g_t = \nabla_{\theta} L(\theta_{t-1}) = \partial L / \partial \theta$$
+> </div>
+>
+> O gradiente $g_t$ é o vector de derivadas parciais da função de perda $L$.
+>
+> ---
+> <div align="center">
+>
+> **PASSO 2: ACTUALIZAÇÃO DO PRIMEIRO MOMENTO (MÉDIA)**
+>
+> $$m_t = \beta_1 \cdot m_{t-1} + (1 - \beta_1) \cdot g_t$$
+> </div>
+>
+> **$\beta_1 = 0.9$:** Suaviza oscilações e acelera em direcções consistentes (*momentum*).
+>
+> ---
+> <div align="center">
+>
+> **PASSO 3: ACTUALIZAÇÃO DO SEGUNDO MOMENTO (VARIÂNCIA)**
+>
+> $$v_t = \beta_2 \cdot v_{t-1} + (1 - \beta_2) \cdot g_t^2$$
+> </div>
+>
+> **$\beta_2 = 0.999$:** Mede a "magnitude histórica" dos gradientes para cada parâmetro.
+>
+> ---
+> <div align="center">
+> 
+> **PASSO 4: CORRECÇÃO DE BIAS (BIAS CORRECTION)**
+>
+> $$\hat{m}_t = m_t / (1 - \beta_1^t) \quad \text{e} \quad \hat{v}_t = v_t / (1 - \beta_2^t)$$
+> </div>
+>
+> Compensa o facto de $m_0$ e $v_0$ serem inicializados a zero.
+>
+> ---
+>  <div align="center">
+> 
+> **PASSO 5: ACTUALIZAÇÃO DOS PARÂMETROS**
+>
+> $$\theta_t = \theta_{t-1} - \alpha \cdot \hat{m}_t / (\sqrt{\hat{v}_t} + \epsilon)$$
+> </div>
+>
+> **$\alpha = 0.001$:** Magnitude base do passo no PhotoperiodNet.
+> **$\epsilon = 10^{-8}$:** Evita a divisão por zero.
 
 #### 5.2.4 Hiperparâmetros do Adam
 
