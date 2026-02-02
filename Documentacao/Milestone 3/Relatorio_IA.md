@@ -182,7 +182,8 @@ O **backpropagation** calcula gradientes da loss em relação aos pesos, propaga
 > <div align="center">
 >
 > **REGRA DA CADEIA**
-> $$\frac{\partial L}{\partial w} = \frac{\partial L}{\partial z} \cdot \frac{\partial z}{\partial w}$$
+>
+>  $$\frac{\partial L}{\partial w} = \frac{\partial L}{\partial z} \cdot \frac{\partial z}{\partial w}$$
 >
 > </div>
 >
@@ -192,19 +193,14 @@ O **backpropagation** calcula gradientes da loss em relação aos pesos, propaga
 > <div align="center">
 >
 > **ACTUALIZAÇÃO DE PESOS (GRADIENT DESCENT)**
-> $$w_{t+1} = w_t - \eta \cdot \frac{\partial L}{\partial w_t}$$
+>
+>  $$w_{t+1} = w_t - \eta \cdot \frac{\partial L}{\partial w_t}$$
 >
 > </div>
 >
 > **$\eta$ (eta):** *learning rate* (taxa de aprendizagem)
+>
 > Se gradiente $> 0$, diminuímos $w$. Se gradiente $< 0$, aumentamos $w$.
-
-Actualização de Pesos (Gradient Descent)
-
-wt+1 = wt - η · ∂L/∂wt
-
-**η (eta):** learning rate (taxa de aprendizagem)  
-Se gradiente > 0, diminuímos w. Se gradiente < 0, aumentamos w.
 
 #### Variantes do Gradient Descent
 
@@ -216,37 +212,37 @@ Se gradiente > 0, diminuímos w. Se gradiente < 0, aumentamos w.
 
 ## 3. Arquitectura do Modelo PhotoperiodNet
 
-**INPUT (3 features)**  
-\[Turbidez, pH, Temperatura\] - normalizados
 
-↓
+```mermaid
+flowchart TD
+    %% Node Definitions
+    INP["<b>INPUT (3 features)</b><br/>[Turbidez, pH, Temperatura] - normalizados"]
+    FC1["<b>FC1:</b> Linear(3→32) + ReLU + Dropout(10%)"]
+    FC2["<b>FC2:</b> Linear(32→32) + ReLU + Dropout(10%)"]
+    SHARED["<b>SHARED:</b> Linear(32→16) + ReLU"]
+    
+    HEAD1["<b>HEAD 1</b><br/>Ajuste<br/>-Sigmoid<br/>[-1, 0]"]
+    HEAD2["<b>HEAD 2</b><br/>TPA<br/>Sigmoid<br/>[0, 1]"]
+    HEAD3["<b>HEAD 3</b><br/>Alimentação<br/>Sigmoid<br/>[0, 1]"]
 
-**FC1:** Linear(3→32) + ReLU + Dropout(10%)
+    %% Styling
+    style INP fill:#1a2c23,stroke:#52b788,stroke-width:2px,color:#fff
+    style FC1 fill:#2c1e14,stroke:#fca311,stroke-width:2px,color:#fff
+    style FC2 fill:#2c1e14,stroke:#fca311,stroke-width:2px,color:#fff
+    style SHARED fill:#2c1e14,stroke:#fca311,stroke-width:2px,color:#fff
+    
+    style HEAD1 fill:#1a1a2e,stroke:#7209b7,stroke-width:2px,color:#fff
+    style HEAD2 fill:#1a1a2e,stroke:#7209b7,stroke-width:2px,color:#fff
+    style HEAD3 fill:#1a1a2e,stroke:#7209b7,stroke-width:2px,color:#fff
 
-↓
-
-**FC2:** Linear(32→32) + ReLU + Dropout(10%)
-
-↓
-
-**SHARED:** Linear(32→16) + ReLU
-
-↓ ↓ ↓
-
-**HEAD 1**  
-Ajuste  
-\-Sigmoid  
-\[-1, 0\]
-
-**HEAD 2**  
-TPA  
-Sigmoid  
-\[0, 1\]
-
-**HEAD 3**  
-Alimentação  
-Sigmoid  
-\[0, 1\]
+    %% Connections
+    INP --> FC1
+    FC1 --> FC2
+    FC2 --> SHARED
+    SHARED --> HEAD1
+    SHARED --> HEAD2
+    SHARED --> HEAD3
+```
 
 ### Detalhes das Camadas
 
@@ -264,13 +260,19 @@ Sigmoid
 
 ### Dropout como Regularização
 
-Dropout
-
-hdrop = m · h / (1 - p)
-
-**m:** máscara binária (Bernoulli) | **p = 0.1:** probabilidade de desactivar  
-Durante treino: 10% dos neurónios são zerados aleatoriamente  
-Durante inferência: todos os neurónios activos
+> [!NOTE]
+> <div align="center">
+>
+> **DROPOUT**
+>
+> $$h_{drop} = \frac{m \cdot h}{1 - p}$$
+>
+> </div>
+> **m:** máscara binária (Bernoulli) | **p = 0.1:** probabilidade de desactivar
+> 
+> Durante treino: 10% dos neurónios são zerados aleatoriamente
+> 
+> Durante inferência: todos os neurónios activos
 
 ### Multi-Head Output
 
@@ -284,22 +286,37 @@ O modelo foi treinado com **10.000 amostras sintéticas** geradas por regras esp
 
 #### Distribuições das Features
 
-Turbidez: Beta(2, 5) × 100
+> [!NOTE]
+> <div align="center">
+>
+> **TURBIDEZ: BETA(2, 5) × 100**
+>
+> $$f(x; \alpha=2, \beta=5) = \frac{x^{\alpha-1}(1-x)^{\beta-1}}{B(\alpha, \beta)}$$
+> </div>
+> 
+> **Média:** $2/7 \approx 28.6\%$ | **Moda:** $20\%$
+>
+> Maioria das amostras em valores baixos (água limpa) - realista para aquários bem mantidos.
 
-f(x; α=2, β=5) = xα-1(1-x)β-1 / B(α,β)
+> [!NOTE]
+> <div align="center">
+>
+> **PH: NORMAL(7.0, 0.4), TRUNCADA [6.0, 8.5]**
+>
+> $$f(x; \mu=7, \sigma=0.4) = \frac{1}{\sigma\sqrt{2\pi}} \cdot e^{-\frac{(x-\mu)^2}{2\sigma^2}}$$
+> </div>
+> 
+> Distribuição centrada no pH neutro ($7.0$), típico de água de aquário.
 
-**Média:** 2/7 ≈ 28.6% | **Moda:** 20%  
-Maioria das amostras em valores baixos (água limpa) - realista para aquários bem mantidos.
-
-pH: Normal(7.0, 0.4), truncada \[6.0, 8.5\]
-
-f(x; μ=7, σ=0.4) = (1/σ√2π) · e\-(x-μ)²/2σ²
-
-Distribuição centrada no pH neutro (7.0), típico de água de aquário.
-
-Temperatura: Normal(25.5, 2.0), truncada \[20, 31\]
-
-f(x; μ=25.5, σ=2) - temperatura típica de aquário tropical
+> [!NOTE]
+> <div align="center">
+>
+> **TEMPERATURA: NORMAL(25.5, 2.0), TRUNCADA [20, 31]**
+>
+> $$f(x; \mu=25.5, \sigma=2) \text{ - temperatura típica de aquário tropical}$$
+> </div>
+>
+> **Média:** $25.5$°C | **Desvio Padrão:** $2.0$
 
 ### 4.2 Regras Base (Ground Truth)
 
@@ -317,12 +334,16 @@ Os labels são gerados por regras especializadas. A turbidez é o driver princip
 
 ### 4.3 Normalização (StandardScaler)
 
-Z-Score Normalization
-
-xnorm = (x - μ) / σ
-
-**μ:** média do conjunto de treino | **σ:** desvio padrão  
-**Importante:** O scaler é ajustado apenas nos dados de treino e guardado em `models/scaler.pkl`
+> [!NOTE]
+> <div align="center">
+>
+> **Z-SCORE NORMALIZATION**
+>
+> $$x_{norm} = \frac{x - \mu}{\sigma}$$
+> </div>
+>
+> **$\mu$:** média do conjunto de treino | **$\sigma$:** desvio padrão
+> **Importante:** O scaler é ajustado apenas nos dados de treino e guardado em `models/scaler.pkl`
 
 ### 4.4 Divisão Train/Test
 
@@ -334,20 +355,30 @@ xnorm = (x - μ) / σ
 
 ### 5.1 Função de Perda: MSE
 
-Mean Squared Error (MSE)
-
-MSE = (1/n) Σ (yi - ŷi)²
-
-Média dos quadrados das diferenças entre valores reais (y) e previsões (ŷ).  
-Penaliza mais erros grandes devido ao quadrado.
+> [!NOTE]
+> <div align="center">
+>
+> **MEAN SQUARED ERROR (MSE)**
+>
+> $$\text{MSE} = \frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2$$
+> </div>
+>
+> Média dos quadrados das diferenças entre valores reais ($y$) e previsões ($\hat{y}$).
+> 
+> Penaliza mais erros grandes devido ao quadrado.
 
 ### 5.2 Optimizador Adam
 
 **Adam** (Adaptive Moment Estimation) é um algoritmo de optimização estocástica proposto por Kingma & Ba (2014). Combina as vantagens do **SGD com Momentum** (que acelera a convergência em direcções consistentes) e do **RMSprop** (que adapta a learning rate por parâmetro).
 
-Definição Formal: Adam
-
-Adam mantém estimativas de médias móveis exponenciais do primeiro momento (média) e do segundo momento (variância não centrada) dos gradientes, usando estas estimativas para adaptar a taxa de aprendizagem de cada parâmetro individualmente.
+> [!NOTE]
+> <div align="center">
+>
+> **Definição Formal: Adam**
+>
+> </div>
+>
+> Adam mantém estimativas de médias móveis exponenciais do primeiro momento (média) e do segundo momento (variância não centrada) dos gradientes, usando estas estimativas para adaptar a taxa de aprendizagem de cada parâmetro individualmente.
 
 #### 5.2.1 Motivação e Contexto Histórico
 
@@ -362,63 +393,76 @@ O **Adam** unifica estas técnicas, sendo robusto a hiperparâmetros e eficiente
 
 #### 5.2.2 Algoritmo Completo
 
-Algoritmo: Adam (Adaptive Moment Estimation)
-
-1.  **Entrada:** α (learning rate), β₁, β₂ (taxas de decaimento), ε (estabilidade numérica), θ₀ (parâmetros iniciais)
-2.  **Inicializar:** m₀ = 0 (1º momento), v₀ = 0 (2º momento), t = 0
-3.  **Repetir até convergência:**
-    *   t ← t + 1
-    *   gt ← ∇θL(θt-1)   _(calcular gradiente)_
-    *   mt ← β₁·mt-1 + (1-β₁)·gt   _(actualizar 1º momento)_
-    *   vt ← β₂·vt-1 + (1-β₂)·gt²   _(actualizar 2º momento)_
-    *   m̂t ← mt / (1-β₁t)   _(correcção de bias 1º momento)_
-    *   v̂t ← vt / (1-β₂t)   _(correcção de bias 2º momento)_
-    *   θt ← θt-1 - α · m̂t / (√v̂t + ε)   _(actualizar parâmetros)_
-4.  **Retornar:** θt (parâmetros optimizados)
+> [!NOTE]
+> <div align="center">
+>
+> **ALGORITMO: ADAM (ADAPTIVE MOMENT ESTIMATION)**
+> </div>
+>
+> 1. **Entrada:** $\alpha$ (*learning rate*), $\beta_1, \beta_2$ (taxas de decaimento), $\epsilon$ (estabilidade), $\theta_0$ (parâmetros iniciais)
+> 2. **Inicializar:** $m_0 = 0$ ($1º$ momento), $v_0 = 0$ ($2º$ momento), $t = 0$
+> 3. **Repetir até convergência:**
+>    * $t \leftarrow t + 1$
+>    * $g_t \leftarrow \nabla_{\theta} L(\theta_{t-1})$ (calcular gradiente)
+>    * $m_t \leftarrow \beta_1 \cdot m_{t-1} + (1 - \beta_1) \cdot g_t$ (actualizar $1º$ momento)
+>    * $v_t \leftarrow \beta_2 \cdot v_{t-1} + (1 - \beta_2) \cdot g_t^2$ (actualizar $2º$ momento)
+>    * $\hat{m}_t \leftarrow m_t / (1 - \beta_1^t)$ (correcção de bias $1º$ momento)
+>    * $\hat{v}_t \leftarrow v_t / (1 - \beta_2^t)$ (correcção de bias $2º$ momento)
+>    * $\theta_t \leftarrow \theta_{t-1} - \alpha \cdot \hat{m}_t / (\sqrt{\hat{v}_t} + \epsilon)$ (actualizar parâmetros)
+> 4. **Retornar:** $\theta_t$ (parâmetros optimizados)
 
 #### 5.2.3 Fórmulas Matemáticas Detalhadas
 
-Passo 1: Cálculo do Gradiente
-
-gt = ∇θL(θt-1) = ∂L/∂θ
-
-O gradiente gt é o vector de derivadas parciais da função de perda L em relação a cada parâmetro θ. Em mini-batch, é estimado sobre um subconjunto de dados.
-
-Passo 2: Actualização do Primeiro Momento (Média)
-
-mt = β1 · mt-1 + (1 - β1) · gt
-
-**mt:** Estimativa da média móvel exponencial do gradiente  
-**β1 = 0.9:** Taxa de decaimento (90% do valor anterior + 10% do novo gradiente)  
-**Intuição:** Funciona como "momentum" - suaviza oscilações e acelera em direcções consistentes
-
-Passo 3: Actualização do Segundo Momento (Variância)
-
-vt = β2 · vt-1 + (1 - β2) · gt²
-
-**vt:** Estimativa da média móvel exponencial do gradiente ao quadrado  
-**β2 = 0.999:** Taxa de decaimento mais lenta (memória mais longa)  
-**Intuição:** Mede a "magnitude histórica" dos gradientes para cada parâmetro
-
-Passo 4: Correcção de Bias (Bias Correction)
-
-m̂t = mt / (1 - β1t)  
-v̂t = vt / (1 - β2t)
-
-**Problema:** Como m₀ = v₀ = 0, os primeiros valores são enviesados para zero  
-**Solução:** Dividir por (1-βt) compensa este viés inicial  
-**Exemplo t=1:** m̂₁ = m₁/(1-0.9¹) = m₁/0.1 = 10·m₁ (amplia 10x)  
-**Quando t→∞:** (1-βt)→1, logo correcção desaparece
-
-Passo 5: Actualização dos Parâmetros
-
-θt = θt-1 - α · m̂t / (√v̂t + ε)
-
-**α (learning rate):** Magnitude base do passo (0.001 no PhotoperiodNet)  
-**m̂t:** Direcção do passo (média dos gradientes)  
-**√v̂t:** Escala adaptativa (normaliza pela magnitude histórica)  
-**ε = 10⁻⁸:** Previne divisão por zero  
-**Intuição:** Parâmetros com gradientes grandes historicamente recebem updates menores
+> [!NOTE]
+> <div align="center">
+>
+> **PASSO 1: CÁLCULO DO GRADIENTE**
+>
+> $$g_t = \nabla_{\theta} L(\theta_{t-1}) = \partial L / \partial \theta$$
+> </div>
+>
+> O gradiente $g_t$ é o vector de derivadas parciais da função de perda $L$.
+>
+> ---
+> <div align="center">
+>
+> **PASSO 2: ACTUALIZAÇÃO DO PRIMEIRO MOMENTO (MÉDIA)**
+>
+> $$m_t = \beta_1 \cdot m_{t-1} + (1 - \beta_1) \cdot g_t$$
+> </div>
+>
+> **$\beta_1 = 0.9$:** Suaviza oscilações e acelera em direcções consistentes (*momentum*).
+>
+> ---
+> <div align="center">
+>
+> **PASSO 3: ACTUALIZAÇÃO DO SEGUNDO MOMENTO (VARIÂNCIA)**
+>
+> $$v_t = \beta_2 \cdot v_{t-1} + (1 - \beta_2) \cdot g_t^2$$
+> </div>
+>
+> **$\beta_2 = 0.999$:** Mede a "magnitude histórica" dos gradientes para cada parâmetro.
+>
+> ---
+> <div align="center">
+> 
+> **PASSO 4: CORRECÇÃO DE BIAS (BIAS CORRECTION)**
+>
+> $$\hat{m}_t = m_t / (1 - \beta_1^t) \quad \text{e} \quad \hat{v}_t = v_t / (1 - \beta_2^t)$$
+> </div>
+>
+> Compensa o facto de $m_0$ e $v_0$ serem inicializados a zero.
+>
+> ---
+>  <div align="center">
+> 
+> **PASSO 5: ACTUALIZAÇÃO DOS PARÂMETROS**
+>
+> $$\theta_t = \theta_{t-1} - \alpha \cdot \hat{m}_t / (\sqrt{\hat{v}_t} + \epsilon)$$
+> </div>
+>
+> **$\alpha = 0.001$:** Magnitude base do passo no PhotoperiodNet.
+> **$\epsilon = 10^{-8}$:** Evita a divisão por zero.
 
 #### 5.2.4 Hiperparâmetros do Adam
 
@@ -441,13 +485,18 @@ Passo 5: Actualização dos Parâmetros
 
 #### 5.2.6 Porque Usamos Adam no PhotoperiodNet
 
-**Justificação da escolha:**
-
-*   **Convergência rápida:** Modelo pequeno (1,763 parâmetros) beneficia de optimização eficiente
-*   **Robusto a hiperparâmetros:** Valores padrão funcionam bem sem tuning extensivo
-*   **Multi-output:** Diferentes cabeças podem ter gradientes de magnitudes diferentes; Adam adapta automaticamente
-*   **Mini-batch:** Adam funciona bem com batch size pequeno (32) devido ao momentum
-*   **Standard da indústria:** Optimizador mais usado em deep learning moderno
+> [!TIP]
+> <div align="center">
+>
+> **Justificação da escolha:**
+>
+> </div>
+>
+>*   **Convergência rápida:** Modelo pequeno (1,763 parâmetros) beneficia de optimização eficiente
+>*   **Robusto a hiperparâmetros:** Valores padrão funcionam bem sem tuning extensivo
+>*   **Multi-output:** Diferentes cabeças podem ter gradientes de magnitudes diferentes; Adam adapta automaticamente
+>*   **Mini-batch:** Adam funciona bem com batch size pequeno (32) devido ao momentum
+>*   **Standard da indústria:** Optimizador mais usado em deep learning moderno
 
 #### 5.2.7 Implementação em PyTorch
 
@@ -484,33 +533,43 @@ Existem várias extensões do Adam para casos específicos:
 
 ### 5.3 Learning Rate Scheduling
 
-ReduceLROnPlateau
-
-ηnew = ηold × factor (se loss não melhora em patience épocas)
-
-**factor=0.5:** reduz LR para metade  
-**patience=20:** espera 20 épocas sem melhoria antes de reduzir
+> [!NOTE]
+> <div align="center">
+>
+> **REDUCELRONPLATEAU**
+>
+> $$\eta_{new} = \eta_{old} \times \text{factor} \text{ (se loss não melhora em } \text{patience} \text{ épocas)}$$
+> </div>
+>
+> **factor = 0.5:** reduz a taxa de aprendizagem ($\eta$) para metade
+>
+> **patience = 20:** espera 20 épocas sem melhoria antes de reduzir
 
 ### 5.4 Early Stopping
 
 O treino pára quando a **validation loss** não melhora durante 50 épocas consecutivas, prevenindo overfitting.
 
 Algoritmo: Early Stopping
-
+```
 1.  Inicializar best\_loss = ∞, patience\_counter = 0
 2.  Para cada época:
     *   Se val\_loss < best\_loss: best\_loss=val\_loss, patience\_counter=0, guardar modelo
     *   Senão: patience\_counter += 1
     *   Se patience\_counter ≥ 50: PARAR
+```
 
 ### 5.5 Validação Cruzada K-Fold
 
-K-Fold Cross Validation (K=5)
-
-Performance = (1/K) Σ metricfold\_i
-
-O dataset é dividido em 5 partes. Cada fold usa 4 partes para treino e 1 para validação.  
-Garante que o modelo generaliza bem independentemente da divisão dos dados.
+> [!NOTE]
+> <div align="center">
+>
+> **K-FOLD CROSS VALIDATION (K=5)**
+>
+> $$\text{Performance} = \frac{1}{K} \sum \text{metric}_{\text{fold}_i}$$
+> </div>
+>
+> O dataset é dividido em 5 partes. Cada fold usa 4 partes para treino e 1 para validação.
+> Garante que o modelo generaliza bem independentemente da divisão dos dados.
 
 ### Hiperparâmetros do Treino
 
@@ -526,89 +585,108 @@ Garante que o modelo generaliza bem independentemente da divisão dos dados.
 
 ### 6.1 MAE (Mean Absolute Error)
 
-Mean Absolute Error
-
-MAE = (1/n) Σ |yi - ŷi|
-
-Média dos erros absolutos. Interpretável nas unidades originais (horas, %).  
-**Vantagem:** Robusto a outliers (não penaliza erros grandes excessivamente).
+> [!NOTE]
+> <div align="center">
+>
+> **MEAN ABSOLUTE ERROR (MAE)**
+>
+> $$\text{MAE} = \frac{1}{n} \sum_{i=1}^{n} |y_i - \hat{y}_i|$$
+> </div>
+>
+> Média dos erros absolutos. Interpretável nas unidades originais (horas, %).  
+> **Vantagem:** Robusto a *outliers* (não penaliza erros grandes excessivamente).
+>
+> Interpretável nas unidades originais (horas, %).
 
 ### 6.2 MSE (Mean Squared Error)
 
-Mean Squared Error
-
-MSE = (1/n) Σ (yi - ŷi)²
-
-Média dos erros ao quadrado. Penaliza mais erros grandes.  
-Usada como função de perda durante o treino.
+> [!NOTE]
+> <div align="center">
+>
+> **MEAN SQUARED ERROR (MSE)**
+>
+> $$\text{MSE} = (1/n) \textstyle\sum (y_i - \hat{y}_i)^2$$
+> </div>
+>
+> Média dos erros ao quadrado. Penaliza mais erros grandes.
+>
+> Usada como função de perda durante o treino.
 
 ### 6.3 RMSE (Root Mean Squared Error)
 
-Root Mean Squared Error
-
-RMSE = √MSE = √\[(1/n) Σ (yi - ŷi)²\]
-
-Raiz quadrada do MSE. Mesma unidade que os dados originais.  
-Mais sensível a erros grandes que MAE.
+> [!NOTE]
+> <div align="center">
+>
+> **ROOT MEAN SQUARED ERROR (RMSE)**
+>
+> $$\text{RMSE} = \sqrt{\text{MSE}} = \sqrt{(1/n) \textstyle\sum (y_i - \hat{y}_i)^2}$$
+> </div>
+>
+> Raiz quadrada do MSE. Mesma unidade que os dados originais.
+>
+> Mais sensível a erros grandes que MAE.
 
 ### 6.4 R² (Coeficiente de Determinação)
 
-R² Score
-
-R² = 1 - SSres/SStot = 1 - \[Σ(y-ŷ)²\]/\[Σ(y-ȳ)²\]
-
-Proporção da variância explicada pelo modelo.  
-**R² = 1:** previsão perfeita | **R² = 0:** modelo ≈ média  
-**R² < 0:** modelo pior que média (problema sério)
+> [!NOTE]
+> <div align="center">
+>
+> **R² SCORE**
+>
+> $$R^2 = 1 - SS_{res}/SS_{tot} = 1 - \frac{\textstyle\sum (y-\hat{y})^2}{\textstyle\sum (y-\bar{y})^2}$$
+> </div>
+>
+> Proporção da variância explicada pelo modelo.
+> **$R^2 = 1$:** previsão perfeita | **$R^2 = 0$:** modelo $\approx$ média
+>
+> **$R^2 < 0$:** modelo pior que média (problema sério)
 
 ### 6.5 Accuracy por Threshold
 
-Accuracy@Threshold
-
-Acct = (1/n) Σ 𝟙\[|yi - ŷi| < t\] × 100%
-
-Percentagem de previsões com erro absoluto menor que threshold t.  
-**Exemplo:** Accuracy@1h = % previsões com erro < 1 hora
+> [!NOTE]
+> <div align="center">
+>
+> **ACCURACY@THRESHOLD**
+>
+> $$\text{Acc}_t = (1/n) \textstyle\sum 1[|y_i - \hat{y}_i| < t] \times 100\%$$
+> </div>                                                            
+>
+> Percentagem de previsões com erro absoluto menor que threshold t.
+>
+> **Exemplo:** Accuracy@1h = % previsões com erro < 1 hora
 
 ### Resumo das Métricas
 
 | Métrica | Fórmula | Intervalo | Objectivo |
-| --- | --- | --- | --- |
-| MAE | (1/n)Σ\|y-ŷ\| | \[0, +∞) | Minimizar |
-| MSE | (1/n)Σ(y-ŷ)² | \[0, +∞) | Minimizar |
-| RMSE | √MSE | \[0, +∞) | Minimizar |
-| R²  | 1 - SSres/SStot | (-∞, 1\] | Maximizar (→1) |
-| Acc@t | % erros < t | \[0, 100\]% | Maximizar |
+| :--- | :--- | :--- | :--- |
+| **MAE** | $(1/n)\sum|y-\hat{y}|$ | $[0, +\infty)$ | Minimizar |
+| **MSE** | $(1/n)\sum(y-\hat{y})^2$ | $[0, +\infty)$ | Minimizar |
+| **RMSE** | $\sqrt{MSE}$ | $[0, +\infty)$ | Minimizar |
+| **R²** | $1 - SS_{res}/SS_{tot}$ | $(-\infty, 1]$ | Maximizar ($\rightarrow 1$) |
+| **Acc@t** | % erros < t | $[0, 100]\%$ | Maximizar |
 
 ## 7. Resultados Experimentais
 
 ### 7.1 Métricas Finais
 
-0.18h
+### Resultados do Modelo
 
-MAE Fotoperíodo
+| **MAE Fotoperíodo** | **Accuracy <1h** | **MAE TPA** |  **Acc TPA <10%** |
+| :--- | :--- | :--- | :--- |
+| 0.20h | 99.8% | 1.93% | 96.2% |
 
-99.85%
+| **MAE Alimentação** | **Acc TPA <10%** | **R² Global** |
+| :--- | :--- | :--- |
+| 1.18% | 99.2% | 0.963 |
 
-Accuracy <1h
-
-1.79%
-
-MAE TPA
-
-99.95%
-
-Acc TPA <10%
-
-1.18%
-
-MAE Alimentação
-
-0.969
-
-R² Global
-
-**Interpretação:** O modelo prevê o ajuste de fotoperíodo com erro médio de **11 minutos** (0.18h). 99.85% das previsões estão dentro de 1 hora do valor ideal. R² = 0.969 indica que o modelo explica 96.9% da variância dos dados.
+> [!TIP]
+> <div align="left">
+>
+> **Interpretação:**
+>
+> </div>
+>
+> O modelo prevê o ajuste de fotoperíodo com erro médio de **11 minutos** (0.18h). 99.85% das previsões estão dentro de 1 hora do valor ideal. $R^2 = 0.969$ indica que o modelo explica 96.9% da variância dos dados.
 
 ### 7.2 Detalhes do Treino
 
