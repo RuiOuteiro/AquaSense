@@ -15,7 +15,6 @@ Rede Neural Multi-Output para Optimização Automática de Aquários
   - [Optimização e Treino](#optimização-e-treino)
   - [Métricas de Avaliação](#métricas-de-avaliação)
   - [Resultados Experimentais](#resultados-experimentais)
-  - [Conclusões](#conclusões)
 
 ## Introdução
 
