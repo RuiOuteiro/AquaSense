@@ -334,12 +334,16 @@ Os labels são gerados por regras especializadas. A turbidez é o driver princip
 
 ### 4.3 Normalização (StandardScaler)
 
-Z-Score Normalization
-
-xnorm = (x - μ) / σ
-
-**μ:** média do conjunto de treino | **σ:** desvio padrão  
-**Importante:** O scaler é ajustado apenas nos dados de treino e guardado em `models/scaler.pkl`
+> [!NOTE]
+> <div align="center">
+>
+> **Z-SCORE NORMALIZATION**
+>
+> $$x_{norm} = \frac{x - \mu}{\sigma}$$
+> </div>
+>
+> **$\mu$:** média do conjunto de treino | **$\sigma$:** desvio padrão
+> **Importante:** O scaler é ajustado apenas nos dados de treino e guardado em `models/scaler.pkl`
 
 ### 4.4 Divisão Train/Test
 
@@ -351,20 +355,30 @@ xnorm = (x - μ) / σ
 
 ### 5.1 Função de Perda: MSE
 
-Mean Squared Error (MSE)
-
-MSE = (1/n) Σ (yi - ŷi)²
-
-Média dos quadrados das diferenças entre valores reais (y) e previsões (ŷ).  
-Penaliza mais erros grandes devido ao quadrado.
+> [!NOTE]
+> <div align="center">
+>
+> **MEAN SQUARED ERROR (MSE)**
+>
+> $$\text{MSE} = \frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2$$
+> </div>
+>
+> Média dos quadrados das diferenças entre valores reais ($y$) e previsões ($\hat{y}$).
+> 
+> Penaliza mais erros grandes devido ao quadrado.
 
 ### 5.2 Optimizador Adam
 
 **Adam** (Adaptive Moment Estimation) é um algoritmo de optimização estocástica proposto por Kingma & Ba (2014). Combina as vantagens do **SGD com Momentum** (que acelera a convergência em direcções consistentes) e do **RMSprop** (que adapta a learning rate por parâmetro).
 
-Definição Formal: Adam
-
-Adam mantém estimativas de médias móveis exponenciais do primeiro momento (média) e do segundo momento (variância não centrada) dos gradientes, usando estas estimativas para adaptar a taxa de aprendizagem de cada parâmetro individualmente.
+> [!NOTE]
+> <div align="center">
+>
+> **Definição Formal: Adam**
+>
+> </div>
+>
+> Adam mantém estimativas de médias móveis exponenciais do primeiro momento (média) e do segundo momento (variância não centrada) dos gradientes, usando estas estimativas para adaptar a taxa de aprendizagem de cada parâmetro individualmente.
 
 #### 5.2.1 Motivação e Contexto Histórico
 
@@ -379,19 +393,23 @@ O **Adam** unifica estas técnicas, sendo robusto a hiperparâmetros e eficiente
 
 #### 5.2.2 Algoritmo Completo
 
-Algoritmo: Adam (Adaptive Moment Estimation)
-
-1.  **Entrada:** α (learning rate), β₁, β₂ (taxas de decaimento), ε (estabilidade numérica), θ₀ (parâmetros iniciais)
-2.  **Inicializar:** m₀ = 0 (1º momento), v₀ = 0 (2º momento), t = 0
-3.  **Repetir até convergência:**
-    *   t ← t + 1
-    *   gt ← ∇θL(θt-1)   _(calcular gradiente)_
-    *   mt ← β₁·mt-1 + (1-β₁)·gt   _(actualizar 1º momento)_
-    *   vt ← β₂·vt-1 + (1-β₂)·gt²   _(actualizar 2º momento)_
-    *   m̂t ← mt / (1-β₁t)   _(correcção de bias 1º momento)_
-    *   v̂t ← vt / (1-β₂t)   _(correcção de bias 2º momento)_
-    *   θt ← θt-1 - α · m̂t / (√v̂t + ε)   _(actualizar parâmetros)_
-4.  **Retornar:** θt (parâmetros optimizados)
+> [!NOTE]
+> <div align="center">
+>
+> **ALGORITMO: ADAM (ADAPTIVE MOMENT ESTIMATION)**
+> </div>
+>
+> 1. **Entrada:** $\alpha$ (*learning rate*), $\beta_1, \beta_2$ (taxas de decaimento), $\epsilon$ (estabilidade), $\theta_0$ (parâmetros iniciais)
+> 2. **Inicializar:** $m_0 = 0$ ($1º$ momento), $v_0 = 0$ ($2º$ momento), $t = 0$
+> 3. **Repetir até convergência:**
+>    * $t \leftarrow t + 1$
+>    * $g_t \leftarrow \nabla_{\theta} L(\theta_{t-1})$ (calcular gradiente)
+>    * $m_t \leftarrow \beta_1 \cdot m_{t-1} + (1 - \beta_1) \cdot g_t$ (actualizar $1º$ momento)
+>    * $v_t \leftarrow \beta_2 \cdot v_{t-1} + (1 - \beta_2) \cdot g_t^2$ (actualizar $2º$ momento)
+>    * $\hat{m}_t \leftarrow m_t / (1 - \beta_1^t)$ (correcção de bias $1º$ momento)
+>    * $\hat{v}_t \leftarrow v_t / (1 - \beta_2^t)$ (correcção de bias $2º$ momento)
+>    * $\theta_t \leftarrow \theta_{t-1} - \alpha \cdot \hat{m}_t / (\sqrt{\hat{v}_t} + \epsilon)$ (actualizar parâmetros)
+> 4. **Retornar:** $\theta_t$ (parâmetros optimizados)
 
 #### 5.2.3 Fórmulas Matemáticas Detalhadas
 
