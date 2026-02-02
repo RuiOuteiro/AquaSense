@@ -202,13 +202,6 @@ O **backpropagation** calcula gradientes da loss em relação aos pesos, propaga
 >
 > Se gradiente $> 0$, diminuímos $w$. Se gradiente $< 0$, aumentamos $w$.
 
-Actualização de Pesos (Gradient Descent)
-
-wt+1 = wt - η · ∂L/∂wt
-
-**η (eta):** learning rate (taxa de aprendizagem)  
-Se gradiente > 0, diminuímos w. Se gradiente < 0, aumentamos w.
-
 #### Variantes do Gradient Descent
 
 | Variante | Batch | Características |
@@ -219,37 +212,37 @@ Se gradiente > 0, diminuímos w. Se gradiente < 0, aumentamos w.
 
 ## 3. Arquitectura do Modelo PhotoperiodNet
 
-**INPUT (3 features)**  
-\[Turbidez, pH, Temperatura\] - normalizados
 
-↓
+```mermaid
+flowchart TD
+    %% Node Definitions
+    INP["<b>INPUT (3 features)</b><br/>[Turbidez, pH, Temperatura] - normalizados"]
+    FC1["<b>FC1:</b> Linear(3→32) + ReLU + Dropout(10%)"]
+    FC2["<b>FC2:</b> Linear(32→32) + ReLU + Dropout(10%)"]
+    SHARED["<b>SHARED:</b> Linear(32→16) + ReLU"]
+    
+    HEAD1["<b>HEAD 1</b><br/>Ajuste<br/>-Sigmoid<br/>[-1, 0]"]
+    HEAD2["<b>HEAD 2</b><br/>TPA<br/>Sigmoid<br/>[0, 1]"]
+    HEAD3["<b>HEAD 3</b><br/>Alimentação<br/>Sigmoid<br/>[0, 1]"]
 
-**FC1:** Linear(3→32) + ReLU + Dropout(10%)
+    %% Styling
+    style INP fill:#1a2c23,stroke:#52b788,stroke-width:2px,color:#fff
+    style FC1 fill:#2c1e14,stroke:#fca311,stroke-width:2px,color:#fff
+    style FC2 fill:#2c1e14,stroke:#fca311,stroke-width:2px,color:#fff
+    style SHARED fill:#2c1e14,stroke:#fca311,stroke-width:2px,color:#fff
+    
+    style HEAD1 fill:#1a1a2e,stroke:#7209b7,stroke-width:2px,color:#fff
+    style HEAD2 fill:#1a1a2e,stroke:#7209b7,stroke-width:2px,color:#fff
+    style HEAD3 fill:#1a1a2e,stroke:#7209b7,stroke-width:2px,color:#fff
 
-↓
-
-**FC2:** Linear(32→32) + ReLU + Dropout(10%)
-
-↓
-
-**SHARED:** Linear(32→16) + ReLU
-
-↓ ↓ ↓
-
-**HEAD 1**  
-Ajuste  
-\-Sigmoid  
-\[-1, 0\]
-
-**HEAD 2**  
-TPA  
-Sigmoid  
-\[0, 1\]
-
-**HEAD 3**  
-Alimentação  
-Sigmoid  
-\[0, 1\]
+    %% Connections
+    INP --> FC1
+    FC1 --> FC2
+    FC2 --> SHARED
+    SHARED --> HEAD1
+    SHARED --> HEAD2
+    SHARED --> HEAD3
+```
 
 ### Detalhes das Camadas
 
@@ -267,13 +260,19 @@ Sigmoid
 
 ### Dropout como Regularização
 
-Dropout
-
-hdrop = m · h / (1 - p)
-
-**m:** máscara binária (Bernoulli) | **p = 0.1:** probabilidade de desactivar  
-Durante treino: 10% dos neurónios são zerados aleatoriamente  
-Durante inferência: todos os neurónios activos
+> [!NOTE]
+> <div align="center">
+>
+> **DROPOUT**
+>
+> $$h_{drop} = \frac{m \cdot h}{1 - p}$$
+>
+> </div>
+> **m:** máscara binária (Bernoulli) | **p = 0.1:** probabilidade de desactivar
+> 
+> Durante treino: 10% dos neurónios são zerados aleatoriamente
+> 
+> Durante inferência: todos os neurónios activos
 
 ### Multi-Head Output
 
@@ -287,22 +286,37 @@ O modelo foi treinado com **10.000 amostras sintéticas** geradas por regras esp
 
 #### Distribuições das Features
 
-Turbidez: Beta(2, 5) × 100
+> [!NOTE]
+> <div align="center">
+>
+> **TURBIDEZ: BETA(2, 5) × 100**
+>
+> $$f(x; \alpha=2, \beta=5) = \frac{x^{\alpha-1}(1-x)^{\beta-1}}{B(\alpha, \beta)}$$
+> </div>
+> 
+> **Média:** $2/7 \approx 28.6\%$ | **Moda:** $20\%$
+>
+> Maioria das amostras em valores baixos (água limpa) - realista para aquários bem mantidos.
 
-f(x; α=2, β=5) = xα-1(1-x)β-1 / B(α,β)
+> [!NOTE]
+> <div align="center">
+>
+> **PH: NORMAL(7.0, 0.4), TRUNCADA [6.0, 8.5]**
+>
+> $$f(x; \mu=7, \sigma=0.4) = \frac{1}{\sigma\sqrt{2\pi}} \cdot e^{-\frac{(x-\mu)^2}{2\sigma^2}}$$
+> </div>
+> 
+> Distribuição centrada no pH neutro ($7.0$), típico de água de aquário.
 
-**Média:** 2/7 ≈ 28.6% | **Moda:** 20%  
-Maioria das amostras em valores baixos (água limpa) - realista para aquários bem mantidos.
-
-pH: Normal(7.0, 0.4), truncada \[6.0, 8.5\]
-
-f(x; μ=7, σ=0.4) = (1/σ√2π) · e\-(x-μ)²/2σ²
-
-Distribuição centrada no pH neutro (7.0), típico de água de aquário.
-
-Temperatura: Normal(25.5, 2.0), truncada \[20, 31\]
-
-f(x; μ=25.5, σ=2) - temperatura típica de aquário tropical
+> [!NOTE]
+> <div align="center">
+>
+> **TEMPERATURA: NORMAL(25.5, 2.0), TRUNCADA [20, 31]**
+>
+> $$f(x; \mu=25.5, \sigma=2) \text{ - temperatura típica de aquário tropical}$$
+> </div>
+>
+> **Média:** $25.5$°C | **Desvio Padrão:** $2.0$
 
 ### 4.2 Regras Base (Ground Truth)
 
