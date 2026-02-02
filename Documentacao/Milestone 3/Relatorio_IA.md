@@ -178,11 +178,26 @@ A **sigmoid** mapeia valores para (0, 1), ideal para probabilidades ou valores n
 
 O **backpropagation** calcula gradientes da loss em relação aos pesos, propagando o erro da saída para as camadas anteriores usando a regra da cadeia.
 
-Regra da Cadeia
+> [!NOTE]
+> <div align="center">
+>
+> **REGRA DA CADEIA**
+> $$\frac{\partial L}{\partial w} = \frac{\partial L}{\partial z} \cdot \frac{\partial z}{\partial w}$$
+>
+> </div>
+>
+> O gradiente de $L$ em relação a $w$ é o produto dos gradientes ao longo do caminho computacional.
 
-∂L/∂w = ∂L/∂z · ∂z/∂w
-
-O gradiente de L em relação a w é o produto dos gradientes ao longo do caminho computacional.
+> [!NOTE]
+> <div align="center">
+>
+> **ACTUALIZAÇÃO DE PESOS (GRADIENT DESCENT)**
+> $$w_{t+1} = w_t - \eta \cdot \frac{\partial L}{\partial w_t}$$
+>
+> </div>
+>
+> **$\eta$ (eta):** *learning rate* (taxa de aprendizagem)
+> Se gradiente $> 0$, diminuímos $w$. Se gradiente $< 0$, aumentamos $w$.
 
 Actualização de Pesos (Gradient Descent)
 
