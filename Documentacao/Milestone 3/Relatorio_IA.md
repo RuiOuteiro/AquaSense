@@ -550,21 +550,26 @@ Existem várias extensões do Adam para casos específicos:
 O treino pára quando a **validation loss** não melhora durante 50 épocas consecutivas, prevenindo overfitting.
 
 Algoritmo: Early Stopping
-
+```
 1.  Inicializar best\_loss = ∞, patience\_counter = 0
 2.  Para cada época:
     *   Se val\_loss < best\_loss: best\_loss=val\_loss, patience\_counter=0, guardar modelo
     *   Senão: patience\_counter += 1
     *   Se patience\_counter ≥ 50: PARAR
+```
 
 ### 5.5 Validação Cruzada K-Fold
 
-K-Fold Cross Validation (K=5)
-
-Performance = (1/K) Σ metricfold\_i
-
-O dataset é dividido em 5 partes. Cada fold usa 4 partes para treino e 1 para validação.  
-Garante que o modelo generaliza bem independentemente da divisão dos dados.
+> [!NOTE]
+> <div align="center">
+>
+> **K-FOLD CROSS VALIDATION (K=5)**
+>
+> $$\text{Performance} = \frac{1}{K} \sum \text{metric}_{\text{fold}_i}$$
+> </div>
+>
+> O dataset é dividido em 5 partes. Cada fold usa 4 partes para treino e 1 para validação.
+> Garante que o modelo generaliza bem independentemente da divisão dos dados.
 
 ### Hiperparâmetros do Treino
 
@@ -580,59 +585,85 @@ Garante que o modelo generaliza bem independentemente da divisão dos dados.
 
 ### 6.1 MAE (Mean Absolute Error)
 
-Mean Absolute Error
-
-MAE = (1/n) Σ |yi - ŷi|
-
-Média dos erros absolutos. Interpretável nas unidades originais (horas, %).  
-**Vantagem:** Robusto a outliers (não penaliza erros grandes excessivamente).
+> [!NOTE]
+> <div align="center">
+>
+> **MEAN ABSOLUTE ERROR (MAE)**
+>
+> $$\text{MAE} = \frac{1}{n} \sum_{i=1}^{n} |y_i - \hat{y}_i|$$
+> </div>
+>
+> Média dos erros absolutos. Interpretável nas unidades originais (horas, %).  
+> **Vantagem:** Robusto a *outliers* (não penaliza erros grandes excessivamente).
+>
+> Interpretável nas unidades originais (horas, %).
 
 ### 6.2 MSE (Mean Squared Error)
 
-Mean Squared Error
-
-MSE = (1/n) Σ (yi - ŷi)²
-
-Média dos erros ao quadrado. Penaliza mais erros grandes.  
-Usada como função de perda durante o treino.
+> [!NOTE]
+> <div align="center">
+>
+> **MEAN SQUARED ERROR (MSE)**
+>
+> $$\text{MSE} = (1/n) \textstyle\sum (y_i - \hat{y}_i)^2$$
+> </div>
+>
+> Média dos erros ao quadrado. Penaliza mais erros grandes.
+>
+> Usada como função de perda durante o treino.
 
 ### 6.3 RMSE (Root Mean Squared Error)
 
-Root Mean Squared Error
-
-RMSE = √MSE = √\[(1/n) Σ (yi - ŷi)²\]
-
-Raiz quadrada do MSE. Mesma unidade que os dados originais.  
-Mais sensível a erros grandes que MAE.
+> [!NOTE]
+> <div align="center">
+>
+> **ROOT MEAN SQUARED ERROR (RMSE)**
+>
+> $$\text{RMSE} = \sqrt{\text{MSE}} = \sqrt{(1/n) \textstyle\sum (y_i - \hat{y}_i)^2}$$
+> </div>
+>
+> Raiz quadrada do MSE. Mesma unidade que os dados originais.
+>
+> Mais sensível a erros grandes que MAE.
 
 ### 6.4 R² (Coeficiente de Determinação)
 
-R² Score
-
-R² = 1 - SSres/SStot = 1 - \[Σ(y-ŷ)²\]/\[Σ(y-ȳ)²\]
-
-Proporção da variância explicada pelo modelo.  
-**R² = 1:** previsão perfeita | **R² = 0:** modelo ≈ média  
-**R² < 0:** modelo pior que média (problema sério)
+> [!NOTE]
+> <div align="center">
+>
+> **R² SCORE**
+>
+> $$R^2 = 1 - SS_{res}/SS_{tot} = 1 - \frac{\textstyle\sum (y-\hat{y})^2}{\textstyle\sum (y-\bar{y})^2}$$
+> </div>
+>
+> Proporção da variância explicada pelo modelo.
+> **$R^2 = 1$:** previsão perfeita | **$R^2 = 0$:** modelo $\approx$ média
+>
+> **$R^2 < 0$:** modelo pior que média (problema sério)
 
 ### 6.5 Accuracy por Threshold
 
-Accuracy@Threshold
-
-Acct = (1/n) Σ 𝟙\[|yi - ŷi| < t\] × 100%
-
-Percentagem de previsões com erro absoluto menor que threshold t.  
-**Exemplo:** Accuracy@1h = % previsões com erro < 1 hora
+> [!NOTE]
+> <div align="center">
+>
+> **ACCURACY@THRESHOLD**
+>
+> $$\text{Acc}_t = (1/n) \textstyle\sum 1[|y_i - \hat{y}_i| < t] \times 100\%$$
+> </div>                                                            
+>
+> Percentagem de previsões com erro absoluto menor que threshold t.
+>
+> **Exemplo:** Accuracy@1h = % previsões com erro < 1 hora
 
 ### Resumo das Métricas
 
 | Métrica | Fórmula | Intervalo | Objectivo |
-| --- | --- | --- | --- |
-| MAE | (1/n)Σ\|y-ŷ\| | \[0, +∞) | Minimizar |
-| MSE | (1/n)Σ(y-ŷ)² | \[0, +∞) | Minimizar |
-| RMSE | √MSE | \[0, +∞) | Minimizar |
-| R²  | 1 - SSres/SStot | (-∞, 1\] | Maximizar (→1) |
-| Acc@t | % erros < t | \[0, 100\]% | Maximizar |
+| :--- | :--- | :--- | :--- |
+| **MAE** | $(1/n)\sum|y-\hat{y}|$ | $[0, +\infty)$ | Minimizar |
+| **MSE** | $(1/n)\sum(y-\hat{y})^2$ | $[0, +\infty)$ | Minimizar |
+| **RMSE** | $\sqrt{MSE}$ | $[0, +\infty)$ | Minimizar |
+| **R²** | $1 - SS_{res}/SS_{tot}$ | $(-\infty, 1]$ | Maximizar ($\rightarrow 1$) |
+| **Acc@t** | % erros < t | $[0, 100]\%$ | Maximizar |
 
 ## 7. Resultados Experimentais
 
