@@ -1,14 +1,13 @@
 # Sistema de Inteligência Artificial AquaSense
 
-Relatório Técnico-Académico Completo
-
 Rede Neural Multi-Output para Optimização Automática de Aquários
 
 **Autores:** Rui Outeiro, Emanuel Carvalho, Paulo Jadaugy
 
 **Data:** Fevereiro 2026
 
-**Versão:** 1.0.0- [Sistema de Inteligência Artificial AquaSense](#sistema-de-inteligência-artificial-aquasense)
+**Versão:** 1.0.0 
+
 - [Sistema de Inteligência Artificial AquaSense](#sistema-de-inteligência-artificial-aquasense)
   - [1. Introdução](#1-introdução)
     - [Problema](#problema)
