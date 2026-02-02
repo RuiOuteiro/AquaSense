@@ -713,28 +713,3 @@ Algoritmo: Early Stopping
 
 
 O modelo mantém boa performance mesmo em condições críticas, com accuracy superior a 96% para erros <1h em todas as faixas.
-
-## Conclusões
-
-### Objectivos Alcançados
-
-*   ✅ Rede neural multi-output funcional com 3 entradas e 3 saídas
-*   ✅ MAE < 0.2h para fotoperíodo, < 2% para TPA e alimentação
-*   ✅ R² > 0.96 indicando excelente capacidade preditiva
-*   ✅ API REST integrada com o dashboard AquaSense
-*   ✅ Documentação completa e código modular
-
-### Limitações
-
-*   Dados sintéticos (não validados com aquários reais)
-*   Apenas 3 sensores (poderia incluir NO₃, PO₄, O₂)
-*   Regras base são genéricas (não personalizadas por tipo de aquário)
-
-### Trabalho Futuro
-
-*   Validação com dados de aquários reais
-*   Adição de mais sensores
-*   Sistema de feedback do utilizador para refinamento contínuo
-*   Diferentes perfis para água doce, salgada, plantado
-
-**Conclusão Final:** O sistema PhotoperiodNet demonstra que redes neurais podem efectivamente aprender relações complexas entre parâmetros de aquário e fornecer sugestões úteis para manutenção, mesmo quando treinadas apenas com dados sintéticos baseados em regras especializadas.
