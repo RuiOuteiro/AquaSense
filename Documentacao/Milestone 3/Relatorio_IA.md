@@ -132,18 +132,30 @@ A função **ReLU** é a activação mais usada em camadas ocultas devido à sua
 
 A **sigmoid** mapeia valores para (0, 1), ideal para probabilidades ou valores normalizados.
 
-Função Sigmoid (Logística)
 
-σ(x) = 1 / (1 + e\-x)
-
-**Domínio:** ℝ | **Imagem:** (0, 1)  
-σ(0) = 0.5 | limx→+∞ σ(x) = 1 | limx→-∞ σ(x) = 0
-
-Derivada da Sigmoid
-
-σ'(x) = σ(x) · (1 - σ(x))
-
-Derivada máxima = 0.25 (quando x = 0). Este valor pequeno causa _vanishing gradient_ em redes profundas, por isso usamos sigmoid apenas nas saídas.
+> [!NOTE]
+> <div align="center">
+>
+> **FUNÇÃO SIGMOID (LOGÍSTICA)**
+>
+> $$\sigma(x) = \frac{1}{1 + e^{-x}}$$
+>
+>  </div>
+>
+> **Domínio:** $\mathbb{R}$ | **Imagem:** $(0, 1)$
+> $\sigma(0) = 0.5$ | $\lim_{x \to +\infty} \sigma(x) = 1$ | $\lim_{x \to -\infty} \sigma(x) = 0$
+>
+> ---
+>
+> <div align="center">
+>
+> **DERIVADA DA SIGMOID**
+>
+> $$\sigma'(x) = \sigma(x) \cdot (1 - \sigma(x))$$
+>
+> </div>
+>
+> Derivada máxima $= 0.25$ (quando $x = 0$). Este valor pequeno causa *vanishing gradient* em redes profundas, por isso usamos sigmoid apenas nas saídas.
 
 ##### Uso no PhotoperiodNet:
 
