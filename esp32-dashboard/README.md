@@ -1,6 +1,6 @@
-# AquaSense - Sistema de Monitorização de Aquário
+# AquaSense - Sistema de Monitorização e Manutenção de Aquário
 
-Dashboard para monitorização e controlo de aquário com ESP32, IA e interface web.
+Dashboard para monitorização e controlo do aquário
 
 ## Início Rápido
 
@@ -85,5 +85,5 @@ DB_NAME=esp32_data
 | Serviço | Porta |
 |---------|-------|
 | Dashboard | 3001 |
-| IA API | 5000 |
+| API IA | 5000 |
 | MySQL | 3309 |
