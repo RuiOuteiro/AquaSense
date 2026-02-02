@@ -269,7 +269,8 @@ flowchart TD
 > $$h_{drop} = \frac{m \cdot h}{1 - p}$$
 >
 > </div>
-> **m:** máscara binária (Bernoulli) | **p = 0.1:** probabilidade de desactivar
+>
+> **m:** máscara binária (Bernoulli) | **p = 0.1**: probabilidade de desactivar
 > 
 > Durante treino: 10% dos neurónios são zerados aleatoriamente
 > 
