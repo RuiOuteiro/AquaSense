@@ -143,6 +143,7 @@ A **sigmoid** mapeia valores para (0, 1), ideal para probabilidades ou valores n
 >  </div>
 >
 > **Domínio:** $\mathbb{R}$ | **Imagem:** $(0, 1)$
+>
 > $\sigma(0) = 0.5$ | $\lim_{x \to +\infty} \sigma(x) = 1$ | $\lim_{x \to -\infty} \sigma(x) = 0$
 >
 > ---
