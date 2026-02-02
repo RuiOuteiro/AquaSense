@@ -1,0 +1,21 @@
+{
+  "epochs_trained": 133,
+  "training_time_seconds": 70.99819302558899,
+  "best_val_loss": 0.0004524479794781655,
+  "test_metrics": {
+    "mse": 0.0004736948758363724,
+    "mae": 0.015019521117210388,
+    "rmse": 0.021764532520510804,
+    "r2": 0.9687816768147002,
+    "mae_photoperiod": 0.18443481624126434,
+    "accuracy_1h": 99.85000000000001,
+    "accuracy_2h": 100.0,
+    "mae_tpa": 1.7935307025909424,
+    "accuracy_tpa_5pct": 97.25,
+    "accuracy_tpa_10pct": 99.95,
+    "mae_feeding": 1.1753684282302856,
+    "accuracy_feed_10pct": 99.4,
+    "loss": 0.0004736948960926384
+  },
+  "model_params": null
+}
