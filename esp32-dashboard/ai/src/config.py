@@ -150,10 +150,7 @@ def get_expected_adjustment(
 ) -> float:
     """
     Ajuste esperado de fotoperíodo (horas <= 0).
-
-    - Base: regras de turbidez
-    - Trend: piorar rápido -> reduz mais
-    - pH/temp: se risco alto -> reduz um pouco mais (evitar algas/stress)
+    Baseado APENAS em turbidez (pH/temp não afectam).
     """
     turbidity = float(turbidity)
     trend = float(trend)
@@ -166,14 +163,7 @@ def get_expected_adjustment(
     elif trend > 5:
         adjustment -= 1
 
-    # Modulação por risco (pH/temp)
-    risk = _risk_multiplier(ph, temperature)
-    if risk >= 1.4:
-        adjustment -= 2
-    elif risk >= 1.25:
-        adjustment -= 1
-    elif risk >= 1.1:
-        adjustment -= 0.5
+    # pH/temp NÃO afectam fotoperíodo - apenas turbidez
 
     # Clamp final
     adjustment = max(-12.0, min(0.0, adjustment))
@@ -188,6 +178,7 @@ def get_expected_tpa(
 ) -> float:
     """
     Percentagem de TPA esperada (0..100).
+    Baseada APENAS em turbidez (pH/temp não afectam).
     """
     turbidity = float(turbidity)
     trend = float(trend)
@@ -200,14 +191,7 @@ def get_expected_tpa(
     elif trend > 5:
         tpa = min(100.0, tpa + 5.0)
 
-    # Modulação por risco (pH/temp)
-    risk = _risk_multiplier(ph, temperature)
-    if risk >= 1.4:
-        tpa = min(100.0, tpa + 15.0)
-    elif risk >= 1.25:
-        tpa = min(100.0, tpa + 10.0)
-    elif risk >= 1.1:
-        tpa = min(100.0, tpa + 5.0)
+    # pH/temp NÃO afectam TPA - apenas turbidez
 
     return float(max(0.0, min(100.0, tpa)))
 
@@ -220,6 +204,7 @@ def get_expected_feeding(
 ) -> float:
     """
     Percentagem de alimentação esperada (0..100).
+    Baseada APENAS em turbidez (pH/temp não afectam).
     """
     turbidity = float(turbidity)
     trend = float(trend)
@@ -232,13 +217,6 @@ def get_expected_feeding(
     elif trend > 5 and feeding > 0:
         feeding = max(0.0, feeding - 10.0)
 
-    # Modulação por risco (pH/temp): se risco alto, reduz comida
-    risk = _risk_multiplier(ph, temperature)
-    if risk >= 1.4:
-        feeding = max(0.0, feeding - 40.0)
-    elif risk >= 1.25:
-        feeding = max(0.0, feeding - 25.0)
-    elif risk >= 1.1:
-        feeding = max(0.0, feeding - 10.0)
+    # pH/temp NÃO afectam alimentação - apenas turbidez
 
     return float(max(0.0, min(100.0, feeding)))

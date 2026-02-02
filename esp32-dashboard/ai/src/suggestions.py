@@ -47,13 +47,11 @@ def get_full_suggestions(
     else:
         trend = "desconhecida"
     
-    # Intensidade sugerida
-    suggested_intensity = _calculate_intensity(
-        current_intensity, adjustment_hours, turbidity_now, severity
-    )
+    # Intensidade sugerida (baseada apenas em turbidez)
+    suggested_intensity = _calculate_intensity(current_intensity, turbidity_now)
     
-    # Luz noturna
-    nightlight_hours = _calculate_nightlight(severity, trend, suggested_photoperiod)
+    # Luz noturna/azul
+    night_light = _calculate_nightlight(turbidity_now, trend)
     
     # Descrições detalhadas
     tpa_desc = _describe_tpa(ai_tpa_pct, severity)
@@ -64,16 +62,15 @@ def get_full_suggestions(
     
     # Ações recomendadas
     actions = _generate_actions(
-        turbidity_now, ph, temperature,
+        turbidity_now, trend,
         adjustment_hours, ai_tpa_pct, ai_feeding_pct,
-        suggested_intensity, current_intensity,
-        nightlight_hours, severity
+        tpa_desc, night_light, ph, temperature
     )
     
     return {
         "fotoperiodo_sugerido": round(suggested_photoperiod, 1),
+        "ajuste_horas": round(adjustment_hours, 1),
         "intensidade_sugerida": suggested_intensity,
-        "luz_noturna_horas": round(nightlight_hours, 1),
         
         "tpa": {
             "percentagem": round(ai_tpa_pct, 0),
@@ -84,6 +81,8 @@ def get_full_suggestions(
             "percentagem": round(ai_feeding_pct, 0),
             "descricao": feeding_desc
         },
+        
+        "luz_noturna": night_light,
         
         "severidade": severity,
         "tendencia": trend,
@@ -156,45 +155,69 @@ def _calculate_trend(turbidity_24h: float, turbidity_now: float) -> str:
 
 def _calculate_intensity(
     current_intensity: int,
-    adjustment_hours: float,
-    turbidity: float,
-    severity: str
+    turbidity: float
 ) -> int:
-    """Calcula intensidade sugerida."""
-    if severity == "critica":
-        return 30
-    elif severity == "alta":
-        return 50
-    elif turbidity >= 60:
-        return max(30, current_intensity - 30)
-    elif adjustment_hours <= -6:
-        return max(40, current_intensity - 25)
-    elif adjustment_hours <= -4:
-        return max(60, current_intensity - 15)
-    elif adjustment_hours <= -2:
-        return max(70, current_intensity - 10)
-    else:
-        return current_intensity
+    """
+    Calcula intensidade sugerida baseada APENAS na turbidez.
+    (Lógica do ficheiro antigo)
+    """
+    if turbidity > 90:
+        return min(current_intensity, 20)
+    elif turbidity > 80:
+        return min(current_intensity, 30)
+    elif turbidity > 70:
+        return min(current_intensity, 40)
+    elif turbidity > 60:
+        return min(current_intensity, 50)
+    elif turbidity > 50:
+        return min(current_intensity, 70)
+    elif turbidity > 40:
+        return min(current_intensity, 80)
+    return current_intensity
 
 
-def _calculate_nightlight(severity: str, trend: str, photoperiod: float) -> float:
-    """Calcula horas de luz noturna."""
-    # Se fotoperíodo muito baixo, luz noturna ajuda
-    if photoperiod <= 4:
-        if severity == "critica" and trend in ["descida", "descida_rapida"]:
-            return 3.0
-        elif severity == "alta":
-            return 2.0
-        else:
-            return 1.0
-    
-    # Transições
-    if severity == "critica" and trend in ["descida", "descida_rapida"]:
-        return 2.0
-    elif severity == "alta" and trend == "descida_rapida":
-        return 1.0
-    
-    return 0.0
+def _calculate_nightlight(turbidity: float, trend: str) -> dict:
+    """
+    Gera sugestões para a luz noturna (azul).
+    Baseado na turbidez actual e tendência.
+    """
+    if turbidity > 90:
+        return {
+            "accao": "desligar",
+            "razao": "Desligar luz azul completamente - situação crítica de algas",
+            "forcar": True
+        }
+    elif turbidity > 80:
+        return {
+            "accao": "desligar",
+            "razao": "Desligar luz azul para reduzir crescimento de algas",
+            "forcar": False
+        }
+    elif turbidity > 70:
+        return {
+            "accao": "reduzir",
+            "periodo_max": 4,
+            "razao": "Reduzir período da luz azul para máximo 4h",
+            "forcar": False
+        }
+    elif turbidity > 60:
+        return {
+            "accao": "reduzir",
+            "periodo_max": 6,
+            "razao": "Limitar luz azul a 6h por noite",
+            "forcar": False
+        }
+    elif turbidity > 40:
+        return {
+            "accao": "monitorizar",
+            "razao": "Monitorizar - considerar reduzir se piorar",
+            "forcar": False
+        }
+    return {
+        "accao": "manter",
+        "razao": "Luz azul pode manter configuração normal",
+        "forcar": False
+    }
 
 
 def _describe_tpa(tpa_pct: float, severity: str) -> str:
@@ -271,71 +294,94 @@ def _generate_reason(
 
 
 def _generate_actions(
-    turbidity: float, ph: Optional[float], temp: Optional[float],
+    turbidity: float, trend: str,
     adjustment: float, tpa_pct: float, feeding_pct: float,
-    suggested_intensity: int, current_intensity: int,
-    nightlight: float, severity: str
+    tpa_desc: str, night_light: dict,
+    ph: Optional[float] = None, temperature: Optional[float] = None
 ) -> list:
-    """Gera lista de ações recomendadas."""
+    """
+    Gera lista de ações recomendadas.
+    
+    Tipos de sugestões:
+    - TPA (Troca Parcial de Água)
+    - Alimentação
+    - Fotoperíodo
+    - Luz azul/noturna
+    - Alertas pH/temperatura
+    """
     actions = []
+    nl_action = night_light.get("accao", "manter")
     
-    # TPA
-    if tpa_pct >= 70:
-        actions.append(f"Fazer TPA URGENTE de {tpa_pct:.0f}% nas próximas 12-24h")
-    elif tpa_pct >= 50:
-        actions.append(f"Fazer TPA de {tpa_pct:.0f}% nas próximas 24-48h")
-    elif tpa_pct >= 30:
-        actions.append(f"Fazer TPA de {tpa_pct:.0f}% esta semana")
-    elif tpa_pct >= 20:
-        actions.append(f"TPA preventiva de {tpa_pct:.0f}%")
+    # Ações por nível de turbidez (como no ficheiro antigo)
+    if turbidity > 90:
+        actions = [
+            tpa_desc,
+            "Suspender alimentação por 3+ dias",
+            "Reduzir fotoperíodo para mínimo (2-4h)",
+            "DESLIGAR luz azul completamente",
+            "Verificar filtração e aumentar oxigenação"
+        ]
+    elif turbidity > 80:
+        actions = [
+            tpa_desc,
+            "Suspender alimentação por 2 dias",
+            "Reduzir fotoperíodo para 4h",
+            "Desligar luz azul" if nl_action == "desligar" else "Reduzir luz azul"
+        ]
+    elif turbidity > 70:
+        actions = [
+            tpa_desc,
+            "Suspender alimentação por 2 dias",
+            "Reduzir fotoperíodo para 4-6h",
+            night_light.get("razao", "")
+        ]
+    elif turbidity > 60:
+        actions = [
+            tpa_desc,
+            "Reduzir alimentação para 50%",
+            "Reduzir fotoperíodo",
+            night_light.get("razao", "")
+        ]
+    elif turbidity > 40:
+        actions = [
+            tpa_desc,
+            "Reduzir ligeiramente alimentação",
+            "Ajustar fotoperíodo preventivamente"
+        ]
+    elif trend == "subida_rapida":
+        actions = [
+            "Monitorizar evolução",
+            "Considerar TPA preventiva",
+            "Reduzir alimentação"
+        ]
+    elif trend == "subida":
+        actions = ["Monitorizar nos próximos dias"]
+    else:
+        actions = ["Manter rotina actual"]
     
-    # Alimentação
-    if feeding_pct == 0:
-        actions.append("SUSPENDER alimentação completamente")
-    elif feeding_pct < 50:
-        actions.append(f"Reduzir alimentação para {feeding_pct:.0f}%")
-    elif feeding_pct < 100:
-        actions.append(f"Alimentar a {feeding_pct:.0f}% do normal")
-    
-    # Fotoperíodo
-    if abs(adjustment) >= 6:
-        actions.append(f"Reduzir fotoperíodo em {abs(adjustment):.0f}h")
-    elif abs(adjustment) >= 2:
-        actions.append(f"Ajustar fotoperíodo em {adjustment:.0f}h")
-    
-    # Intensidade
-    if suggested_intensity != current_intensity:
-        diff = suggested_intensity - current_intensity
-        if diff < -20:
-            actions.append(f"Reduzir intensidade para {suggested_intensity}%")
-        elif diff > 20:
-            actions.append(f"Aumentar intensidade para {suggested_intensity}%")
-    
-    # Luz noturna
-    if nightlight > 0:
-        actions.append(f"Ativar luz noturna por {nightlight:.1f}h")
-    
-    # Alertas pH/temp
+    # Adicionar alertas de pH
     if ph is not None:
-        if ph < 6.2 or ph > 8.0:
-            actions.append(f"pH CRÍTICO ({ph:.2f}) - verificar imediatamente")
-        elif ph < 6.5 or ph > 7.8:
-            actions.append(f"pH fora do ideal ({ph:.2f}) - monitorizar")
+        if ph > 8.5:
+            actions.append(f"pH ALTO ({ph:.1f}) - testar KH, verificar CO2")
+        elif ph > 8.0:
+            actions.append(f"pH elevado ({ph:.1f}) - testar KH/GH, monitorizar")
+        elif ph < 6.0:
+            actions.append(f"pH BAIXO ({ph:.1f}) - verificar injecção CO2, testar KH")
+        elif ph < 6.5:
+            actions.append(f"pH baixo ({ph:.1f}) - verificar CO2, monitorizar")
     
-    if temp is not None:
-        if temp < 20.0 or temp > 30.0:
-            actions.append(f"Temperatura CRÍTICA ({temp:.1f}°C) - ajustar urgente")
-        elif temp < 22.0 or temp > 28.5:
-            actions.append(f"Temperatura elevada ({temp:.1f}°C) - verificar")
+    # Adicionar alertas de temperatura
+    if temperature is not None:
+        if temperature > 30:
+            actions.append(f"TEMP ALTA ({temperature:.0f}°C) - aumentar circulação, reduzir luz")
+        elif temperature > 28:
+            actions.append(f"Temperatura elevada ({temperature:.0f}°C) - monitorizar")
+        elif temperature < 20:
+            actions.append(f"TEMP BAIXA ({temperature:.0f}°C) - verificar aquecedor")
+        elif temperature < 22:
+            actions.append(f"Temperatura baixa ({temperature:.0f}°C) - monitorizar")
     
-    # Manutenção geral
-    if severity == "critica":
-        actions.append("Verificar filtração e limpeza geral do sistema")
-        actions.append("Testar parâmetros completos (NO3, PO4, GH, KH)")
-    elif severity == "alta":
-        actions.append("Verificar e limpar filtro")
-    
-    if not actions:
-        actions.append("Manter configurações actuais")
+    # Remover ações vazias
+    actions = [a for a in actions if a]
     
     return actions
