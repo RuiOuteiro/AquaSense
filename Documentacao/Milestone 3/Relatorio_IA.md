@@ -669,31 +669,24 @@ Algoritmo: Early Stopping
 
 ### 7.1 Métricas Finais
 
-0.18h
+### Resultados do Modelo
 
-MAE Fotoperíodo
+| **MAE Fotoperíodo** | **Accuracy <1h** | **MAE TPA** |  **Acc TPA <10%** |
+| :--- | :--- | :--- | :--- |
+| 0.20h | 99.8% | 1.93% | 96.2% |
 
-99.85%
+| **MAE Alimentação** | **Acc TPA <10%** | **R² Global** |
+| :--- | :--- | :--- |
+| 1.18% | 99.2% | 0.963 |
 
-Accuracy <1h
-
-1.79%
-
-MAE TPA
-
-99.95%
-
-Acc TPA <10%
-
-1.18%
-
-MAE Alimentação
-
-0.969
-
-R² Global
-
-**Interpretação:** O modelo prevê o ajuste de fotoperíodo com erro médio de **11 minutos** (0.18h). 99.85% das previsões estão dentro de 1 hora do valor ideal. R² = 0.969 indica que o modelo explica 96.9% da variância dos dados.
+> [!TIP]
+> <div align="left">
+>
+> **Interpretação:**
+>
+> </div>
+>
+> O modelo prevê o ajuste de fotoperíodo com erro médio de **11 minutos** (0.18h). 99.85% das previsões estão dentro de 1 hora do valor ideal. $R^2 = 0.969$ indica que o modelo explica 96.9% da variância dos dados.
 
 ### 7.2 Detalhes do Treino
 
