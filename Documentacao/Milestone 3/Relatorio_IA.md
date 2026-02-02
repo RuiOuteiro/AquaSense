@@ -80,11 +80,6 @@ Uma **camada linear** (ou _dense layer_) é uma transformação afim que mapeia 
 > **Onde:** z ∈ ℝm = saída, W ∈ ℝm×n = matriz de pesos, x ∈ ℝn = entrada, b ∈ ℝm = bias  
 > **Parâmetros treináveis:** m × n + m = m(n + 1)
 
-
-
-
-
-
 **Exemplo:** A primeira camada do PhotoperiodNet é `Linear(3, 32)`, com 3×32 + 32 = **128 parâmetros**.
 
 ### 2.3 Funções de Activação
@@ -95,18 +90,31 @@ As funções de activação introduzem **não-linearidade**, permitindo que a re
 
 A função **ReLU** é a activação mais usada em camadas ocultas devido à sua simplicidade e eficácia.
 
-Função ReLU
+> [!NOTE]
+> <div align="center">
+>
+> **FUNÇÃO RELU**
+>
+> $$\text{ReLU}(x) = \max(0, x) = \begin{cases} x, & \text{se } x > 0 \\ 0, & \text{se } x \leq 0 \end{cases}$$
+>
+> </div>
+>
+> **Domínio:** $\mathbb{R}$ | **Imagem:** $[0, +\infty)$
+>
+> **Derivada:** $f'(x) = 1$ se $x > 0$, $f'(x) = 0$ se $x \leq 0$
 
-ReLU(x) = max(0, x) = { x, se x > 0; 0, se x ≤ 0 }
 
-**Domínio:** ℝ | **Imagem:** \[0, +∞)  
-**Derivada:** f'(x) = 1 se x > 0, f'(x) = 0 se x ≤ 0
-
-Derivada da ReLU
-
-d/dx ReLU(x) = { 1, se x > 0; 0, se x ≤ 0 }
-
-A derivada simples (0 ou 1) evita o _vanishing gradient problem_ que afecta sigmoid/tanh em redes profundas.
+> [!NOTE]
+> <div align="center">
+>
+>
+> **DERIVADA DA RELU**
+>
+> $$\frac{d}{dx} \text{ReLU}(x) = \begin{cases} 1, & \text{se } x > 0 \\ 0, & \text{se } x \leq 0 \end{cases}$$
+> 
+> </div>
+>
+> A derivada simples ($0$ ou $1$) evita o *vanishing gradient problem* que afecta sigmoid/tanh em redes profundas.
 
 ##### Vantagens da ReLU:
 
