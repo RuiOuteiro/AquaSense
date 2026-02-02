@@ -667,7 +667,11 @@ Algoritmo: Early Stopping
 
 ## 7. Resultados Experimentais
 
-### 7.1 Métricas Finais
+### 7.1 Distribuição dos dados
+
+![Distribuição dos dados executando através do notebook:](/Documentacao/Milestone%203/Ficheiros/data_distribution.png)
+
+### 7.2 Métricas Finais
 
 ![Treino feito através do notebook:](/Documentacao/Milestone%203/Ficheiros/metrics_summary.png)
 
@@ -690,25 +694,21 @@ Algoritmo: Early Stopping
 >
 > O modelo prevê o ajuste de fotoperíodo com erro médio de **11 minutos** (0.20h). 99.8% das previsões estão dentro de 1 hora do valor ideal. $R^2 = 0.963$ indica que o modelo explica 96.3% da variância dos dados.
 
-### 7.2 Detalhes do Treino
+### 7.3 Detalhes do Treino
+
+![Curva de treino do modelo:](/Documentacao/Milestone%203/Ficheiros/training_curves.png)
 
 | Métrica | Valor |
 | --- | --- |
-| Épocas treinadas | 133 (early stopping) |
-| Tempo de treino | 71 segundos |
-| Melhor Val Loss | 0.000452 |
-| Test MSE | 0.000474 |
-| Parâmetros treináveis | 1,763 |
+| Épocas treinadas | 139 (early stopping) |
+| Tempo de treino | 76,3 segundos |
+| Melhor Val Loss | 0,0005 |
+| Test MSE | 0.0006 |
 
-### 7.3 Análise por Faixa de Turbidez
+### 7.4 Comparação do modelo neural vs baseline (regras)
 
-| Faixa | MAE | Acc <1h | Acc <2h |
-| --- | --- | --- | --- |
-| Limpa (0-20%) | 0.15h | 99.9% | 100% |
-| Baixa (20-40%) | 0.22h | 99.5% | 100% |
-| Moderada (40-60%) | 0.28h | 98.9% | 99.8% |
-| Alta (60-80%) | 0.35h | 97.5% | 99.5% |
-| Crítica (80-100%) | 0.42h | 96.0% | 99.0% |
+![Comparação feita através do notebook:](/Documentacao/Milestone%203/Ficheiros/model_comparison.png)
+
 
 O modelo mantém boa performance mesmo em condições críticas, com accuracy superior a 96% para erros <1h em todas as faixas.
 
