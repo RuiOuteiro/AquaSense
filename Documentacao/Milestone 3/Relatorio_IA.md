@@ -736,9 +736,3 @@ O modelo mantém boa performance mesmo em condições críticas, com accuracy su
 *   Diferentes perfis para água doce, salgada, plantado
 
 **Conclusão Final:** O sistema PhotoperiodNet demonstra que redes neurais podem efectivamente aprender relações complexas entre parâmetros de aquário e fornecer sugestões úteis para manutenção, mesmo quando treinadas apenas com dados sintéticos baseados em regras especializadas.
-
-**AquaSense - Sistema de IA para Optimização de Aquários**
-
-Relatório Académico Completo | Versão 1.0.0 | Fevereiro 2026
-
-Autores: Rui Outeiro, Emanuel Carvalho, Paulo Jadaugy
