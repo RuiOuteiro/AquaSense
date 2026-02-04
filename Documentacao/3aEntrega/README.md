@@ -1,4 +1,4 @@
-# Sistema de controlo de aquários - AquaSense
+# Sistema para controlo de qualidade de um aquário - AquaSense
 
 "PROPÓSITO"
 
