@@ -19,11 +19,16 @@
 
 ## Identificação do Problema
 
-Em muitos aquários, não existe um sistema acessível e autónomo que permita acompanhar a qualidade da água em tempo real, seja do trabalho ou de outro pais, nomeadamente parâmetros como pH, turbidez e temperatura.
-Devido a ausência esta monotorização compromete o equilíbrio do ecossistema aquático e afeta a saúde dos organismos vivos e a deteção precoce de situações críticas.
+Uma vez que não existe no mercado um sistema completo que permita acompanhar a qualidade da água em tempo real remotamente, nomeadamente parâmetros como pH, turbidez e temperatura e condições ambientais ao redor do aquário como temperatura e humidade.
 
-As soluções atualmente disponíveis no mercado são limitadas, pouco integradas e sem capacidade de analise inteligente AI dos dados recolhidos e extremamente caras.
-Devido a estas situações torna-se relevante desenvolver uma solução inteligente, acessível e inovadora que seja capaz de recolher dados, processar e analisar os dados da agua em tempo real e que recorre a inteligência artificial para tomar decisões emitir alertas ajudar na manutenção dos aquários 
+
+Além disso, na aquariofilia, é preciso disciplina na manutenção dos aquários, pelo que podem existir momentos de desleixe porque requer muito trabalho. O objectivo aqui é automatizar parte desse trabalho como a monitorização de alguns dos parametros, a iluminação automática, etc.
+
+
+As soluções atualmente disponíveis no mercado são limitadas, e não têm a capacidade de analise via Inteligência Artificial dos dados recolhidos para decisões operacionais. Além disso as poucas e limitadas ferramentas que existem são extremamente caras.
+
+
+Devido a estas situações torna-se relevante desenvolver uma solução inteligente, acessível e inovadora que seja capaz de recolher dados, processar e analisar os dados da água em tempo real e que recorre a inteligência artificial para tomar decisões e emitir alertas para ajudar na manutenção dos aquários.
 
 ## Identificação de Requisitos
 
