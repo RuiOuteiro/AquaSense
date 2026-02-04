@@ -59,7 +59,7 @@ graph TD
     SA <== "DADOS / COMANDOS" ==> ESP32
     ESP32 ==>|DADOS| WF
     WF <== "DADOS / COMANDOS" ==> SB
-    SB ==>|DADOS| DW
+    SB <== "DADOS / COMANDOS" ==> DW
 
     %% Styling
     style SA fill:#7d94f5,stroke:#333,stroke-width:1px
