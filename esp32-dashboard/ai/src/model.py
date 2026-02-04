@@ -28,12 +28,26 @@ from .config import (
 
 class PhotoperiodNet(nn.Module):
     """
-    Rede neural multi-output.
+    Rede neural multi-output para sistema AquaSense.
+
+    Arquitectura:
+        - Feature extractor: 2 camadas fully connected com ReLU e Dropout
+        - Shared layer: camada partilhada para os 3 outputs
+        - 3 heads independentes: ajuste, TPA, alimentação
 
     Inputs (3):
-      [turbidez, pH, temperatura]
+        [turbidez, pH, temperatura] - normalizados pelo StandardScaler
+    
     Outputs (3) normalizados:
-      [ajuste/12, tpa/100, feeding/100]
+        [ajuste/12, tpa/100, feeding/100]
+        - ajuste: [-1, 0] -> multiplicar por 12 para horas
+        - tpa: [0, 1] -> multiplicar por 100 para %
+        - feeding: [0, 1] -> multiplicar por 100 para %
+
+    Exemplo de uso:
+        model = PhotoperiodNet()
+        model.to(device)
+        output = model(input_tensor)  # (batch, 3)
     """
 
     def __init__(self, input_dim: int = INPUT_DIM, hidden_dim: int = HIDDEN_DIM, output_dim: int = OUTPUT_DIM):
@@ -90,6 +104,43 @@ class PhotoperiodNet(nn.Module):
 
         out = torch.cat([adj, tpa, feed], dim=1)  # (batch, 3)
         return out
+
+    def count_parameters(self) -> int:
+        """
+        Conta o número total de parâmetros treináveis.
+        
+        Returns:
+            int: Número de parâmetros treináveis
+        """
+        return sum(p.numel() for p in self.parameters() if p.requires_grad)
+
+    def summary(self) -> str:
+        """
+        Gera resumo da arquitectura do modelo (compatível com PyTorch).
+        
+        Returns:
+            str: Resumo formatado do modelo
+        """
+        lines = [
+            "=" * 60,
+            "PhotoperiodNet - Resumo do Modelo",
+            "=" * 60,
+            f"Parâmetros treináveis: {self.count_parameters():,}",
+            "",
+            "Arquitectura:",
+            "-" * 40,
+        ]
+        
+        for name, module in self.named_children():
+            if isinstance(module, nn.Sequential):
+                lines.append(f"  {name}:")
+                for i, layer in enumerate(module):
+                    lines.append(f"    [{i}] {layer}")
+            else:
+                lines.append(f"  {name}: {module}")
+        
+        lines.append("=" * 60)
+        return "\n".join(lines)
 
 
 # Mantém compatibilidade com o teu inference.py (que estava a instanciar AquaSenseNet)

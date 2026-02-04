@@ -1,21 +1,11 @@
 {
-  "epochs_trained": 139,
-  "training_time_seconds": 76.26546859741211,
-  "best_val_loss": 0.000512184469262138,
+  "source": "synthetic",
+  "n_samples": 10000,
+  "epochs_trained": 242,
+  "best_val_loss": 0.00044366627524141224,
   "test_metrics": {
-    "mse": 0.0005548663320951164,
-    "mae": 0.015968527644872665,
-    "rmse": 0.02355560086465884,
-    "r2": 0.9634321630747561,
-    "mae_photoperiod": 0.2022993564605713,
-    "accuracy_1h": 99.75,
-    "accuracy_2h": 100.0,
-    "mae_tpa": 1.9269574880599976,
-    "accuracy_tpa_5pct": 96.2,
-    "accuracy_tpa_10pct": 100.0,
-    "mae_feeding": 1.1777729988098145,
-    "accuracy_feed_10pct": 99.15,
-    "loss": 0.0005548663453664631
-  },
-  "model_params": null
+    "photoperiod_mae": 0.17716899514198303,
+    "tpa_mae": 1.8803963661193848,
+    "feeding_mae": 1.0744750499725342
+  }
 }

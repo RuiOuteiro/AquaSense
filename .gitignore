@@ -25,3 +25,6 @@ logs
 esp32-dashboard/aquasense/config.h
 esp32-dashboard/aquasense/config.h
 /esp32-dashboard/ai/src/__pycache__
+/esp32-dashboard/ai/src/__pycache__
+*.pyc
+esp32-dashboard/ai/src/__pycache__/config.cpython-310.pyc

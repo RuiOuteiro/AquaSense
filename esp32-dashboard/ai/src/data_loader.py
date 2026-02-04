@@ -1,21 +1,133 @@
 """
 Carregamento e preparação de dados para treino do modelo AquaSense.
 
-Gera dataset sintético baseado em regras (turbidez + pH + temperatura)
-e prepara para treino com normalização adequada.
+Carrega dados reais da base de dados MySQL quando disponíveis,
+com fallback para dados sintéticos baseados em regras.
 """
 import numpy as np
 import pickle
-from typing import Tuple
+from typing import Tuple, Optional
 from pathlib import Path
 import torch
 from torch.utils.data import DataLoader, TensorDataset
 
 from .config import (
-    RANDOM_SEED, TEST_SIZE, BATCH_SIZE, DEVICE,
+    RANDOM_SEED, TEST_SIZE, BATCH_SIZE, DEVICE, DB_CONFIG,
     get_expected_adjustment, get_expected_tpa, get_expected_feeding,
     SCALER_PATH
 )
+
+# Tentar importar mysql connector
+try:
+    import mysql.connector
+    MYSQL_AVAILABLE = True
+except ImportError:
+    MYSQL_AVAILABLE = False
+    print("[!] mysql-connector-python não instalado. Usar: pip install mysql-connector-python")
+
+
+def load_data_from_db(min_samples: int = 100) -> Optional[Tuple[np.ndarray, np.ndarray]]:
+    """
+    Carrega dados reais da base de dados MySQL.
+    
+    Agrupa leituras por timestamp (±5 min) para obter tuplos
+    (turbidez, pH, temperatura) simultâneos.
+    
+    Args:
+        min_samples: Número mínimo de amostras para usar dados reais
+    
+    Returns:
+        (X, y) se sucesso, None se falhar ou dados insuficientes
+    """
+    if not MYSQL_AVAILABLE:
+        print("[!] MySQL não disponível, usando dados sintéticos")
+        return None
+    
+    try:
+        conn = mysql.connector.connect(
+            host=DB_CONFIG["host"],
+            port=DB_CONFIG["port"],
+            user=DB_CONFIG["user"],
+            password=DB_CONFIG["password"],
+            database=DB_CONFIG["database"]
+        )
+        cursor = conn.cursor(dictionary=True)
+        
+        # Query para obter leituras agrupadas por janela temporal (1 min)
+        # Agrupa turbidity, pH e temperature do mesmo período
+        # NOTA: A BD pode ter nomes em PT ou EN (temperatura/temperature, turbidez/turbidity)
+        #       Usamos COALESCE para aceitar ambos os formatos
+        query = """
+        SELECT 
+            DATE_FORMAT(data_hora, '%Y-%m-%d %H:%i') as time_window,
+            MAX(CASE WHEN tipo_sensor IN ('turbidity', 'turbidez') THEN valor END) as turbidez,
+            MAX(CASE WHEN tipo_sensor IN ('pH', 'ph') THEN valor END) as ph,
+            MAX(CASE WHEN tipo_sensor IN ('temperature', 'temperatura') THEN valor END) as temperatura
+        FROM leituras_sensores
+        WHERE tipo_sensor IN ('turbidity', 'turbidez', 'pH', 'ph', 'temperature', 'temperatura')
+        GROUP BY time_window
+        HAVING turbidez IS NOT NULL 
+           AND ph IS NOT NULL 
+           AND temperatura IS NOT NULL
+        ORDER BY time_window DESC
+        LIMIT 50000
+        """
+        
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        
+        if len(rows) < min_samples:
+            print(f"[!] Dados insuficientes na BD: {len(rows)} amostras (mínimo: {min_samples})")
+            return None
+        
+        # Converter para arrays numpy
+        turbidity = np.array([float(r['turbidez']) for r in rows], dtype=np.float32)
+        ph = np.array([float(r['ph']) for r in rows], dtype=np.float32)
+        temperature = np.array([float(r['temperatura']) for r in rows], dtype=np.float32)
+        
+        X = np.column_stack([turbidity, ph, temperature])
+        
+        # Gerar labels usando as regras existentes
+        n_samples = len(rows)
+        y = np.zeros((n_samples, 3), dtype=np.float32)
+        
+        for i in range(n_samples):
+            adj = get_expected_adjustment(
+                turbidity=turbidity[i],
+                ph=ph[i],
+                temperature=temperature[i]
+            )
+            tpa = get_expected_tpa(
+                turbidity=turbidity[i],
+                ph=ph[i],
+                temperature=temperature[i]
+            )
+            feed = get_expected_feeding(
+                turbidity=turbidity[i],
+                ph=ph[i],
+                temperature=temperature[i]
+            )
+            
+            # Normalizar labels
+            y[i, 0] = adj / 12.0    # [-12, 0] -> [-1, 0]
+            y[i, 1] = tpa / 100.0   # [0, 100] -> [0, 1]
+            y[i, 2] = feed / 100.0  # [0, 100] -> [0, 1]
+        
+        print(f"[✓] Dados carregados da BD: {n_samples} amostras")
+        print(f"    Turbidez: {turbidity.min():.1f} - {turbidity.max():.1f}")
+        print(f"    pH: {ph.min():.2f} - {ph.max():.2f}")
+        print(f"    Temperatura: {temperature.min():.1f} - {temperature.max():.1f}°C")
+        
+        return X, y
+        
+    except mysql.connector.Error as e:
+        print(f"[!] Erro MySQL: {e}")
+        return None
+    except Exception as e:
+        print(f"[!] Erro ao carregar dados: {e}")
+        return None
 
 
 class StandardScaler:
@@ -133,10 +245,22 @@ def generate_synthetic_data(n_samples: int = 10000, seed: int = RANDOM_SEED) -> 
 def prepare_data(
     n_samples: int = 10000,
     test_size: float = TEST_SIZE,
-    seed: int = RANDOM_SEED
+    seed: int = RANDOM_SEED,
+    use_real_data: bool = True,
+    min_real_samples: int = 100
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, StandardScaler]:
     """
     Prepara dados completos para treino e teste.
+    
+    Tenta carregar dados reais da BD primeiro; se falhar ou
+    dados insuficientes, usa dados sintéticos como fallback.
+    
+    Args:
+        n_samples: Número de amostras sintéticas (se necessário)
+        test_size: Proporção de dados para teste
+        seed: Seed para reprodutibilidade
+        use_real_data: Tentar usar dados reais da BD
+        min_real_samples: Mínimo de amostras para usar dados reais
     
     Returns:
         X_train: Features de treino (normalizadas)
@@ -145,13 +269,25 @@ def prepare_data(
         y_test: Labels de teste (normalizadas)
         scaler: Scaler ajustado (para usar em produção)
     """
-    # Gerar dados
-    X, y = generate_synthetic_data(n_samples, seed)
+    # Tentar carregar dados reais da BD
+    real_data = None
+    if use_real_data:
+        print("[*] A tentar carregar dados reais da BD...")
+        real_data = load_data_from_db(min_samples=min_real_samples)
+    
+    if real_data is not None:
+        X, y = real_data
+        data_source = "BD"
+    else:
+        print("[*] A usar dados sintéticos...")
+        X, y = generate_synthetic_data(n_samples, seed)
+        data_source = "sintético"
     
     # Split treino/teste
+    n_total = len(X)
     np.random.seed(seed)
-    indices = np.random.permutation(n_samples)
-    n_test = int(n_samples * test_size)
+    indices = np.random.permutation(n_total)
+    n_test = int(n_total * test_size)
     
     test_indices = indices[:n_test]
     train_indices = indices[n_test:]
@@ -169,7 +305,7 @@ def prepare_data(
     # Guardar scaler para produção
     scaler.save(SCALER_PATH)
     
-    print(f"[✓] Dataset preparado:")
+    print(f"[✓] Dataset preparado (fonte: {data_source}):")
     print(f"    Treino: {X_train.shape[0]} amostras")
     print(f"    Teste:  {X_test.shape[0]} amostras")
     print(f"[✓] Scaler guardado: {SCALER_PATH}")
@@ -230,8 +366,8 @@ def create_dataloaders(
 
 
 if __name__ == "__main__":
-    print("Gerando dataset sintético...")
-    X_train, X_test, y_train, y_test, scaler = prepare_data()
+    print("Preparando dataset (BD real com fallback sintético)...")
+    X_train, X_test, y_train, y_test, scaler = prepare_data(use_real_data=True)
     
     print(f"\n✓ Dataset gerado:")
     print(f"  Treino: {X_train.shape[0]} amostras")

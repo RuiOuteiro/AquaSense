@@ -1,12 +1,26 @@
 """
 Servidor API Flask para o modelo de IA AquaSense.
-Fornece endpoints para sugestões de ajuste de fotoperíodo.
+
+Fornece endpoints REST para integração com o dashboard ESP32.
+Utiliza PyTorch para inferência do modelo de rede neural.
 
 Endpoints:
-    GET  /api/ai/photoperiod - Obter sugestão completa
-    POST /api/ai/apply       - Aplicar sugestão
-    GET  /api/ai/stats       - Estatísticas de turbidez
-    GET  /api/ai/health      - Status do sistema
+    GET  /api/ai/health      - Status do sistema e modelo
+    GET  /api/ai/photoperiod - Obter sugestão completa (fotoperíodo, TPA, alimentação)
+    POST /api/ai/apply       - Aplicar sugestão às configurações
+    GET  /api/ai/stats       - Estatísticas de sensores para gráficos
+
+Requisitos:
+    - PyTorch >= 2.0
+    - Flask >= 2.0
+    - mysql-connector-python >= 8.0
+    - Modelo treinado em models/photoperiod_model.pt
+
+Uso em produção:
+    gunicorn -w 4 -b 0.0.0.0:5000 api_server:app
+
+Uso em desenvolvimento:
+    python api_server.py
 """
 from flask import Flask, jsonify, request
 from flask_cors import CORS
@@ -49,43 +63,43 @@ def get_sensor_stats():
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         
-        # Turbidez
+        # Turbidez (aceita 'turbidity' ou 'turbidez')
         cursor.execute("""
             SELECT AVG(valor) as media_24h, MAX(valor) as max_24h, MIN(valor) as min_24h
             FROM leituras_sensores 
-            WHERE tipo_sensor = 'turbidity'
+            WHERE tipo_sensor IN ('turbidity', 'turbidez')
             AND data_hora >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
         """)
         turb_stats = cursor.fetchone()
         turbidity_24h = float(turb_stats['media_24h']) if turb_stats and turb_stats['media_24h'] else 15.0
         
-        # Última leitura de turbidez
+        # Última leitura de turbidez (aceita 'turbidity' ou 'turbidez')
         cursor.execute("""
             SELECT valor
             FROM leituras_sensores 
-            WHERE tipo_sensor = 'turbidity'
+            WHERE tipo_sensor IN ('turbidity', 'turbidez')
             ORDER BY data_hora DESC
             LIMIT 1
         """)
         turb_now = cursor.fetchone()
         turbidity_now = float(turb_now['valor']) if turb_now else turbidity_24h
         
-        # pH
+        # pH (aceita 'pH' ou 'ph')
         cursor.execute("""
             SELECT valor
             FROM leituras_sensores 
-            WHERE tipo_sensor = 'ph'
+            WHERE tipo_sensor IN ('pH', 'ph')
             ORDER BY data_hora DESC
             LIMIT 1
         """)
         ph_reading = cursor.fetchone()
         ph = float(ph_reading['valor']) if ph_reading else 7.0
         
-        # Temperatura
+        # Temperatura (aceita 'temperature' ou 'temperatura')
         cursor.execute("""
             SELECT valor
             FROM leituras_sensores 
-            WHERE tipo_sensor = 'temperature'
+            WHERE tipo_sensor IN ('temperature', 'temperatura')
             ORDER BY data_hora DESC
             LIMIT 1
         """)
@@ -195,8 +209,8 @@ def get_photoperiod_suggestion():
             temperature=sensor_data['temperature']
         )
         
-        # Guardar sugestão na DB
-        update_ai_suggestion(result['fotoperiodo_sugerido'])
+        # NÃO guardar automaticamente - apenas devolver sugestão
+        # A sugestão só é aplicada quando o utilizador clica em "Aplicar"
         
         return jsonify(result)
     
@@ -290,7 +304,7 @@ def get_stats():
                 DATE_FORMAT(data_hora, '%Y-%m-%d %H:00') as hora,
                 AVG(valor) as turbidez
             FROM leituras_sensores 
-            WHERE tipo_sensor = 'turbidity'
+            WHERE tipo_sensor IN ('turbidity', 'turbidez')
             AND data_hora >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
             GROUP BY DATE_FORMAT(data_hora, '%Y-%m-%d %H:00')
             ORDER BY hora
@@ -303,7 +317,7 @@ def get_stats():
                 DATE(data_hora) as dia,
                 AVG(valor) as turbidez
             FROM leituras_sensores 
-            WHERE tipo_sensor = 'turbidity'
+            WHERE tipo_sensor IN ('turbidity', 'turbidez')
             AND data_hora >= DATE_SUB(NOW(), INTERVAL 7 DAY)
             GROUP BY DATE(data_hora)
             ORDER BY dia
@@ -316,7 +330,7 @@ def get_stats():
                 DATE_FORMAT(data_hora, '%Y-%m-%d %H:00') as hora,
                 AVG(valor) as ph
             FROM leituras_sensores 
-            WHERE tipo_sensor = 'ph'
+            WHERE tipo_sensor IN ('pH', 'ph')
             AND data_hora >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
             GROUP BY DATE_FORMAT(data_hora, '%Y-%m-%d %H:00')
             ORDER BY hora
@@ -329,7 +343,7 @@ def get_stats():
                 DATE_FORMAT(data_hora, '%Y-%m-%d %H:00') as hora,
                 AVG(valor) as temperatura
             FROM leituras_sensores 
-            WHERE tipo_sensor = 'temperature'
+            WHERE tipo_sensor IN ('temperature', 'temperatura')
             AND data_hora >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
             GROUP BY DATE_FORMAT(data_hora, '%Y-%m-%d %H:00')
             ORDER BY hora

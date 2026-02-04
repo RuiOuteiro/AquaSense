@@ -1,14 +1,20 @@
 """
-Módulo de treino do modelo.
+Módulo de treino do modelo AquaSense.
 
-Inclui:
-- Treino simples com early stopping
+Funcionalidades:
+- Treino com dados reais da BD MySQL (automático)
+- Fallback para dados sintéticos se BD indisponível
+- Early stopping e learning rate scheduling
 - K-Fold Cross Validation
-- Métricas detalhadas
-- Logging de progresso
+- Métricas detalhadas por output
 
-Versão (prof): 3 inputs -> turbidez + pH + temperatura
-Outputs: ajuste fotoperíodo, TPA%, alimentação%
+Inputs (3): turbidez, pH, temperatura
+Outputs (3): ajuste fotoperíodo, TPA%, alimentação%
+
+Uso:
+    python3 -m src.train                    # Treino completo (BD + sintético fallback)
+    python3 -m src.train --synthetic        # Forçar dados sintéticos
+    python3 -m src.train --no-cv            # Sem cross-validation
 """
 import json
 import time
@@ -201,12 +207,8 @@ def train_model(
 
     model = AquaSenseNet().to(DEVICE)
 
-    # Evitar rebentar se não tiver summary()/count_parameters()
-    if hasattr(model, "summary"):
-        try:
-            print(f"\n{model.summary()}")
-        except Exception:
-            pass
+    # Mostrar resumo do modelo
+    print(f"\n{model.summary()}")
     print(f"Device: {DEVICE}")
 
     criterion = nn.MSELoss()
@@ -274,12 +276,7 @@ def train_model(
     torch.save(model.state_dict(), MODEL_PATH)
 
     # Guardar métricas
-    model_params = None
-    if hasattr(model, "count_parameters"):
-        try:
-            model_params = int(model.count_parameters())
-        except Exception:
-            model_params = None
+    model_params = model.count_parameters()
 
     final_metrics = {
         "epochs_trained": int(epoch),
@@ -499,6 +496,35 @@ def compare_with_baseline() -> Dict[str, object]:
 
 
 if __name__ == "__main__":
+    import argparse
+    
+    parser = argparse.ArgumentParser(description="Treino do modelo AquaSense")
+    parser.add_argument("--synthetic", action="store_true", 
+                        help="Forçar uso de dados sintéticos (ignora BD)")
+    parser.add_argument("--no-cv", action="store_true",
+                        help="Não executar cross-validation")
+    parser.add_argument("--no-compare", action="store_true",
+                        help="Não executar comparação com baseline")
+    args = parser.parse_args()
+    
+    # Configurar fonte de dados
+    if args.synthetic:
+        # Forçar sintético: modificar temporariamente prepare_data
+        from .data_loader import prepare_data as _prepare_data
+        def prepare_data_synthetic():
+            return _prepare_data(use_real_data=False)
+        # Substituir globalmente para este run
+        import src.data_loader
+        src.data_loader.prepare_data = prepare_data_synthetic
+        print("[!] Modo forçado: dados SINTÉTICOS\n")
+    
+    # Treino principal
     _model, _history = train_model()
-    _cv_results = cross_validate()
-    _comparison = compare_with_baseline()
+    
+    # Cross-validation (opcional)
+    if not args.no_cv:
+        _cv_results = cross_validate()
+    
+    # Comparação com baseline (opcional)
+    if not args.no_compare:
+        _comparison = compare_with_baseline()

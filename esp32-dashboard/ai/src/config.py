@@ -1,10 +1,19 @@
 """
 Configurações centralizadas do módulo de IA AquaSense.
 
-Versão: 3 parâmetros de entrada (turbidez + pH + temperatura)
-Outputs: ajuste fotoperíodo, TPA%, alimentação%
+Este ficheiro contém todas as constantes e configurações do sistema.
+Modificar aqui para ajustar hiperparâmetros, caminhos ou regras de baseline.
+
+Arquitectura do modelo:
+    - Input (3): turbidez (0-100), pH (0-14), temperatura (°C)
+    - Output (3): ajuste fotoperíodo (h), TPA (%), alimentação (%)
+
+Ambiente:
+    - Desenvolvimento: valores default
+    - Produção: configurar via variáveis de ambiente (DB_HOST, DB_PORT, etc.)
 """
 from pathlib import Path
+import os
 import torch
 
 # ==============================
@@ -28,12 +37,13 @@ METRICS_PATH = MODELS_DIR / "metrics.json"
 # ==============================
 # BASE DE DADOS
 # ==============================
+# Configurável via variáveis de ambiente para produção
 DB_CONFIG = {
-    "host": "127.0.0.1",
-    "port": 3309,
-    "user": "root",
-    "password": "",
-    "database": "esp32_data",
+    "host": os.getenv("DB_HOST", "127.0.0.1"),
+    "port": int(os.getenv("DB_PORT", "3309")),
+    "user": os.getenv("DB_USER", "root"),
+    "password": os.getenv("DB_PASSWORD", ""),
+    "database": os.getenv("DB_NAME", "esp32_data"),
 }
 
 # ==============================
