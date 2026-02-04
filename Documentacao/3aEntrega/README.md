@@ -16,9 +16,14 @@
   - [Estruturação da arquitetura](#estruturação-da-arquitetura)
 
 
-## Introdução
 
-## Problema
+## Identificação do Problema
+
+Em muitos aquários, não existe um sistema acessível e autónomo que permita acompanhar a qualidade da água em tempo real, seja do trabalho ou de outro pais, nomeadamente parâmetros como pH, turbidez e temperatura.
+Devido a ausência esta monotorização compromete o equilíbrio do ecossistema aquático e afeta a saúda dos organismos vivos e a deteção precoce de situações críticas.
+
+As soluções atualmente disponíveis no mercado são limitadas, pouco integradas e sem capacidade de analise inteligente AI dos dados recolhidos e extremamente caras.
+Devido a estas situações torna-se relevante desenvolver uma solução inteligente, acessível e inovadora que seja capaz de recolher dados, processar e analisar os dados da agua em tempo real e que recorre a inteligência artificial para tomar decisões emitir alertas ajudar na manutenção dos aquários 
 
 ## Solução Proposta
 
