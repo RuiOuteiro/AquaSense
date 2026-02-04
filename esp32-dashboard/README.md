@@ -72,12 +72,12 @@ DB_PASSWORD=
 DB_NAME=esp32_data
 ```
 ### Credenciais
-
-## Comandos Úteis
 ```
 Utilizador: aquasense@email.pt
 Password: admin123
 ```
+
+## Comandos Úteis
 
 | Comando | Descrição |
 |---------|-----------|
