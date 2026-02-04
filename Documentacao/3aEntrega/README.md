@@ -6,7 +6,7 @@
 
 **Grupo e ano Letivo:** Grupo 3 (2025/2026)
 
-**Autores:** Rui Outeiro, Emanuel Carvalho, Paulo Jadaugy
+**Autores:** Rui Outeiro (20231566), Emanuel Carvalho (20231627), Paulo Jadaugy (20241711)
 
 Índice:
 - [Relatório Final - Projeto AquaSense](#relatório-final---projeto-aquasense)
