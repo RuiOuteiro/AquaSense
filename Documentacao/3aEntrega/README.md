@@ -74,6 +74,7 @@ graph TD
 #### Hardware 
 
 ![Imagem do circuito](./Ficheiros/circuit_image.svg)
+[Link do projeto](https://app.cirkitdesigner.com/project/a4304a47-1a98-431c-bca2-73c1af9060d3)
 
 #### Software
 #### Processamento de dados 
