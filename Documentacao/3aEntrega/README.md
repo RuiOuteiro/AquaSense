@@ -8,7 +8,7 @@
 
 **Autores:** Rui Outeiro, Emanuel Carvalho, Paulo Jadaugy
 
-
+Índice:
 - [Relatório Final - Projeto AquaSense](#relatório-final---projeto-aquasense)
   - [Introdução](#introdução)
   - [Problema](#problema)
@@ -29,6 +29,17 @@ As soluções atualmente disponíveis no mercado são limitadas, e não têm a c
 
 
 Devido a estas situações torna-se relevante desenvolver uma solução inteligente, acessível e inovadora que seja capaz de recolher dados, processar e analisar os dados da água em tempo real e que recorre a inteligência artificial para tomar decisões e emitir alertas para ajudar na manutenção dos aquários.
+
+## Solução Proposta
+
+O sistema Aquasense permite a monotorização continua e automática da qualidade da água do aquário, ao recolher dados de pH, turbidez e temperatura, estes são dados incompletos para uma análise completa da qualidade da água, mas permite ter uma ideia clara de alguns parametros chave.
+
+
+O sistema é capaz de processar e analisar os dados em tempo real, permitido atuação automática e emissão de alertas em casos de condições críticas.
+
+
+Permite acesso remoto à informação e permite a configuração do fotoperiodo e ventilação pelo utilizador e também recorre a inteligência artificial para apoiar a tomada de decisão e otimizar a manutenção do aquário.
+
 
 ## Identificação de Requisitos
 
