@@ -72,6 +72,9 @@ graph TD
 ### Camada de perceção/dispositivos
 
 #### Hardware 
+
+![Imagem do circuito](./Ficheiros/circuit_image.svg)
+
 #### Software
 #### Processamento de dados 
 #### Conectividade 
