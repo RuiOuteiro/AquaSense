@@ -4,9 +4,9 @@ import pool from '../utils/db'
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
   
-  const { device_id, sensors } = body
+  const { device_id, sensors, aquario_id } = body
 
-  console.log('[SENSORS POST] Recebido:', { device_id, sensorsCount: sensors?.length, sensors: sensors?.map((s: any) => s.type) })
+  console.log('[SENSORS POST] Recebido:', { device_id, aquario_id, sensorsCount: sensors?.length, sensors: sensors?.map((s: any) => s.type) })
 
   if (!device_id || !sensors || !Array.isArray(sensors)) {
     console.log('[SENSORS POST] Erro: campos em falta')
@@ -17,6 +17,18 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
+    // Determinar aquario_id pelo device_id se não fornecido
+    let targetAquarioId = aquario_id || 1
+    if (!aquario_id) {
+      const [aquarios] = await pool.execute(
+        'SELECT id FROM aquarios WHERE device_id = ? AND ativo = 1 LIMIT 1',
+        [device_id]
+      )
+      if ((aquarios as any[]).length > 0) {
+        targetAquarioId = (aquarios as any[])[0].id
+      }
+    }
+
     // Inserir todos os sensores numa única transação
     const connection = await pool.getConnection()
     await connection.beginTransaction()
@@ -34,8 +46,8 @@ export default defineEventHandler(async (event) => {
         
         if (type && value !== undefined) {
           await connection.execute(
-            'INSERT INTO leituras_sensores (id_dispositivo, tipo_sensor, valor, unidade) VALUES (?, ?, ?, ?)',
-            [device_id, type, value, unit || null]
+            'INSERT INTO leituras_sensores (aquario_id, id_dispositivo, tipo_sensor, valor, unidade) VALUES (?, ?, ?, ?, ?)',
+            [targetAquarioId, device_id, type, value, unit || null]
           )
           inserted++
         }

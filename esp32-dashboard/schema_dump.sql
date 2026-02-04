@@ -16,18 +16,37 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `configuracoes`
+-- Table structure for table `aquarios`
 --
 
---CREATE DATABASE IF NOT EXISTS
-CREATE DATABASE IF NOT EXISTS esp32_data;
-USE esp32_data;
+DROP TABLE IF EXISTS `aquarios`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `aquarios` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `utilizador_id` int(11) NOT NULL,
+  `nome` varchar(100) NOT NULL,
+  `descricao` text DEFAULT NULL,
+  `device_id` varchar(50) DEFAULT NULL COMMENT 'ID do ESP32 associado',
+  `criado_em` timestamp NOT NULL DEFAULT current_timestamp(),
+  `ativo` tinyint(1) DEFAULT 1,
+  PRIMARY KEY (`id`),
+  KEY `idx_utilizador` (`utilizador_id`),
+  KEY `idx_device` (`device_id`),
+  CONSTRAINT `aquarios_ibfk_1` FOREIGN KEY (`utilizador_id`) REFERENCES `utilizadores` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `configuracoes`
+--
 
 DROP TABLE IF EXISTS `configuracoes`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `configuracoes` (
   `id` int(11) NOT NULL DEFAULT 1,
+  `aquario_id` int(11) DEFAULT NULL,
   `modo_manual` tinyint(1) DEFAULT 0,
   `ventoinha_manual` tinyint(1) DEFAULT 0,
   `temp_ligar` decimal(5,2) DEFAULT 14.00,
@@ -58,7 +77,9 @@ CREATE TABLE `configuracoes` (
   `luz_noturna_minuto_desligar` int(11) DEFAULT 0,
   `ai_ajuste_fotoperiodo` tinyint(1) DEFAULT 0,
   `ai_fotoperiodo_sugerido` int(11) DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `fk_config_aquario` (`aquario_id`),
+  CONSTRAINT `fk_config_aquario` FOREIGN KEY (`aquario_id`) REFERENCES `aquarios` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -71,6 +92,7 @@ DROP TABLE IF EXISTS `leituras_sensores`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `leituras_sensores` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
+  `aquario_id` int(11) DEFAULT NULL,
   `id_dispositivo` varchar(50) NOT NULL,
   `tipo_sensor` varchar(50) NOT NULL,
   `valor` decimal(10,4) NOT NULL,
@@ -78,9 +100,126 @@ CREATE TABLE `leituras_sensores` (
   `data_hora` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   KEY `idx_dispositivo` (`id_dispositivo`),
-  KEY `idx_data` (`data_hora`)
-) ENGINE=InnoDB AUTO_INCREMENT=17602 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  KEY `idx_data` (`data_hora`),
+  KEY `idx_aquario` (`aquario_id`),
+  CONSTRAINT `fk_leituras_aquario` FOREIGN KEY (`aquario_id`) REFERENCES `aquarios` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=121245 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `sessoes`
+--
+
+DROP TABLE IF EXISTS `sessoes`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `sessoes` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `utilizador_id` int(11) NOT NULL,
+  `token_hash` varchar(255) NOT NULL,
+  `expira_em` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `criado_em` timestamp NOT NULL DEFAULT current_timestamp(),
+  `ip_address` varchar(45) DEFAULT NULL,
+  `user_agent` text DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `utilizador_id` (`utilizador_id`),
+  KEY `idx_token` (`token_hash`),
+  KEY `idx_expira` (`expira_em`),
+  CONSTRAINT `sessoes_ibfk_1` FOREIGN KEY (`utilizador_id`) REFERENCES `utilizadores` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `utilizadores`
+--
+
+DROP TABLE IF EXISTS `utilizadores`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `utilizadores` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `email` varchar(255) NOT NULL,
+  `password_hash` varchar(255) NOT NULL,
+  `nome` varchar(100) NOT NULL,
+  `criado_em` timestamp NOT NULL DEFAULT current_timestamp(),
+  `ultimo_login` timestamp NULL DEFAULT NULL,
+  `ativo` tinyint(1) DEFAULT 1,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `email` (`email`),
+  KEY `idx_email` (`email`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Temporary view structure for view `v_estatisticas_aquario`
+--
+
+DROP TABLE IF EXISTS `v_estatisticas_aquario`;
+/*!50001 DROP VIEW IF EXISTS `v_estatisticas_aquario`*/;
+SET @saved_cs_client     = @@character_set_client;
+/*!50503 SET character_set_client = utf8mb4 */;
+/*!50001 CREATE VIEW `v_estatisticas_aquario` AS SELECT 
+ 1 AS `aquario_id`,
+ 1 AS `aquario_nome`,
+ 1 AS `utilizador_id`,
+ 1 AS `total_leituras`,
+ 1 AS `ultima_leitura`*/;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Temporary view structure for view `v_leituras_completas`
+--
+
+DROP TABLE IF EXISTS `v_leituras_completas`;
+/*!50001 DROP VIEW IF EXISTS `v_leituras_completas`*/;
+SET @saved_cs_client     = @@character_set_client;
+/*!50503 SET character_set_client = utf8mb4 */;
+/*!50001 CREATE VIEW `v_leituras_completas` AS SELECT 
+ 1 AS `id`,
+ 1 AS `aquario_id`,
+ 1 AS `aquario_nome`,
+ 1 AS `utilizador_id`,
+ 1 AS `tipo_sensor`,
+ 1 AS `valor`,
+ 1 AS `unidade`,
+ 1 AS `data_hora`*/;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Final view structure for view `v_estatisticas_aquario`
+--
+
+/*!50001 DROP VIEW IF EXISTS `v_estatisticas_aquario`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = utf8mb4 */;
+/*!50001 SET character_set_results     = utf8mb4 */;
+/*!50001 SET collation_connection      = utf8mb4_general_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `v_estatisticas_aquario` AS select `a`.`id` AS `aquario_id`,`a`.`nome` AS `aquario_nome`,`a`.`utilizador_id` AS `utilizador_id`,count(`ls`.`id`) AS `total_leituras`,max(`ls`.`data_hora`) AS `ultima_leitura` from (`aquarios` `a` left join `leituras_sensores` `ls` on(`a`.`id` = `ls`.`aquario_id`)) group by `a`.`id`,`a`.`nome`,`a`.`utilizador_id` */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
+
+--
+-- Final view structure for view `v_leituras_completas`
+--
+
+/*!50001 DROP VIEW IF EXISTS `v_leituras_completas`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = utf8mb4 */;
+/*!50001 SET character_set_results     = utf8mb4 */;
+/*!50001 SET collation_connection      = utf8mb4_general_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `v_leituras_completas` AS select `ls`.`id` AS `id`,`ls`.`aquario_id` AS `aquario_id`,`a`.`nome` AS `aquario_nome`,`a`.`utilizador_id` AS `utilizador_id`,`ls`.`tipo_sensor` AS `tipo_sensor`,`ls`.`valor` AS `valor`,`ls`.`unidade` AS `unidade`,`ls`.`data_hora` AS `data_hora` from (`leituras_sensores` `ls` join `aquarios` `a` on(`ls`.`aquario_id` = `a`.`id`)) */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -91,4 +230,4 @@ CREATE TABLE `leituras_sensores` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-01-22  3:09:12
+-- Dump completed on 2026-02-04 22:08:49
