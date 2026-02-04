@@ -1,8 +1,15 @@
-# Sistema para controlo de qualidade de um aquário - AquaSense
+# Relatório Final - Projeto AquaSense
 
-"PROPÓSITO"
+**Universidade:** IADE - Universidade Europeia
+
+**Unidade Curricular:** PBL para 4 UC's (IoT, Sistemas Distribuidos, Engenharia de Software e IA)
+
+**Grupo e ano Letivo:** Grupo 3 (2025/2026)
 
 **Autores:** Rui Outeiro, Emanuel Carvalho, Paulo Jadaugy
+
+
+
 
 Estrutura exemplo
 
