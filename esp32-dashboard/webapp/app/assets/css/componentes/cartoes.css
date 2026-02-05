@@ -1,0 +1,278 @@
+/**
+ * Estilos de cartões
+ * 
+ * @ficheiro assets/css/componentes/cartoes.css
+ * @autor AquaSense Team
+ */
+
+/* ========== CARTÃO BASE ========== */
+.cartao {
+  background: var(--fundo-cartao);
+  border: 1px solid var(--borda-cartao);
+  border-radius: var(--raio-grande);
+  padding: var(--espaco-lg);
+  backdrop-filter: blur(10px);
+  transition: all var(--transicao-normal);
+}
+
+.cartao:hover {
+  border-color: var(--borda-activa);
+  box-shadow: var(--sombra-cartao);
+}
+
+/* ========== CARTÃO SENSOR ========== */
+.cartao-sensor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-sm);
+  min-width: 140px;
+}
+
+.cartao-sensor-cabecalho {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-sm);
+}
+
+.cartao-sensor-icone {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--raio-medio);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+}
+
+.cartao-sensor-icone.temperatura {
+  background: rgba(255, 107, 107, 0.15);
+  color: var(--cor-temperatura);
+}
+
+.cartao-sensor-icone.ph {
+  background: rgba(78, 205, 196, 0.15);
+  color: var(--cor-ph);
+}
+
+.cartao-sensor-icone.turbidez {
+  background: rgba(255, 230, 109, 0.15);
+  color: var(--cor-turbidez);
+}
+
+.cartao-sensor-icone.humidade {
+  background: rgba(167, 139, 250, 0.15);
+  color: var(--cor-humidade);
+}
+
+.cartao-sensor-icone.ambiente {
+  background: rgba(244, 114, 182, 0.15);
+  color: var(--cor-ambiente);
+}
+
+.cartao-sensor-etiqueta {
+  font-size: var(--tamanho-xs);
+  color: var(--texto-secundario);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cartao-sensor-valor {
+  font-size: var(--tamanho-2xl);
+  font-weight: 700;
+  color: var(--texto-principal);
+}
+
+.cartao-sensor-valor.high {
+  color: var(--cor-erro);
+}
+
+.cartao-sensor-valor.low {
+  color: var(--cor-info);
+}
+
+.cartao-sensor-valor.acidic {
+  color: var(--cor-aviso);
+}
+
+.cartao-sensor-valor.alkaline {
+  color: var(--cor-info);
+}
+
+.cartao-sensor-valor.murky {
+  color: var(--cor-erro);
+}
+
+.cartao-sensor-valor.clear {
+  color: var(--cor-sucesso);
+}
+
+.cartao-sensor-tensao {
+  font-size: var(--tamanho-xs);
+  color: var(--texto-terciario);
+}
+
+/* ========== CARTÃO LUZ ========== */
+.cartao-luz {
+  position: relative;
+  overflow: hidden;
+}
+
+.cartao-luz::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--cor-luz);
+  opacity: 0;
+  transition: opacity var(--transicao-normal);
+}
+
+.cartao-luz.ligado::before {
+  opacity: 1;
+}
+
+.cartao-luz.branca {
+  --cor-luz: var(--cor-luz-branca);
+}
+
+.cartao-luz.noturna {
+  --cor-luz: var(--cor-luz-noturna);
+}
+
+.cartao-luz-cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--espaco-md);
+}
+
+.cartao-luz-titulo {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-sm);
+}
+
+.cartao-luz-icone {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--raio-medio);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  transition: all var(--transicao-normal);
+}
+
+.cartao-luz.branca .cartao-luz-icone {
+  background: var(--cor-luz-branca-fundo);
+  color: var(--texto-terciario);
+}
+
+.cartao-luz.branca.ligado .cartao-luz-icone {
+  background: var(--cor-luz-branca);
+  color: #000;
+  box-shadow: 0 0 20px var(--cor-luz-branca);
+}
+
+.cartao-luz.noturna .cartao-luz-icone {
+  background: var(--cor-luz-noturna-fundo);
+  color: var(--texto-terciario);
+}
+
+.cartao-luz.noturna.ligado .cartao-luz-icone {
+  background: var(--cor-luz-noturna);
+  color: #000;
+  box-shadow: 0 0 20px var(--cor-luz-noturna);
+}
+
+.cartao-luz-nome {
+  font-size: var(--tamanho-sm);
+  font-weight: 600;
+  color: var(--texto-principal);
+}
+
+.cartao-luz-estado {
+  font-size: var(--tamanho-xs);
+  color: var(--texto-terciario);
+}
+
+.cartao-luz.ligado .cartao-luz-estado {
+  color: var(--cor-sucesso);
+}
+
+/* ========== CARTÃO VENTOINHA ========== */
+.cartao-ventoinha-icone {
+  font-size: 2rem;
+  transition: all var(--transicao-lenta);
+}
+
+.cartao-ventoinha-icone.ligada {
+  color: var(--cor-sucesso);
+  animation: rodar 1s linear infinite;
+}
+
+.cartao-ventoinha-icone.desligada {
+  color: var(--texto-terciario);
+}
+
+/* ========== CARTÃO HORA ========== */
+.cartao-hora {
+  text-align: center;
+}
+
+.cartao-hora-valor {
+  font-size: var(--tamanho-4xl);
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--cor-primaria-clara), var(--cor-secundaria));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.cartao-hora-etiqueta {
+  font-size: var(--tamanho-xs);
+  color: var(--texto-terciario);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* ========== GRELHA DE CARTÕES ========== */
+.grelha-cartoes {
+  display: grid;
+  gap: var(--espaco-md);
+}
+
+.grelha-cartoes-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.grelha-cartoes-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.grelha-cartoes-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.grelha-cartoes-5 {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+@media (max-width: 768px) {
+  .grelha-cartoes-3,
+  .grelha-cartoes-4,
+  .grelha-cartoes-5 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .grelha-cartoes-2,
+  .grelha-cartoes-3,
+  .grelha-cartoes-4,
+  .grelha-cartoes-5 {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,229 @@
+/**
+ * Estilos do layout principal
+ * 
+ * @ficheiro assets/css/layouts/principal.css
+ * @autor AquaSense Team
+ */
+
+/* ========== APLICAÇÃO ========== */
+.aplicacao {
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--fundo-principal) 0%, var(--fundo-secundario) 100%);
+  color: var(--texto-principal);
+  font-family: var(--fonte-principal);
+}
+
+/* ========== CONTEÚDO PRINCIPAL ========== */
+.conteudo-principal {
+  max-width: var(--largura-maxima);
+  margin: 0 auto;
+  padding: var(--espaco-lg);
+}
+
+/* ========== SECÇÕES ========== */
+.seccao {
+  margin-bottom: var(--espaco-xl);
+}
+
+.seccao:last-child {
+  margin-bottom: 0;
+}
+
+.seccao-titulo {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-sm);
+  font-size: var(--tamanho-lg);
+  font-weight: 600;
+  color: var(--texto-principal);
+  margin-bottom: var(--espaco-md);
+}
+
+.seccao-titulo-icone {
+  font-size: 1.5rem;
+  color: var(--cor-primaria-clara);
+}
+
+/* ========== GRELHA DE ILUMINAÇÃO ========== */
+.grelha-iluminacao {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--espaco-md);
+}
+
+@media (max-width: 1024px) {
+  .grelha-iluminacao {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .grelha-iluminacao {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ========== GRELHA DE PARÂMETROS ========== */
+.grelha-parametros {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--espaco-md);
+}
+
+@media (max-width: 1024px) {
+  .grelha-parametros {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .grelha-parametros {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .grelha-parametros {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ========== RODAPÉ ========== */
+.rodape {
+  text-align: center;
+  padding: var(--espaco-lg);
+  color: var(--texto-terciario);
+  font-size: var(--tamanho-xs);
+}
+
+.rodape-actualizacao {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--espaco-xs);
+}
+
+/* ========== PAINEL DA CONSOLA ========== */
+.consola-painel {
+  position: fixed;
+  bottom: var(--espaco-md);
+  right: var(--espaco-md);
+  width: 400px;
+  max-height: 300px;
+  background: var(--fundo-cartao-solido);
+  border: 1px solid var(--borda-cartao);
+  border-radius: var(--raio-grande);
+  box-shadow: var(--sombra-grande);
+  z-index: var(--z-dropdown);
+  animation: aparecer-escala var(--transicao-normal);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.consola-cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--espaco-sm) var(--espaco-md);
+  background: rgba(30, 41, 59, 0.8);
+  border-bottom: 1px solid var(--borda-sutil);
+}
+
+.consola-titulo {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-xs);
+  font-size: var(--tamanho-sm);
+  font-weight: 600;
+  color: var(--texto-principal);
+}
+
+.consola-titulo-icone {
+  color: var(--cor-sucesso);
+}
+
+.consola-accoes {
+  display: flex;
+  gap: var(--espaco-xs);
+}
+
+.consola-corpo {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--espaco-sm);
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: var(--tamanho-xs);
+  line-height: 1.6;
+}
+
+.consola-registo {
+  display: flex;
+  gap: var(--espaco-sm);
+  padding: 2px 0;
+}
+
+.consola-registo-hora {
+  color: var(--texto-terciario);
+  flex-shrink: 0;
+}
+
+.consola-registo-mensagem {
+  word-break: break-word;
+}
+
+.consola-registo.info .consola-registo-mensagem {
+  color: var(--texto-secundario);
+}
+
+.consola-registo.success .consola-registo-mensagem {
+  color: var(--cor-sucesso);
+}
+
+.consola-registo.warn .consola-registo-mensagem {
+  color: var(--cor-aviso);
+}
+
+.consola-registo.error .consola-registo-mensagem {
+  color: var(--cor-erro);
+}
+
+@media (max-width: 600px) {
+  .consola-painel {
+    left: var(--espaco-md);
+    width: auto;
+    right: var(--espaco-md);
+  }
+}
+
+/* ========== DISTINTIVOS DE ALERTA ========== */
+.distintivo-alerta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espaco-xs);
+  padding: var(--espaco-xs) var(--espaco-sm);
+  border-radius: var(--raio-grande);
+  font-size: var(--tamanho-xs);
+  font-weight: 500;
+}
+
+.distintivo-alerta.alert-ok {
+  background: var(--cor-sucesso-fundo);
+  color: var(--cor-sucesso);
+}
+
+.distintivo-alerta.alert-moderate {
+  background: rgba(251, 191, 36, 0.15);
+  color: #fbbf24;
+}
+
+.distintivo-alerta.alert-warning {
+  background: var(--cor-aviso-fundo);
+  color: var(--cor-aviso);
+}
+
+.distintivo-alerta.alert-critical {
+  background: var(--cor-erro-fundo);
+  color: var(--cor-erro);
+  animation: pulsar 1s ease-in-out infinite;
+}

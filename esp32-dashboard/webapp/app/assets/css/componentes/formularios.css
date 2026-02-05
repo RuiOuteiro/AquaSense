@@ -1,0 +1,230 @@
+/**
+ * Estilos de formulários
+ * 
+ * @ficheiro assets/css/componentes/formularios.css
+ * @autor AquaSense Team
+ */
+
+/* ========== GRUPO DE CAMPO ========== */
+.campo-grupo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-xs);
+}
+
+.campo-etiqueta {
+  font-size: var(--tamanho-sm);
+  font-weight: 500;
+  color: var(--texto-secundario);
+}
+
+/* ========== INPUT TEXTO ========== */
+.campo-texto {
+  width: 100%;
+  padding: var(--espaco-sm) var(--espaco-md);
+  background: var(--fundo-input);
+  border: 1px solid var(--borda-sutil);
+  border-radius: var(--raio-medio);
+  color: var(--texto-principal);
+  font-family: var(--fonte-principal);
+  font-size: var(--tamanho-sm);
+  transition: all var(--transicao-rapida);
+}
+
+.campo-texto:focus {
+  outline: none;
+  border-color: var(--cor-primaria);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.campo-texto::placeholder {
+  color: var(--texto-terciario);
+}
+
+.campo-texto:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ========== INPUT HORA ========== */
+.campo-hora {
+  padding: var(--espaco-sm);
+  background: var(--fundo-input);
+  border: 1px solid var(--borda-sutil);
+  border-radius: var(--raio-medio);
+  color: var(--texto-principal);
+  font-family: var(--fonte-principal);
+  font-size: var(--tamanho-sm);
+}
+
+.campo-hora:focus {
+  outline: none;
+  border-color: var(--cor-primaria);
+}
+
+.campo-hora::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+}
+
+/* ========== DESLIZADOR (SLIDER) ========== */
+.deslizador-contentor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-sm);
+}
+
+.deslizador {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  background: var(--fundo-hover);
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.deslizador::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background: var(--cor-primaria);
+  border-radius: var(--raio-redondo);
+  cursor: pointer;
+  transition: all var(--transicao-rapida);
+}
+
+.deslizador::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 10px var(--cor-primaria);
+}
+
+.deslizador::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  background: var(--cor-primaria);
+  border-radius: var(--raio-redondo);
+  cursor: pointer;
+  border: none;
+}
+
+.deslizador-valor {
+  text-align: center;
+  font-size: var(--tamanho-sm);
+  font-weight: 600;
+  color: var(--cor-primaria-clara);
+}
+
+/* ========== COMUTADOR (TOGGLE) ========== */
+.comutador {
+  position: relative;
+  width: 48px;
+  height: 26px;
+  cursor: pointer;
+}
+
+.comutador-entrada {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.comutador-fundo {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--fundo-hover);
+  border-radius: 13px;
+  transition: all var(--transicao-normal);
+}
+
+.comutador-entrada:checked + .comutador-fundo {
+  background: var(--cor-sucesso);
+}
+
+.comutador-bola {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  left: 2px;
+  top: 2px;
+  background: white;
+  border-radius: var(--raio-redondo);
+  transition: all var(--transicao-normal);
+  box-shadow: var(--sombra-pequena);
+}
+
+.comutador-entrada:checked ~ .comutador-bola {
+  transform: translateX(22px);
+}
+
+/* ========== LINHA DE FORMULÁRIO ========== */
+.formulario-linha {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--espaco-sm) 0;
+  border-bottom: 1px solid var(--borda-sutil);
+}
+
+.formulario-linha:last-child {
+  border-bottom: none;
+}
+
+.formulario-linha-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.formulario-linha-titulo {
+  font-size: var(--tamanho-sm);
+  font-weight: 500;
+  color: var(--texto-principal);
+}
+
+.formulario-linha-descricao {
+  font-size: var(--tamanho-xs);
+  color: var(--texto-terciario);
+}
+
+/* ========== MENSAGENS ========== */
+.mensagem-erro {
+  padding: var(--espaco-sm) var(--espaco-md);
+  background: var(--cor-erro-fundo);
+  border: 1px solid var(--cor-erro);
+  border-radius: var(--raio-medio);
+  color: var(--cor-erro);
+  font-size: var(--tamanho-sm);
+}
+
+.mensagem-sucesso {
+  padding: var(--espaco-sm) var(--espaco-md);
+  background: var(--cor-sucesso-fundo);
+  border: 1px solid var(--cor-sucesso);
+  border-radius: var(--raio-medio);
+  color: var(--cor-sucesso);
+  font-size: var(--tamanho-sm);
+}
+
+/* ========== ÁREA DE TEXTO ========== */
+.campo-area {
+  width: 100%;
+  min-height: 80px;
+  padding: var(--espaco-sm) var(--espaco-md);
+  background: var(--fundo-input);
+  border: 1px solid var(--borda-sutil);
+  border-radius: var(--raio-medio);
+  color: var(--texto-principal);
+  font-family: var(--fonte-principal);
+  font-size: var(--tamanho-sm);
+  resize: vertical;
+}
+
+.campo-area:focus {
+  outline: none;
+  border-color: var(--cor-primaria);
+}
