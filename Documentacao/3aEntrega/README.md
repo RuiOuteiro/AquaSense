@@ -695,49 +695,45 @@ O sistema oferece interação natural através de:
 
 ---
 
-## Próximas Etapas (após a finalização da UC, devido a componentes ainda em trânsito)
+## Próximas Etapas 
 
-* Instalação de duas bombas peristálticas para dosagem de fertilizantes (micro e macronutrientes) no aquário, controladas através de módulo MOSFET.
-* Implementação de módulo MOSFET 220 V para controlo da válvula solenóide responsável pela injeção de CO₂, interrompendo o funcionamento quando o pH for detetado fora dos parâmetros definidos.
-* Construção de um alimentador automático de peixes.
-* Implementação de sensor de nível tipo float switch.
-* Implementação de sensor de fugas de água (leak sensor).
-* Implementação de câmara de monitorização.
-* Otimização do modelo de inteligência artificial para validação e aprendizagem baseada no feedback do utilizador, após a execução das ações sugeridas pela IA.
-
-Se quiseres, também posso normalizar isto para formato de relatório técnico ou documentação de projeto, porque neste tipo de listas convém manter consistência entre termos elétricos, eletrónicos e de automação.
-
+- Instalação de duas bombas peristálticas para dosagem de fertilizantes (micro e macronutrientes) no aquário, controladas através de módulo MOSFET.
+- Implementação de módulo MOSFET 220 V para controlo da válvula solenóide responsável pela injeção de gás carbónico cortando a energia quando o pH for detetado fora dos parâmetros definidos.
+- Construção de um alimentador automático para peixes, com reservatório de ração, mecanismo de dosagem e atuador elétrico (motor)
+- Implementação de sensor de nível com float switch.
+- Implementação de sensor de fugas de água.
+- Implementação de câmara de monitorização.
+- Otimização do modelo de inteligência artificial para validação e aprendizagem baseada no feedback do utilizador, após a execução das ações sugeridas pela IA.
 
 ---
-
-## Conclusão
-
-O projeto AquaSense atingiu com sucesso os objetivos propostos, resultando num sistema funcional de monitorização e controlo inteligente de aquários. A solução desenvolvida demonstra a viabilidade de criar um produto IoT completo utilizando tecnologias acessíveis e de baixo custo.
 
 ### Objetivos Alcançados
 
 **Monitorização em tempo real** - Leituras de temperatura, pH, turbidez e condições ambientais a cada 15 segundos
 
-**Automação inteligente** - Controlo automático de iluminação com fade PWM e ventilação por temperatura
+**Controlos Automáticos** - Controlo automático de iluminação com fade PWM e ventilação por temperatura
 
 **Interface intuitiva** - Dashboard web responsivo com gráficos e configurações
 
-**Sistema de alertas** - Notificações Telegram em tempo real para situações críticas
+**Sistema de alertas** - Notificações na web app e Telegram em tempo real para situações críticas
 
-**Integração de IA** - Modelo de rede neural para sugestões de fotoperíodo
+**Integração de IA** - Modelo de rede neural para sugestões de fotoperíodo e decisões de manuteção do aquário
 
-**Custo acessível** - Solução completa por menos de 50€ em componentes
+---
 
-### Lições Aprendidas
+## Conclusão
 
-1. **Calibração de sensores** - A precisão depende fortemente de calibração cuidadosa
-2. **Comunicação WiFi** - Necessidade de reconexão automática robusta
-3. **Gestão de estado** - Sincronização entre ESP32 e servidor é crítica
-4. **User experience** - Interface simples é mais importante que funcionalidades complexas
+O projeto AquaSense cumpriu integralmente os objetivos definidos, resultando num sistema funcional de monitorização e controlo inteligente de aquários. A solução desenvolvida comprova a viabilidade de implementação de um sistema IoT completo recorrendo a tecnologias acessíveis e de baixo custo, sem comprometer a funcionalidade ou a fiabilidade. O sistema é utilizado diariamente em contexto de aquário real.
 
-### Contribuição do Projeto
+O projeto constitui uma base técnica sólida para evoluções futuras na área da automação de aquários, sendo igualmente passível de adaptação e extensão a outros cenários de monitorização ambiental.
 
-O AquaSense demonstra que é possível criar soluções IoT de qualidade profissional em ambiente académico, combinando conhecimentos de múltiplas áreas. O projeto serve como referência para futuros desenvolvimentos na área de automação de aquários e pode ser expandido para outros domínios de monitorização ambiental.
+---
+
+## Autoavaliação: 20
+
+A classificação atribuída reflete o cumprimento integral dos objetivos propostos, a complexidade técnica do sistema desenvolvido e a qualidade da integração entre hardware, software e lógica de controlo. O projeto demonstra domínio consistente das quatro disciplinas envolvidas neste projeto PBL, ultrapassando o mínimo exigido em contexto académico, sendo adicionalmente um sistema operacional e utilizado continuamente, 24h por dia.
+
+---
 
 ### Agradecimentos
 
