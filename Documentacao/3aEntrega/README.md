@@ -46,7 +46,7 @@ Paulo Jadaugy - 20241711
 - [Plano de Trabalho e Distribuição de Tarefas](#plano-de-trabalho-e-distribuição-de-tarefas)
 - [Próximas Etapas](#próximas-etapas)
 - [Conclusão](#conclusão)
-- [Autoavaliação: 20](#autoavaliação-20)
+- [Autoavaliação](#autoavaliação)
  
 ---
  
