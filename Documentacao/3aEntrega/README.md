@@ -231,7 +231,7 @@ Responsável pela recolha de dados do ambiente físico e atuação sobre o aquá
 
 #### Segurança
 - Validação de leituras antes do envio
-- Reconexão automática WiFi
+- Reconexão automática do WiFi
 - Timeout em requests HTTP
 
 ---
