@@ -12,7 +12,8 @@ async function checkAndSendAlerts(aquarioId: number, sensors: any[], deviceId: s
     const [rows] = await pool.execute(
       `SELECT u.id as user_id, u.telegram_chat_id, u.telegram_alertas,
               ac.enabled, ac.temp_min, ac.temp_max, ac.ph_min, ac.ph_max,
-              ac.turbidez_max, ac.humidade_min, ac.humidade_max
+              ac.turbidez_max, ac.humidade_min, ac.humidade_max,
+              ac.temp_ambiente_min, ac.temp_ambiente_max
        FROM utilizadores u 
        JOIN aquarios a ON a.utilizador_id = u.id 
        LEFT JOIN alertas_config ac ON ac.utilizador_id = u.id
@@ -32,6 +33,7 @@ async function checkAndSendAlerts(aquarioId: number, sensors: any[], deviceId: s
     // Construir limites da BD (ou usar defaults)
     const LIMITES: Record<string, { min: number; max: number }> = {
       temperature: { min: user.temp_min || 22, max: user.temp_max || 28 },
+      ambient_temp: { min: user.temp_ambiente_min || 18, max: user.temp_ambiente_max || 30 },
       humidity: { min: user.humidade_min || 40, max: user.humidade_max || 80 },
       ph: { min: user.ph_min || 6.5, max: user.ph_max || 7.5 },
       turbidity: { min: 0, max: user.turbidez_max || 30 }
@@ -88,7 +90,7 @@ export default defineEventHandler(async (event) => {
 
   try {
     // Determinar aquario_id pelo device_id se não fornecido
-    let targetAquarioId = aquario_id || 1
+    let targetAquarioId = aquario_id
     if (!aquario_id) {
       const [aquarios] = await pool.execute(
         'SELECT id FROM aquarios WHERE device_id = ? AND ativo = 1 LIMIT 1',
@@ -96,6 +98,14 @@ export default defineEventHandler(async (event) => {
       )
       if ((aquarios as any[]).length > 0) {
         targetAquarioId = (aquarios as any[])[0].id
+      } else {
+        // Criar aquário automaticamente se não existir
+        const [result] = await pool.execute(
+          'INSERT INTO aquarios (nome, device_id, utilizador_id) VALUES (?, ?, ?)',
+          [`Aquário ${device_id}`, device_id, 1]
+        ) as any
+        targetAquarioId = result.insertId
+        console.log(`[SENSORS] Aquário criado automaticamente: ${targetAquarioId}`)
       }
     }
 

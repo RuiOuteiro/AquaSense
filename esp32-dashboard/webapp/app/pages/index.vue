@@ -113,6 +113,10 @@
       @actualizar-alerta-ph-min="actualizarAlertaPhMin"
       @actualizar-alerta-ph-max="actualizarAlertaPhMax"
       @actualizar-alerta-turbidez-max="actualizarAlertaTurbidezMax"
+      @actualizar-alerta-temp-ambiente-min="actualizarAlertaTempAmbienteMin"
+      @actualizar-alerta-temp-ambiente-max="actualizarAlertaTempAmbienteMax"
+      @actualizar-alerta-humidade-min="actualizarAlertaHumidadeMin"
+      @actualizar-alerta-humidade-max="actualizarAlertaHumidadeMax"
     />
     
     <!-- Modal de Gráficos -->
@@ -139,7 +143,7 @@
       :visivel="mostrarPerfil"
       :formulario="formularioPerfil"
       :telegram="configuracaoTelegram"
-      :aquarios="[...aquarios].map(a => ({...a}))"
+      :aquarios="aquarios"
       :novo-aquario="novoAquario"
       :mostrar-formulario-aquario="mostrarFormularioAquario"
       :a-carregar="aCarregarPerfil"
@@ -430,6 +434,22 @@ function actualizarAlertaPhMax(valor: number) {
 
 function actualizarAlertaTurbidezMax(valor: number) {
   actualizarConfigAlertas({ turbidezMax: valor })
+}
+
+function actualizarAlertaTempAmbienteMin(valor: number) {
+  actualizarConfigAlertas({ tempAmbienteMin: valor })
+}
+
+function actualizarAlertaTempAmbienteMax(valor: number) {
+  actualizarConfigAlertas({ tempAmbienteMax: valor })
+}
+
+function actualizarAlertaHumidadeMin(valor: number) {
+  actualizarConfigAlertas({ humidadeMin: valor })
+}
+
+function actualizarAlertaHumidadeMax(valor: number) {
+  actualizarConfigAlertas({ humidadeMax: valor })
 }
 
 // ========== CICLO DE VIDA ==========
