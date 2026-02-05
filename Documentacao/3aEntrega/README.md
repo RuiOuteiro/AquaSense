@@ -108,7 +108,95 @@ graph TD
 ![Imagem do circuito](./Ficheiros/circuit_image.svg)
 [Link do projeto](https://app.cirkitdesigner.com/project/a4304a47-1a98-431c-bca2-73c1af9060d3)
 
+## Ligações ao ESP32
+
+| GPIO ESP32 | Componente                     | Tipo de sinal   | Função                                   |
+| ---------- | ------------------------------ | --------------- | ---------------------------------------- |
+| GPIO 4     | Sensor DS18B20                 | OneWire         | Temperatura da água                      |
+| GPIO 26    | Sensor DHT11                   | Digital         | Temperatura e humidade ambiente          |
+| GPIO 34    | Sensor de pH                   | Analógico (ADC) | Leitura de pH                            |
+| GPIO 35    | Sensor de turbidez             | Analógico (ADC) | Leitura de turbidez                      |
+| GPIO 27    | Relé K1 (ventoinha)            | Digital         | Liga/desliga a ventoinha (ativo em LOW)  |
+| GPIO 25    | LED vermelho                   | Digital         | Indicador do estado da ventoinha         |
+| GPIO 33    | Buzzer passivo                 | PWM             | Alerta sonoro                            |
+| GPIO 21    | Módulo MOSFET (luz branca/vermelha 12V) | PWM    | Controlo de intensidade da luz principal |
+| GPIO 23    | Relé K2 (luz noturna)          | Digital         | Liga/desliga luz noturna                 |
+| 3V3        | Sensores                       | Alimentação     | Alimentação lógica                       |
+| 5V         | Relé / MOSFET                  | Alimentação     | Alimentação de módulos                   |
+| GND        | Todos os módulos e sensores    | GND comum       | Massa comum partilhada por todo o sistema|
+
+## Material Utilizado
+
+| Componente                       | Quantidade | Observações             |
+| -------------------------------- | ---------- | ----------------------- |
+| ESP32                            | 1          | Controlador principal   |
+| Sensor DS18B20                   | 1          | Temperatura da água     |
+| Sensor DHT11                     | 1          | Temperatura e humidade  |
+| Sensor de pH com módulo          | 1          | Leitura de pH       |
+| Sensor de turbidez               | 1          | Leitura de turbidez         |
+| Relé 2 canais                    | 1          | Ventoinha + luz noturna |
+| Módulo MOSFET (IRLZ44N / F5305S) | 1          | PWM para LED 12V        |
+| Ventoinha 5V                     | 1          | Arrefecimento           |
+| Fita LED branca 12V              | 5 metros   | Iluminação principal    |
+| Fita LED vermelha 12V            | 2 metros   | Iluminação principal    |
+| Fita LED azul 12V                | 3 metros   | Iluminação noturna      |
+| LED vermelho                     | 1          | Indicador ventoinha ligada |
+| Buzzer passivo                   | 1          | Indicador ventoinha ligada |
+| Fonte 12V                        | 1          | Alimentação             |
+| Fonte 5V                         | 1          | Alimentação             | 
+| Resistência 4.7 kΩ               | 1          | Pull-up DS18B20         |
+| Resistência 10 kΩ                | 3          | Divisores de tensão     |
+| Resistência 1.2 kΩ               | 2          | Divisor turbidez        |
+| Resistência 220 Ω                | 2          | LED + buzzer            |
+
 #### Software
+
+## Bibliotecas de Firmware (ESP32)
+
+| Biblioteca        | Função                             |
+| ----------------- | ---------------------------------- |
+| WiFi.h            | Conectividade WiFi                 |
+| HTTPClient.h      | Comunicação HTTP REST              |
+| ArduinoJson       | Serialização e parsing de JSON     |
+| OneWire           | Comunicação OneWire                |
+| DallasTemperature | Leitura do sensor DS18B20          |
+| DHT               | Leitura do sensor DHT11            |
+| time.h            | Sincronização horária via NTP      |
+| LEDC              | Controlo PWM (buzzer e iluminação) |
+
+## Web App
+
+| Camada        | Tecnologia          | Função                                 |
+| ------------- | ------------------- | -------------------------------------- |
+| Frontend      | Nuxt 4              | Interface de utilizador                |
+| Backend       | Nitro (Nuxt Server) | API REST e lógica de servidor          |
+| Base de Dados | MySQL               | Armazenamento de dados e configurações |
+
+## Inteligência Artificial
+
+| Componente | Tecnologia | Função                         |
+| ---------- | ---------- | ------------------------------ |
+| Framework  | PyTorch    | Rede Neural                    |
+| API        | Flask      | Exposição dos serviços de IA   |
+
+## Integrações
+
+| Serviço          | Função                         |
+| ---------------- | ------------------------------ |
+| Telegram Bot API | Alertas                        |
+
+## Ferramentas de Desenvolvimento
+
+| Ferramenta      | Uso                            |
+| --------------- | ------------------------------ |
+| Node.js         | Ambiente de desenvolvimento web|
+| Arduino IDE     | Compilação e upload do firmware|
+| VS Code         | Desenvolvimento geral          |
+| GitHub          | Colaboração, controlo          |
+| XAMPP           | Ambiente local de servidor     |
+| Draw.io         | Diagramas e documentação       |
+| Cirkit Designer | Desenho do circuito eletrónico |
+
 #### Processamento de dados 
 #### Conectividade 
 #### Segurança
