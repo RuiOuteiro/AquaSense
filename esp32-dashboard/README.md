@@ -23,6 +23,7 @@ mysql -u root -P 3309 < schema_dump.sql
 ```bash
 cd esp32-dashboard
 npm install        # Só na primeira vez
+npm install --save vue3-apexcharts # Só na primeira vez
 npm run dev        # Inicia em http://localhost:3001
 ```
 
