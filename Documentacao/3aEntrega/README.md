@@ -223,17 +223,19 @@ Responsável pela recolha de dados do ambiente físico e atuação sobre o aquá
 | time.h | Sincronização NTP |
 | LEDC | Controlo PWM |
 
-#### Processamento
-- Leitura regular dos sensores (temperatura, pH, turbidez, humidade)
-- Controlo automático ou manual da ventoinha
-- Controlo de iluminação por horário/modo com fade PWM
-- Envio de dados em batch via API (JSON)
-
-#### Segurança
-- Validação de leituras antes do envio
-- Reconexão automática do WiFi
-- Timeout em requests HTTP
-
+**Processamento**
+ 
+- Lê periodicamente os valores dos sensores: temperatura da água, pH, turbidez e humidade ambiente
+- Gere a ventoinha com base no modo escolhido (automático ou manual)
+- Controla a iluminação segundo o horário definido, com transições suaves por PWM
+- Agrupa as leituras e envia-as para o servidor em formato JSON
+ 
+**Segurança**
+ 
+- Descarta leituras fora dos intervalos expectáveis antes de as enviar
+- Tenta restabelecer a ligação WiFi caso esta se perca
+- Define limites de tempo nos pedidos HTTP para evitar bloqueios no loop
+ 
 ---
 
 ### 2. Camada de Rede (Conectividade)
@@ -298,16 +300,16 @@ Responsável pelo armazenamento, processamento e análise inteligente dos dados.
 | POST `/api/ai/apply` | Aplicar sugestão |
 
 #### Processamento
-- Armazenamento de leituras históricas
-- Cálculo de médias e estatísticas
-- Verificação de limites e geração de alertas
-- Inferência do modelo neural para sugestões
-
+- Guarda o histórico de leituras para consulta posterior
+- Calcula médias e estatísticas a partir dos dados recolhidos
+- Compara os valores com os limites definidos e gera alertas quando necessário
+- Recorre ao modelo neural para produzir sugestões de fotoperíodo
+ 
 #### Segurança
-- Passwords com hash bcrypt (salt 10)
-- Tokens JWT com expiração
-- Validação de inputs em todos os endpoints
-
+- Armazena as passwords com hash bcrypt (fator de custo 10)
+- Utiliza tokens JWT com validade limitada para gerir sessões
+- Valida todos os dados recebidos nos endpoints antes de os processar
+ 
 ---
 
 ### 4. Camada de Aplicação (Frontend)
@@ -329,13 +331,13 @@ Responsável pela interface com o utilizador.
 | Fonts | Inter, JetBrains Mono |
 
 #### Funcionalidades
-- Dashboard em tempo real com gráficos
-- Configuração de fotoperíodo e ventilação
-- Gestão de alertas e notificações
-- Histórico de leituras
-- Sugestões de IA
-- Perfil de utilizador
-
+- Apresenta os dados em tempo real e gráficos interativos
+- Permite configurar o fotoperíodo e o comportamento da ventilação
+- Inclui gestão de alertas na app e notificações via Telegram
+- Disponibiliza um histórico completo das leituras dos sensores
+- Mostra sugestões geradas pelo modelo de IA
+- Cada utilizador tem o seu próprio perfil podendo configurar vários aquários
+ 
 #### Integrações
 
 | Serviço | Função |
@@ -343,9 +345,10 @@ Responsável pela interface com o utilizador.
 | Telegram Bot API | Notificações de alertas |
 
 #### Segurança
-- Autenticação obrigatória
-- Sessões com cookies seguros
-- Logout automático
+
+- Todas as páginas exigem autenticação prévia
+- As sessões são mantidas com cookies seguros
+- Sessão terminada automaticamente quando apropriado
 
 ---
 
