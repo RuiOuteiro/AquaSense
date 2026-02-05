@@ -628,7 +628,7 @@ O sistema oferece interação natural através de:
 |-------|--------|-----------|
 | API REST | Testes com curl/Postman | Todos os endpoints OK |
 | Autenticação | Tentativas de acesso não autorizado | Bloqueadas |
-| Persistência dados | Verificação após restart | Dados mantidos |
+| Persistência dados | Cada 15 segundos novos valores são atualizados no dashboard | Dados mantidos |
 | Alertas Telegram | Simulação de valores críticos | Entrega < 2s |
 | Dashboard | Navegação em múltiplos browsers | Responsivo |
 
