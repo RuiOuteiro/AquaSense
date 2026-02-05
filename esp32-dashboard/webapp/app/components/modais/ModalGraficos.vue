@@ -164,7 +164,7 @@ const periodos = PERIODOS_GRAFICO
   color: white;
 }
 
-.carregamento {
+.loading-state {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -173,7 +173,7 @@ const periodos = PERIODOS_GRAFICO
   color: #94a3b8;
 }
 
-.carregamento-spinner {
+.loading-spinner {
   font-size: 1.5rem;
   animation: rodar 1s linear infinite;
 }

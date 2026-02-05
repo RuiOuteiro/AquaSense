@@ -19,7 +19,7 @@ export function useAutenticacao() {
    */
   async function obterUtilizadorActual(): Promise<Utilizador | null> {
     try {
-      const res = await $fetch<{ success: boolean; user: Utilizador }>('/api/auth/me')
+      const res = await $fetch<{ success: boolean; user: Utilizador }>('/api/auth/utilizador')
       if (res.success && res.user) {
         utilizadorActual.value = res.user
         return res.user
@@ -35,7 +35,7 @@ export function useAutenticacao() {
    */
   async function terminarSessao(): Promise<void> {
     try {
-      await $fetch('/api/auth/logout', { method: 'POST' })
+      await $fetch('/api/auth/sair', { method: 'POST' })
     } catch {
       // Ignorar erro
     }

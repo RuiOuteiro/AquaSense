@@ -90,7 +90,7 @@ async function handleLogin() {
   error.value = ''
 
   try {
-    const response = await $fetch<{ success: boolean; token: string }>('/api/auth/login', {
+    const response = await $fetch<{ success: boolean; token: string }>('/api/auth/entrar', {
       method: 'POST',
       body: form.value,
       credentials: 'include'

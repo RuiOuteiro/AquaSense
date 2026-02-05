@@ -52,7 +52,7 @@ export function usePerfil() {
     limparMensagens()
     aCarregar.value = true
     try {
-      const res = await $fetch<{ success: boolean }>('/api/auth/update-name', {
+      const res = await $fetch<{ success: boolean }>('/api/auth/actualizar-nome', {
         method: 'POST',
         body: { nome: formulario.value.nome }
       })
@@ -75,7 +75,7 @@ export function usePerfil() {
     limparMensagens()
     aCarregar.value = true
     try {
-      const res = await $fetch<{ success: boolean }>('/api/auth/update-email', {
+      const res = await $fetch<{ success: boolean }>('/api/auth/actualizar-email', {
         method: 'POST',
         body: { email: formulario.value.email }
       })
@@ -109,7 +109,7 @@ export function usePerfil() {
     
     aCarregar.value = true
     try {
-      const res = await $fetch<{ success: boolean }>('/api/auth/change-password', {
+      const res = await $fetch<{ success: boolean }>('/api/auth/alterar-password', {
         method: 'POST',
         body: {
           currentPassword: formulario.value.currentPassword,
