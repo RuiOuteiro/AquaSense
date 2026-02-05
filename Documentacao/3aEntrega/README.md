@@ -738,12 +738,6 @@ A classificação atribuída reflete o cumprimento integral dos objetivos propos
 
 ---
 
-### Agradecimentos
-
-Agradecemos aos professores das unidades curriculares envolvidas pelo apoio e orientação ao longo do desenvolvimento do projeto.
-
----
-
 **Repositório:** [github.com/RuiOuteiro/AquaSense](https://github.com/RuiOuteiro/AquaSense)
 
 **Data de entrega:** Fevereiro 2026
