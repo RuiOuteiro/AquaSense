@@ -18,6 +18,7 @@
 --
 -- Table structure for table `alertas_config`
 --
+USE esp32_data;
 
 DROP TABLE IF EXISTS `alertas_config`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;

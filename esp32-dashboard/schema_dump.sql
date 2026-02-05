@@ -15,6 +15,12 @@
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
+DROP DATABASE IF EXISTS esp32_data;
+
+CREATE DATABASE esp32_data;
+
+USE esp32_data;
+
 --
 -- Table structure for table `alertas_config`
 --
