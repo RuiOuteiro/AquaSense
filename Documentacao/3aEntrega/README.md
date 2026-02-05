@@ -46,7 +46,7 @@ Paulo Jadaugy - 20241711
 - [Plano de Trabalho e Distribuição de Tarefas](#plano-de-trabalho-e-distribuição-de-tarefas)
 - [Próximas Etapas](#próximas-etapas)
 - [Conclusão](#conclusão)
-- [Autoavaliação: 20](#autoavaliação-20)
+- [Autoavaliação](#autoavaliação)
  
 ---
  
@@ -465,8 +465,8 @@ sequenceDiagram
 
 ### Descrição Geral
 
-O protótipo físico do AquaSense consiste numa caixa impermeável que aloja todos os componentes eletrónicos, posicionada junto ao aquário. 
-A partir desta caixa, saem cabos para os sensores submersos e para os atuadores (iluminação e ventilação).
+Este protótipo físico do AquaSense contém uma caixa à prova de água que abriga toda a eletrônica, posicionada ao lado do aquário. 
+Desta caixa, existem cabos que se estendem até os sensores submersos, bem como até os atuadores (iluminação e ventilação).
 
 ### Componentes Físicos
 
