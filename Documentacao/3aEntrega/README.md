@@ -38,14 +38,15 @@ Paulo Jadaugy - 20241711
 - [Arquitetura por Camadas IoT](#arquitetura-por-camadas-iot)
 - [Ferramentas de Desenvolvimento](#ferramentas-de-desenvolvimento)
 - [Comunicação entre Módulos](#comunicação-entre-módulos)
-- [Artefacto Físico](#esboço-do-artefacto-físico)
+- [Protótipo Físico](#protótipo-físico)
 - [Descrição da Solução e Arquitetura Implementada](#descrição-da-solução-e-arquitetura-implementada)
 - [Desenvolvimento e Prototipagem](#desenvolvimento-e-prototipagem)
-- [Integração de IA, Interação Natural e Sistema Completo](#integração-de-ia-interação-natural-e-sistema-completo)
+- [Integração de IA](#integração-de-ia)
 - [Testes e Resultados](#testes-e-resultados)
 - [Plano de Trabalho e Distribuição de Tarefas](#plano-de-trabalho-e-distribuição-de-tarefas)
 - [Próximas Etapas](#próximas-etapas)
 - [Conclusão](#conclusão)
+- [Autoavaliação: 20](#autoavaliação-20)
  
 ---
  
@@ -223,10 +224,10 @@ Responsável pela recolha de dados do ambiente físico e atuação sobre o aquá
 | LEDC | Controlo PWM |
 
 #### Processamento
-- Leitura periódica dos sensores (temperatura, pH, turbidez, humidade)
-- Controlo automático da ventoinha por temperatura
+- Leitura regular dos sensores (temperatura, pH, turbidez, humidade)
+- Controlo automático ou manual da ventoinha
 - Controlo de iluminação por horário/modo com fade PWM
-- Envio de dados em batch via HTTP POST (JSON)
+- Envio de dados em batch via API (JSON)
 
 #### Segurança
 - Validação de leituras antes do envio
@@ -460,11 +461,12 @@ sequenceDiagram
 
 ---
 
-## Artefacto Físico
+## Protótipo Físico
 
 ### Descrição Geral
 
-O artefacto físico do AquaSense consiste numa caixa de controlo impermeável que aloja todos os componentes eletrónicos, posicionada junto ao aquário. A partir desta caixa, saem cabos para os sensores submersos e para os atuadores (iluminação e ventilação).
+O protótipo físico do AquaSense consiste numa caixa impermeável que aloja todos os componentes eletrónicos, posicionada junto ao aquário. 
+A partir desta caixa, saem cabos para os sensores submersos e para os atuadores (iluminação e ventilação).
 
 ### Componentes Físicos
 
@@ -501,11 +503,11 @@ O artefacto físico do AquaSense consiste numa caixa de controlo impermeável qu
 
 ### Visão Geral da Solução
 
-O AquaSense implementa uma arquitetura de três camadas que separa claramente as responsabilidades:
+Em termos de arquitetura existem três camadas que separam claramente as responsabilidades:
 
 1. **Camada de Perceção (Edge)** - ESP32 com sensores e atuadores
 2. **Camada de Processamento (Backend)** - Servidor Nuxt com API REST e IA
-3. **Camada de Apresentação (Frontend)** - Dashboard web responsivo
+3. **Camada de Apresentação (Frontend)** - Dashboard web
 
 ### Fluxo de Dados Principal
 
@@ -572,7 +574,7 @@ flowchart LR
 
 ---
 
-## Integração de IA, Interação Natural e Sistema Completo
+## Integração de IA
 
 ### Modelo de Inteligência Artificial
 
