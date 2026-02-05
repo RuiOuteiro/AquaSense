@@ -16,8 +16,20 @@ export default defineEventHandler(async (event) => {
     ai_ajuste_fotoperiodo
   } = body
 
-  const aquarioId = aquario_id || 1
   const user = getAuthUser(event)
+  
+  // Obter aquario_id do body ou do primeiro aquário do utilizador
+  let aquarioId = aquario_id
+  if (!aquarioId && user) {
+    const [userAquarios] = await pool.execute(
+      'SELECT id FROM aquarios WHERE utilizador_id = ? AND ativo = 1 ORDER BY id ASC LIMIT 1',
+      [user.id]
+    )
+    if ((userAquarios as any[]).length > 0) {
+      aquarioId = (userAquarios as any[])[0].id
+    }
+  }
+  if (!aquarioId) aquarioId = 1 // Fallback ESP32
 
   try {
     // Se autenticado, verificar permissão
