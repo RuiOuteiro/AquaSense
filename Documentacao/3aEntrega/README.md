@@ -738,13 +738,17 @@ O projeto constrói uma base técnica sólida para futuras melhorias, além de s
 
 Consideramos que existe cumprimento integral dos objetivos propostos. O projeto demonstra domínio das quatro disciplinas envolvidas neste projeto PBL.
 
-Para além do que foi proposto incialmente, foram adicionadas/alteradas algumas funcionalidades nomeadamente a respeito da iluminação, inicialmente tinhamos pensado usar luz branca, mas dada a importância de criar um sistema perfeito para aquários plantados, implementamos duas fitas led de cor vermelha, e três de cor azul. Sendo as azuis consideradas como luz noturna pelo efeito estético quando ligadas após o fim do fotoperiodo normal, tudo isto configurável através da web app.
+Para além do que foi proposto incialmente, foram adicionadas/alteradas algumas funcionalidades nomeadamente a respeito da iluminação e dos seus controlos na web app, inicialmente tinhamos pensado usar só luz branca, mas dada a importância de criar um sistema perfeito para aquários plantados, implementamos duas fitas led de cor vermelha, e três de cor azul. Sendo as azuis consideradas como luz noturna pelo efeito estético quando ligadas após o fim do fotoperiodo normal, tudo isto configurável através da web app.
 
 Além disto, tinhamos planeado construir um sistema de deteção de turbidez através de um LED e um sensor que recebia a luz do led, no entanto esta estratégia revelou ser ineficaz, pelo que obtemos um sensor de turbidez propriamente dito. 
 
-Embora de implementação simples, foram ainda adicionados um buzzer e um led que são activados aquando da activação da ventoinha, para um alerta local.
+Embora de implementação simples, foram ainda adicionados um buzzer e um led que são activados aquando da activação da ventoinha, para um alerta local. A nivel de alertas foi ainda implementado integração com Telegram bot para recepção de alertas em tempo real.
 
-Tinhamos outras ideias de implementação, descritas [aqui](#próximas-etapas)
+O plataforma web também sofreu alterações, originalmente tinhamos feito em HTML/CSS/PHP, mas para uma abordagem mais robusta, moderna e que permitisse escalabilidade facilmente optamos por usar uma framework full-stack, Nuxt.
+
+Tinhamos outras ideias de implementação, descritas [aqui](#próximas-etapas), mas devido a ainda não terem chegado os componentes necessários, não irão ser apresentados neste PBL, no entanto serão implementados posteriormente.
+
+Este projeto está em uso continuo 24h, e irá ser expandido e optimizado com o tempo, podendo ainda ser fácilmente replicado.
 
 ---
 
