@@ -313,6 +313,11 @@ Responsável pelo armazenamento, processamento e análise inteligente dos dados.
 
 Responsável pela interface com o utilizador.
 
+<div align="center">
+  <img src="https://github.com/RuiOuteiro/AquaSense/blob/main/Documentacao/3aEntrega/Ficheiros/Frontend.png" alt="Frontend Aquasense" width="500"/>
+  <p>Exemplo do UI utilizado no Frontend</p>
+</div>
+
 #### Tecnologias
 
 | Componente | Tecnologia |
@@ -387,7 +392,7 @@ sequenceDiagram
     participant Telegram
     participant User as Utilizador
     
-    loop A cada 30 segundos
+    loop A cada 15 segundos
         ESP32->>Backend: POST /api/sensors (JSON)
         Backend->>DB: INSERT leituras
         Backend->>Backend: Verificar limites
@@ -417,7 +422,7 @@ sequenceDiagram
 
 | Comunicação | Protocolo | Formato | Frequência |
 |-------------|-----------|---------|------------|
-| ESP32 → Backend | HTTP POST | JSON | 30 segundos |
+| ESP32 → Backend | HTTP POST | JSON | 15 segundos |
 | Backend → ESP32 | HTTP GET | JSON | Por pedido |
 | Backend → MySQL | TCP/MySQL | SQL | Por operação |
 | Backend → Flask IA | HTTP REST | JSON | Por pedido |
@@ -645,7 +650,7 @@ O sistema oferece interação natural através de:
 
 - **Tempo médio de resposta API:** 45ms
 - **Consumo energético ESP32:** ~150mA (WiFi ativo)
-- **Frequência de leituras:** 30 segundos
+- **Frequência de leituras:** 15 segundos
 - **Capacidade de histórico:** 1+ ano de dados
 - **Precisão do modelo IA:** ~98% em validação cruzada
 
@@ -733,7 +738,7 @@ O projeto AquaSense atingiu com sucesso os objetivos propostos, resultando num s
 
 ### Objetivos Alcançados
 
-**Monitorização em tempo real** - Leituras de temperatura, pH, turbidez e condições ambientais a cada 30 segundos
+**Monitorização em tempo real** - Leituras de temperatura, pH, turbidez e condições ambientais a cada 15 segundos
 
 **Automação inteligente** - Controlo automático de iluminação com fade PWM e ventilação por temperatura
 
