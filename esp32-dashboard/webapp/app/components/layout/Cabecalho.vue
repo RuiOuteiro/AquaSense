@@ -11,7 +11,7 @@
       <!-- Logótipo -->
       <div class="logo">
         <div class="logo-icon">
-          <span class="material-icons-outlined">water_drop</span>
+          <img src="/Logo.png" alt="AquaSense Logo" />
         </div>
         <div class="logo-text">
           <h1>AquaSense</h1>
@@ -144,11 +144,11 @@ onUnmounted(() => {
 .logo-icon {
   width: 48px;
   height: 48px;
+  background: linear-gradient(135deg, #06b6d44a, #3b82f626);
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
 }
 
 .logo-icon img {

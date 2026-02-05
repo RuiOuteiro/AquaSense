@@ -63,12 +63,12 @@ export function useConfiguracaoSistema() {
     try {
       const res = await $fetch<{ success: boolean; data: any }>('/api/config')
       if (res.success && res.data) {
-        config.modoManual = res.data.modo_manual
-        config.ventoinhaManual = res.data.ventoinha_manual
+        config.modoManual = res.data.modo_manual === 1 || res.data.modo_manual === true
+        config.ventoinhaManual = res.data.ventoinha_manual === 1 || res.data.ventoinha_manual === true
         config.tempLigar = parseFloat(res.data.temp_ligar)
         config.tempDesligar = parseFloat(res.data.temp_desligar)
-        config.luzManual = res.data.luz_manual ?? false
-        config.luzEstado = res.data.luz_estado ?? false
+        config.luzManual = res.data.luz_manual === 1 || res.data.luz_manual === true
+        config.luzEstado = res.data.luz_estado === 1 || res.data.luz_estado === true
         config.luzHoraLigar = res.data.luz_hora_ligar ?? 8
         config.luzMinutoLigar = res.data.luz_minuto_ligar ?? 0
         config.luzHoraDesligar = res.data.luz_hora_desligar ?? 20
@@ -78,8 +78,8 @@ export function useConfiguracaoSistema() {
         config.luzModo = res.data.luz_modo ?? 'horario'
         config.luzCicloHoras = res.data.luz_ciclo_horas ?? 8
         config.luzCicloInicio = res.data.luz_ciclo_inicio ?? null
-        config.luzNoturnaManual = res.data.luz_noturna_manual ?? false
-        config.luzNoturnaEstado = res.data.luz_noturna_estado ?? false
+        config.luzNoturnaManual = res.data.luz_noturna_manual === 1 || res.data.luz_noturna_manual === true
+        config.luzNoturnaEstado = res.data.luz_noturna_estado === 1 || res.data.luz_noturna_estado === true
         config.luzNoturnaModo = res.data.luz_noturna_modo ?? 'horario'
         config.luzNoturnaCicloHoras = res.data.luz_noturna_ciclo_horas ?? 8
         config.luzNoturnaCicloInicio = res.data.luz_noturna_ciclo_inicio ?? null
@@ -87,7 +87,7 @@ export function useConfiguracaoSistema() {
         config.luzNoturnaMinutoLigar = res.data.luz_noturna_minuto_ligar ?? 0
         config.luzNoturnaHoraDesligar = res.data.luz_noturna_hora_desligar ?? 8
         config.luzNoturnaMinutoDesligar = res.data.luz_noturna_minuto_desligar ?? 0
-        config.aiAjusteFotoperiodo = res.data.ai_ajuste_fotoperiodo ?? false
+        config.aiAjusteFotoperiodo = res.data.ai_ajuste_fotoperiodo === 1 || res.data.ai_ajuste_fotoperiodo === true
         config.aiFotoperiodoSugerido = res.data.ai_fotoperiodo_sugerido ?? null
       }
     } catch (erro) {

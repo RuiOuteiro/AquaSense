@@ -4,7 +4,7 @@
       <!-- Logo e Título -->
       <div class="auth-header">
         <div class="logo">
-          <span class="material-icons-outlined">water_drop</span>
+          <img src="/Logo.png" alt="AquaSense Logo" />
         </div>
         <h1>AquaSense</h1>
         <p class="subtitle">Sistema Inteligente de Manutenção de Aquário </p>
@@ -141,20 +141,15 @@ async function handleLogin() {
 }
 
 .logo {
-  width: 64px;
-  height: 64px;
-  background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 80px;
+  height: 80px;
   margin: 0 auto 20px;
-  box-shadow: 0 10px 30px -10px rgba(6, 182, 212, 0.5);
 }
 
-.logo .material-icons-outlined {
-  font-size: 36px;
-  color: white;
+.logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .auth-header h1 {
@@ -442,12 +437,8 @@ async function handleLogin() {
   }
 
   .logo {
-    width: 56px;
-    height: 56px;
-  }
-
-  .logo .material-icons-outlined {
-    font-size: 32px;
+    width: 64px;
+    height: 64px;
   }
 }
 </style>

@@ -3,7 +3,7 @@
     <div class="auth-card">
       <div class="auth-header">
         <div class="logo">
-          <span class="material-icons-outlined">water_drop</span>
+          <img src="/Logo.png" alt="AquaSense Logo" />
         </div>
         <h1>Criar Conta</h1>
         <p class="subtitle">Junte-se ao AquaSense</p>
@@ -156,20 +156,15 @@ async function handleRegister() {
 }
 
 .logo {
-  width: 64px;
-  height: 64px;
-  background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 80px;
+  height: 80px;
   margin: 0 auto 16px;
-  box-shadow: 0 10px 30px -10px rgba(16, 185, 129, 0.5);
 }
 
-.logo .material-icons-outlined {
-  font-size: 32px;
-  color: white;
+.logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .auth-header h1 {
@@ -389,7 +384,6 @@ async function handleRegister() {
 @media (max-width: 480px) {
   .auth-card { padding: 28px 20px; border-radius: 20px; }
   .auth-header h1 { font-size: 22px; }
-  .logo { width: 56px; height: 56px; }
-  .logo .material-icons-outlined { font-size: 28px; }
+  .logo { width: 64px; height: 64px; }
 }
 </style>
