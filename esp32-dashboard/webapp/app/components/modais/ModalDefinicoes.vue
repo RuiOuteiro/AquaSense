@@ -380,46 +380,6 @@
             <span>%</span>
           </div>
         </div>
-        
-        <div class="limite-grupo">
-          <label>Temp. Ambiente</label>
-          <div class="limite-campos">
-            <input 
-              type="number" 
-              :value="alertConfig.tempAmbienteMin"
-              class="campo-numero"
-              @change="$emit('actualizarAlertaTempAmbienteMin', Number(($event.target as HTMLInputElement).value))"
-            />
-            <span>-</span>
-            <input 
-              type="number" 
-              :value="alertConfig.tempAmbienteMax"
-              class="campo-numero"
-              @change="$emit('actualizarAlertaTempAmbienteMax', Number(($event.target as HTMLInputElement).value))"
-            />
-            <span>°C</span>
-          </div>
-        </div>
-        
-        <div class="limite-grupo">
-          <label>Humidade</label>
-          <div class="limite-campos">
-            <input 
-              type="number" 
-              :value="alertConfig.humidadeMin"
-              class="campo-numero"
-              @change="$emit('actualizarAlertaHumidadeMin', Number(($event.target as HTMLInputElement).value))"
-            />
-            <span>-</span>
-            <input 
-              type="number" 
-              :value="alertConfig.humidadeMax"
-              class="campo-numero"
-              @change="$emit('actualizarAlertaHumidadeMax', Number(($event.target as HTMLInputElement).value))"
-            />
-            <span>%</span>
-          </div>
-        </div>
       </div>
     </div>
   </ModalBase>
@@ -476,10 +436,6 @@ defineEmits<{
   'actualizarAlertaPhMin': [valor: number]
   'actualizarAlertaPhMax': [valor: number]
   'actualizarAlertaTurbidezMax': [valor: number]
-  'actualizarAlertaTempAmbienteMin': [valor: number]
-  'actualizarAlertaTempAmbienteMax': [valor: number]
-  'actualizarAlertaHumidadeMin': [valor: number]
-  'actualizarAlertaHumidadeMax': [valor: number]
 }>()
 
 const opcoesFotoperiodo = OPCOES_FOTOPERIODO

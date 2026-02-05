@@ -1,0 +1,136 @@
+/**
+ * Estilos de tabelas
+ * 
+ * @ficheiro assets/css/componentes/tabelas.css
+ * @autor AquaSense Team
+ */
+
+/* ========== CONTENTOR DE TABELA ========== */
+.tabela-contentor {
+  overflow-x: auto;
+  border-radius: var(--raio-medio);
+  background: var(--fundo-cartao);
+  border: 1px solid var(--borda-cartao);
+}
+
+/* ========== TABELA ========== */
+.tabela {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--tamanho-sm);
+}
+
+/* ========== CABEÇALHO ========== */
+.tabela-cabecalho {
+  background: rgba(30, 41, 59, 0.8);
+}
+
+.tabela-cabecalho th {
+  padding: var(--espaco-sm) var(--espaco-md);
+  text-align: left;
+  font-weight: 600;
+  color: var(--texto-secundario);
+  text-transform: uppercase;
+  font-size: var(--tamanho-xs);
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--borda-sutil);
+}
+
+/* ========== CORPO ========== */
+.tabela-corpo tr {
+  transition: background var(--transicao-rapida);
+}
+
+.tabela-corpo tr:hover {
+  background: var(--fundo-hover);
+}
+
+.tabela-corpo td {
+  padding: var(--espaco-sm) var(--espaco-md);
+  color: var(--texto-principal);
+  border-bottom: 1px solid var(--borda-sutil);
+}
+
+.tabela-corpo tr:last-child td {
+  border-bottom: none;
+}
+
+/* ========== CÉLULAS ESPECIAIS ========== */
+.tabela-celula-centro {
+  text-align: center;
+}
+
+.tabela-celula-direita {
+  text-align: right;
+}
+
+.tabela-celula-numero {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: var(--tamanho-xs);
+}
+
+/* ========== ESTADOS ========== */
+.tabela-vazia {
+  text-align: center;
+  padding: var(--espaco-xl);
+  color: var(--texto-terciario);
+}
+
+.tabela-carregando {
+  text-align: center;
+  padding: var(--espaco-xl);
+  color: var(--texto-secundario);
+}
+
+/* ========== DISTINTIVOS NA TABELA ========== */
+.tabela-distintivo {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: var(--tamanho-xs);
+  font-weight: 500;
+  border-radius: var(--raio-pequeno);
+}
+
+.tabela-distintivo.ligado {
+  background: var(--cor-sucesso-fundo);
+  color: var(--cor-sucesso);
+}
+
+.tabela-distintivo.desligado {
+  background: var(--fundo-hover);
+  color: var(--texto-terciario);
+}
+
+/* ========== LISTA ALTERNATIVA ========== */
+.lista-registos {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-xs);
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.lista-registo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--espaco-sm) var(--espaco-md);
+  background: var(--fundo-hover);
+  border-radius: var(--raio-pequeno);
+  font-size: var(--tamanho-sm);
+}
+
+.lista-registo-tipo {
+  font-weight: 500;
+  color: var(--texto-principal);
+}
+
+.lista-registo-valor {
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--cor-primaria-clara);
+}
+
+.lista-registo-tempo {
+  font-size: var(--tamanho-xs);
+  color: var(--texto-terciario);
+}

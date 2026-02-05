@@ -7,8 +7,7 @@ export default defineEventHandler(async (event) => {
   try {
     const [rows] = await pool.execute(
       `SELECT enabled, temp_min, temp_max, ph_min, ph_max, 
-              turbidez_max, humidade_min, humidade_max,
-              temp_ambiente_min, temp_ambiente_max 
+              turbidez_max, humidade_min, humidade_max 
        FROM alertas_config WHERE utilizador_id = ?`,
       [user.id]
     )
@@ -32,9 +31,7 @@ export default defineEventHandler(async (event) => {
           phMax: 7.5,
           turbidezMax: 30,
           humidadeMin: 40,
-          humidadeMax: 80,
-          tempAmbienteMin: 18,
-          tempAmbienteMax: 30
+          humidadeMax: 80
         }
       }
     }
@@ -50,9 +47,7 @@ export default defineEventHandler(async (event) => {
         phMax: parseFloat(cfg.ph_max),
         turbidezMax: parseFloat(cfg.turbidez_max),
         humidadeMin: parseFloat(cfg.humidade_min),
-        humidadeMax: parseFloat(cfg.humidade_max),
-        tempAmbienteMin: parseFloat(cfg.temp_ambiente_min) || 18,
-        tempAmbienteMax: parseFloat(cfg.temp_ambiente_max) || 30
+        humidadeMax: parseFloat(cfg.humidade_max)
       }
     }
   } catch (error: any) {

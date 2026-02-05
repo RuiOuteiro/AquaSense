@@ -1,0 +1,186 @@
+/**
+ * Estilos de modais
+ * 
+ * @ficheiro assets/css/componentes/modais.css
+ * @autor AquaSense Team
+ */
+
+/* ========== SOBREPOSIÇÃO ========== */
+.modal-sobreposicao {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: var(--z-modal-fundo);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--espaco-md);
+  animation: aparecer var(--transicao-normal);
+}
+
+/* ========== CONTENTOR ========== */
+.modal-contentor {
+  background: var(--fundo-cartao-solido);
+  border: 1px solid var(--borda-cartao);
+  border-radius: var(--raio-xl);
+  width: 100%;
+  max-width: var(--largura-modal);
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  z-index: var(--z-modal);
+  animation: aparecer-escala var(--transicao-normal);
+  box-shadow: var(--sombra-grande);
+}
+
+.modal-contentor.grande {
+  max-width: var(--largura-modal-grande);
+}
+
+/* ========== CABEÇALHO ========== */
+.modal-cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--espaco-lg);
+  border-bottom: 1px solid var(--borda-sutil);
+  background: rgba(15, 23, 42, 0.5);
+}
+
+.modal-titulo {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-sm);
+  font-size: var(--tamanho-lg);
+  font-weight: 600;
+  color: var(--texto-principal);
+}
+
+.modal-titulo-icone {
+  font-size: 1.5rem;
+}
+
+.modal-fechar {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--fundo-hover);
+  border: none;
+  border-radius: var(--raio-medio);
+  color: var(--texto-secundario);
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: all var(--transicao-rapida);
+}
+
+.modal-fechar:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: var(--cor-erro);
+}
+
+/* ========== CORPO ========== */
+.modal-corpo {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--espaco-lg);
+}
+
+/* ========== RODAPÉ ========== */
+.modal-rodape {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--espaco-sm);
+  padding: var(--espaco-md) var(--espaco-lg);
+  border-top: 1px solid var(--borda-sutil);
+  background: rgba(15, 23, 42, 0.5);
+}
+
+/* ========== SECÇÕES ========== */
+.modal-seccao {
+  margin-bottom: var(--espaco-xl);
+}
+
+.modal-seccao:last-child {
+  margin-bottom: 0;
+}
+
+.modal-seccao-titulo {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-sm);
+  font-size: var(--tamanho-base);
+  font-weight: 600;
+  color: var(--texto-principal);
+  margin-bottom: var(--espaco-md);
+  padding-bottom: var(--espaco-sm);
+  border-bottom: 1px solid var(--borda-sutil);
+}
+
+.modal-seccao-titulo-icone {
+  font-size: 1.25rem;
+  color: var(--cor-primaria-clara);
+}
+
+/* ========== SEPARADOR ========== */
+.modal-separador {
+  height: 1px;
+  background: var(--borda-sutil);
+  margin: var(--espaco-lg) 0;
+}
+
+/* ========== GRELHA NO MODAL ========== */
+.modal-grelha {
+  display: grid;
+  gap: var(--espaco-md);
+}
+
+.modal-grelha-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+@media (max-width: 600px) {
+  .modal-grelha-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ========== CARTÃO NO MODAL ========== */
+.modal-cartao {
+  background: var(--fundo-hover);
+  border-radius: var(--raio-medio);
+  padding: var(--espaco-md);
+}
+
+.modal-cartao-titulo {
+  font-size: var(--tamanho-sm);
+  font-weight: 600;
+  color: var(--texto-principal);
+  margin-bottom: var(--espaco-sm);
+}
+
+/* ========== TRANSIÇÕES ========== */
+.modal-entrar {
+  opacity: 0;
+}
+
+.modal-entrar-activo {
+  opacity: 1;
+  transition: opacity var(--transicao-normal);
+}
+
+.modal-sair {
+  opacity: 1;
+}
+
+.modal-sair-activo {
+  opacity: 0;
+  transition: opacity var(--transicao-normal);
+}
