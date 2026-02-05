@@ -724,9 +724,11 @@ Responsabilidades principais: Inteligência Artificial, Arduino
 
 ## Conclusão
 
-O projeto AquaSense cumpriu integralmente os objetivos definidos, resultando num sistema funcional de monitorização e controlo inteligente de aquários. A solução desenvolvida comprova a viabilidade de implementação de um sistema IoT completo recorrendo a tecnologias acessíveis e de baixo custo, sem comprometer a funcionalidade ou a fiabilidade. O sistema é utilizado diariamente em contexto de aquário real.
+O projeto AquaSense alcançou com sucesso todos os objetivos, e um sistema funcional foi desenvolvido para fornecer monitoramento e controle inteligente de aquários. 
+A solução demonstra que é possível implementar um sistema completo de IoT usando tecnologias acessíveis e de baixo custo, sem comprometer a funcionalidade ou a confiabilidade. 
+Ele é usado diariamente em um contexto real de aquário. 
 
-O projeto constitui uma base técnica sólida para evoluções futuras na área da automação de aquários, sendo igualmente passível de adaptação e extensão a outros cenários de monitorização ambiental.
+O projeto constrói uma base técnica sólida para futuras melhorias, além de ser flexível e transferível para diferentes ambientes de monitoramento ambiental.
 
 ---
 
