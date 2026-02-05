@@ -1,4 +1,74 @@
 import pool from '../utils/db'
+import { sendAlerta } from '../utils/telegram'
+
+// Cache para evitar spam de alertas (1 alerta por tipo a cada 5 minutos)
+const alertCache: Record<string, number> = {}
+const ALERT_COOLDOWN = 5 * 60 * 1000 // 5 minutos
+
+// Função para verificar e enviar alertas
+async function checkAndSendAlerts(aquarioId: number, sensors: any[], deviceId: string) {
+  try {
+    // Obter utilizador, config telegram e config alertas
+    const [rows] = await pool.execute(
+      `SELECT u.id as user_id, u.telegram_chat_id, u.telegram_alertas,
+              ac.enabled, ac.temp_min, ac.temp_max, ac.ph_min, ac.ph_max,
+              ac.turbidez_max, ac.humidade_min, ac.humidade_max
+       FROM utilizadores u 
+       JOIN aquarios a ON a.utilizador_id = u.id 
+       LEFT JOIN alertas_config ac ON ac.utilizador_id = u.id
+       WHERE a.id = ? AND u.telegram_chat_id IS NOT NULL AND u.telegram_alertas = 1`,
+      [aquarioId]
+    )
+    
+    const users = rows as any[]
+    if (users.length === 0) return
+    
+    const user = users[0]
+    const chatId = user.telegram_chat_id
+    
+    // Se alertas desativados, não enviar
+    if (user.enabled === 0) return
+    
+    // Construir limites da BD (ou usar defaults)
+    const LIMITES: Record<string, { min: number; max: number }> = {
+      temperature: { min: user.temp_min || 22, max: user.temp_max || 28 },
+      humidity: { min: user.humidade_min || 40, max: user.humidade_max || 80 },
+      ph: { min: user.ph_min || 6.5, max: user.ph_max || 7.5 },
+      turbidity: { min: 0, max: user.turbidez_max || 30 }
+    }
+    
+    for (const sensor of sensors) {
+      const tipo = sensor.type?.toLowerCase()
+      let valor = sensor.value
+      
+      // Aplicar mesma correção do pH
+      if (tipo === 'ph' && typeof valor === 'number') {
+        valor = valor - 2.5
+      }
+      
+      const limites = LIMITES[tipo]
+      if (!limites) continue
+      
+      const foraDoLimite = valor < limites.min || valor > limites.max
+      if (!foraDoLimite) continue
+      
+      // Verificar cooldown
+      const cacheKey = `${deviceId}_${tipo}`
+      const lastAlert = alertCache[cacheKey] || 0
+      if (Date.now() - lastAlert < ALERT_COOLDOWN) continue
+      
+      // Enviar alerta
+      const enviado = await sendAlerta(chatId, sensor.type, valor)
+      
+      if (enviado) {
+        alertCache[cacheKey] = Date.now()
+        console.log(`[TELEGRAM] Alerta enviado: ${tipo} = ${valor}`)
+      }
+    }
+  } catch (error) {
+    console.error('[TELEGRAM] Erro ao verificar alertas:', error)
+  }
+}
 
 // Endpoint para receber TODOS os dados do ESP32 num único POST
 export default defineEventHandler(async (event) => {
@@ -56,6 +126,9 @@ export default defineEventHandler(async (event) => {
       connection.release()
       
       console.log(`[SENSORS POST] OK: ${inserted} sensores inseridos`)
+      
+      // Verificar alertas e enviar Telegram
+      checkAndSendAlerts(targetAquarioId, sensors, device_id)
       
       return {
         success: true,

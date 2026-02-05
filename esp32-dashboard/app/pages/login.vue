@@ -103,11 +103,11 @@ async function handleLogin() {
   try {
     const response = await $fetch<{ success: boolean; token: string }>('/api/auth/login', {
       method: 'POST',
-      body: form.value
+      body: form.value,
+      credentials: 'include'
     })
 
-    if (response.success && response.token) {
-      localStorage.setItem('auth_token', response.token)
+    if (response.success) {
       router.push('/')
     }
   } catch (err: any) {
@@ -128,6 +128,7 @@ async function handleLogin() {
   padding: 20px;
   position: relative;
   overflow: hidden;
+  font-family: 'Inter', sans-serif;
 }
 
 .auth-card {

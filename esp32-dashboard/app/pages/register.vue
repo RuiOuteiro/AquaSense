@@ -134,6 +134,7 @@ async function handleRegister() {
   padding: 20px;
   position: relative;
   overflow: hidden;
+  font-family: 'Inter', sans-serif;
 }
 
 .auth-card {

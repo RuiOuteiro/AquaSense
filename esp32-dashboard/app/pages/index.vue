@@ -63,6 +63,15 @@
                   <span class="material-icons-outlined">settings</span>
                   Definições
                 </button>
+                <div class="dropdown-divider"></div>
+                <button class="dropdown-item" @click="openProfile(); closeBurgerMenu()">
+                  <span class="material-icons-outlined">person</span>
+                  Perfil
+                </button>
+                <button class="dropdown-item logout" @click="handleLogout(); closeBurgerMenu()">
+                  <span class="material-icons-outlined">logout</span>
+                  Sair
+                </button>
               </div>
             </Transition>
           </div>
@@ -391,10 +400,35 @@
           </div>
         </div>
 
-        <!-- Hora atual -->
-        <div class="current-time-display">
-          <span class="material-icons-outlined">schedule</span>
-          <span class="time">{{ currentTime }}</span>
+        <!-- Hora e Fotoperíodo -->
+        <div class="time-photo-row">
+          <div class="time-card">
+            <span class="material-icons-outlined">schedule</span>
+            <span class="time-value">{{ currentTime }}</span>
+          </div>
+          
+          <div class="photo-card">
+            <div class="photo-stat">
+              <span class="photo-label">Fotoperíodo</span>
+              <span class="photo-value">{{ fotoperiodoTotal }}</span>
+            </div>
+            <div class="photo-divider"></div>
+            <div class="photo-stat">
+              <span class="photo-label">Intensidade</span>
+              <span class="photo-value">{{ config.luzIntensidade }}%</span>
+            </div>
+          </div>
+
+          <div class="schedule-card">
+            <div class="schedule-item white">
+              <span class="schedule-icon"></span>
+              <span class="schedule-times">{{ formatTime(config.luzHoraLigar, config.luzMinutoLigar) }} - {{ formatTime(config.luzHoraDesligar, config.luzMinutoDesligar) }}</span>
+            </div>
+            <div class="schedule-item blue">
+              <span class="schedule-icon"></span>
+              <span class="schedule-times">{{ formatTime(config.luzNoturnaHoraLigar, config.luzNoturnaMinutoLigar) }} - {{ formatTime(config.luzNoturnaHoraDesligar, config.luzNoturnaMinutoDesligar) }}</span>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -504,8 +538,8 @@
                 <span class="material-icons-outlined">thermostat_auto</span>
               </div>
               <div class="sensor-info">
-                <h3>Temp. Ambiente</h3>
-                <span>Sensor DHT11</span>
+                <h3>Temperatura Ambiente</h3>
+                
               </div>
             </div>
             <div class="sensor-value">
@@ -523,8 +557,8 @@
                 <span class="material-icons-outlined">water_drop</span>
               </div>
               <div class="sensor-info">
-                <h3>Humidade</h3>
-                <span>Sensor DHT11</span>
+                <h3>Humidade Ambiente</h3>
+                
               </div>
             </div>
             <div class="sensor-value">
@@ -1390,6 +1424,315 @@
           </div>
         </div>
       </Transition>
+
+      <!-- ========== MODAL DE PERFIL ========== -->
+      <Transition name="modal-fade">
+        <div
+          class="modal-overlay"
+          v-if="showProfile"
+          @click.self="closeProfile"
+        >
+          <div class="modal-container profile-modal">
+            <div class="modal-header">
+              <h2>
+                <span class="material-icons-outlined">person</span>
+                Perfil
+              </h2>
+              <button class="close-btn" @click="closeProfile">
+                <span class="material-icons-outlined">close</span>
+              </button>
+            </div>
+
+            <div class="modal-content custom-scroll">
+              <!-- Mensagens -->
+              <Transition name="fade">
+                <div class="profile-message success" v-if="profileSuccess">
+                  <span class="material-icons-outlined">check_circle</span>
+                  {{ profileSuccess }}
+                </div>
+              </Transition>
+              <Transition name="fade">
+                <div class="profile-message error" v-if="profileError">
+                  <span class="material-icons-outlined">error</span>
+                  {{ profileError }}
+                </div>
+              </Transition>
+
+              <!-- Informações do utilizador - Editável -->
+              <div class="settings-section">
+                <h3>
+                  <span class="material-icons-outlined">account_circle</span>
+                  Informações Pessoais
+                </h3>
+                
+                <div class="profile-form">
+                  <div class="form-group">
+                    <label for="profile-nome">Nome</label>
+                    <div class="input-wrapper">
+                      <span class="input-icon material-icons-outlined">person</span>
+                      <input
+                        id="profile-nome"
+                        type="text"
+                        v-model="profileForm.nome"
+                        :placeholder="currentUser?.nome || 'O seu nome'"
+                        class="modern-input"
+                      />
+                      <button 
+                        class="input-action" 
+                        @click="updateNome" 
+                        :disabled="profileLoading || !profileForm.nome.trim()"
+                        title="Guardar"
+                      >
+                        <span class="material-icons-outlined">{{ profileLoading ? 'sync' : 'check' }}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="profile-email">Email</label>
+                    <div class="input-wrapper">
+                      <span class="input-icon material-icons-outlined">email</span>
+                      <input
+                        id="profile-email"
+                        type="email"
+                        v-model="profileForm.email"
+                        :placeholder="currentUser?.email || 'O seu email'"
+                        class="modern-input"
+                      />
+                      <button 
+                        class="input-action" 
+                        @click="updateEmail" 
+                        :disabled="profileLoading || !profileForm.email.trim()"
+                        title="Guardar"
+                      >
+                        <span class="material-icons-outlined">{{ profileLoading ? 'sync' : 'check' }}</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Segurança -->
+              <div class="settings-section">
+                <h3>
+                  <span class="material-icons-outlined">shield</span>
+                  Segurança
+                </h3>
+                
+                <div class="profile-form">
+                  <div class="form-group">
+                    <label for="profile-current-pw">Password Actual</label>
+                    <div class="input-wrapper">
+                      <span class="input-icon material-icons-outlined">lock</span>
+                      <input
+                        id="profile-current-pw"
+                        :type="showCurrentPw ? 'text' : 'password'"
+                        v-model="profileForm.currentPassword"
+                        placeholder="Introduza a password actual"
+                        class="modern-input"
+                      />
+                      <button class="input-action toggle" @click="showCurrentPw = !showCurrentPw" type="button">
+                        <span class="material-icons-outlined">{{ showCurrentPw ? 'visibility_off' : 'visibility' }}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="profile-new-pw">Nova Password</label>
+                    <div class="input-wrapper">
+                      <span class="input-icon material-icons-outlined">lock_reset</span>
+                      <input
+                        id="profile-new-pw"
+                        :type="showNewPw ? 'text' : 'password'"
+                        v-model="profileForm.newPassword"
+                        placeholder="Mínimo 6 caracteres"
+                        class="modern-input"
+                      />
+                      <button class="input-action toggle" @click="showNewPw = !showNewPw" type="button">
+                        <span class="material-icons-outlined">{{ showNewPw ? 'visibility_off' : 'visibility' }}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <button 
+                    class="action-btn primary" 
+                    @click="updatePassword" 
+                    :disabled="profileLoading || !profileForm.currentPassword || !profileForm.newPassword"
+                  >
+                    <span class="material-icons-outlined">{{ profileLoading ? 'sync' : 'lock_reset' }}</span>
+                    {{ profileLoading ? 'A alterar...' : 'Alterar Password' }}
+                  </button>
+                </div>
+              </div>
+
+              <!-- Telegram -->
+              <div class="settings-section">
+                <h3>
+                  <span class="material-icons-outlined">send</span>
+                  Alertas Telegram
+                </h3>
+                
+                <p class="telegram-info">
+                  Recebe alertas no Telegram quando os sensores saírem dos limites.
+                </p>
+                
+                <div class="form-group">
+                  <label>Chat ID</label>
+                  <div class="input-wrapper">
+                    <span class="input-icon material-icons-outlined">tag</span>
+                    <input
+                      type="text"
+                      v-model="telegramConfig.chat_id"
+                      placeholder="Ex: 7104165881"
+                      class="modern-input"
+                    />
+                    <button 
+                      class="input-action" 
+                      @click="saveTelegram" 
+                      :disabled="telegramLoading || !telegramConfig.chat_id.trim()"
+                      title="Guardar e testar"
+                    >
+                      <span class="material-icons-outlined">{{ telegramLoading ? 'sync' : 'check' }}</span>
+                    </button>
+                  </div>
+                </div>
+                
+                <div class="telegram-help">
+                  <span class="material-icons-outlined">info</span>
+                  <span>Envia mensagem ao <strong>@userinfobot</strong> no Telegram para obter o teu ID.</span>
+                </div>
+              </div>
+
+              <!-- Aquários -->
+              <div class="settings-section">
+                <div class="section-header">
+                  <h3>
+                    <span class="material-icons-outlined">water</span>
+                    Meus Aquários
+                  </h3>
+                  <button class="add-btn" @click="showAddAquario = true" title="Adicionar aquário">
+                    <span class="material-icons-outlined">add</span>
+                  </button>
+                </div>
+
+                <!-- Formulário adicionar aquário -->
+                <div class="add-aquario-form" v-if="showAddAquario">
+                  <div class="form-group">
+                    <div class="input-wrapper">
+                      <span class="input-icon material-icons-outlined">water_drop</span>
+                      <input
+                        type="text"
+                        v-model="newAquario.nome"
+                        placeholder="Nome do aquário"
+                        class="modern-input"
+                      />
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <div class="input-wrapper">
+                      <span class="input-icon material-icons-outlined">memory</span>
+                      <input
+                        type="text"
+                        v-model="newAquario.device_id"
+                        placeholder="Device ID (ex: ESP32_001)"
+                        class="modern-input"
+                      />
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <div class="input-wrapper">
+                      <span class="input-icon material-icons-outlined">description</span>
+                      <input
+                        type="text"
+                        v-model="newAquario.descricao"
+                        placeholder="Descrição (opcional)"
+                        class="modern-input"
+                      />
+                    </div>
+                  </div>
+                  <div class="form-actions">
+                    <button class="action-btn secondary" @click="showAddAquario = false">Cancelar</button>
+                    <button class="action-btn primary" @click="addAquario" :disabled="!newAquario.nome.trim()">
+                      <span class="material-icons-outlined">add</span>
+                      Adicionar
+                    </button>
+                  </div>
+                </div>
+                
+                <div class="aquarios-list" v-if="userAquarios.length > 0">
+                  <div class="aquario-card-full" v-for="aq in userAquarios" :key="aq.id">
+                    <div class="aquario-card-header">
+                      <div class="aquario-icon">
+                        <span class="material-icons-outlined">waves</span>
+                      </div>
+                      <div class="aquario-title-area">
+                        <span class="aquario-nome">{{ aq.nome }}</span>
+                        <span class="aquario-stats">
+                          <span class="material-icons-outlined">analytics</span>
+                          {{ (aq.total_leituras || 0).toLocaleString() }} leituras
+                        </span>
+                      </div>
+                      <button class="icon-btn danger" @click="deleteAquario(aq.id)" title="Eliminar">
+                        <span class="material-icons-outlined">delete</span>
+                      </button>
+                    </div>
+                    
+                    <div class="aquario-fields">
+                      <div class="aquario-field">
+                        <label>Nome</label>
+                        <div class="input-wrapper">
+                          <span class="input-icon material-icons-outlined">label</span>
+                          <input
+                            type="text"
+                            v-model="aq.nome"
+                            class="modern-input"
+                            @change="saveAquario(aq)"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div class="aquario-field">
+                        <label>Device ID / Sensor</label>
+                        <div class="input-wrapper">
+                          <span class="input-icon material-icons-outlined">memory</span>
+                          <input
+                            type="text"
+                            v-model="aq.device_id"
+                            placeholder="Ex: ESP32_001"
+                            class="modern-input"
+                            @change="saveAquario(aq)"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div class="aquario-field">
+                        <label>Descrição</label>
+                        <div class="input-wrapper">
+                          <span class="input-icon material-icons-outlined">description</span>
+                          <input
+                            type="text"
+                            v-model="aq.descricao"
+                            placeholder="Descrição do aquário"
+                            class="modern-input"
+                            @change="saveAquario(aq)"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="aquarios-empty" v-else-if="!showAddAquario">
+                  <span class="material-icons-outlined">info</span>
+                  <div>
+                    <p>Nenhum aquário configurado</p>
+                    <button class="link-btn" @click="showAddAquario = true">Adicionar o primeiro aquário</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
     </Teleport>
   </div>
 </template>
@@ -1404,8 +1747,19 @@
 import { nextTick } from 'vue';
 
 // ========== ALERTAS ==========
-const { alerts, alertConfig, checkParameters, removeAlert, updateConfig: updateAlertConfig } = useAlerts()
+const { alerts, alertConfig, checkParameters, removeAlert, updateConfig: updateAlertConfig, loadConfig: loadAlertConfig } = useAlerts()
 const currentAlert = computed(() => alerts.value[0] || null)
+
+// ========== FOTOPERÍODO ==========
+const fotoperiodoTotal = computed(() => {
+  const ligar = config.luzHoraLigar * 60 + config.luzMinutoLigar
+  const desligar = config.luzHoraDesligar * 60 + config.luzMinutoDesligar
+  let minutos = desligar - ligar
+  if (minutos < 0) minutos += 24 * 60
+  const h = Math.floor(minutos / 60)
+  const m = minutos % 60
+  return m > 0 ? `${h}h ${m}m` : `${h}h`
+})
 
 // ========== INTERFACES ==========
 // Estrutura de dados para leituras dos sensores
@@ -1445,6 +1799,28 @@ const showSettings = ref(false); // Visibilidade do modal de definições
 const showConsole = ref(false); // Visibilidade da consola
 const showCharts = ref(false); // Visibilidade do modal de gráficos
 const showBurgerMenu = ref(false); // Visibilidade do burger menu
+const showProfile = ref(false); // Visibilidade do modal de perfil
+
+// ========== ESTADO DO PERFIL ==========
+const profileForm = ref({
+  nome: '',
+  email: '',
+  currentPassword: '',
+  newPassword: ''
+});
+const profileLoading = ref(false);
+const profileSuccess = ref('');
+const profileError = ref('');
+const userAquarios = ref<any[]>([]);
+const showCurrentPw = ref(false);
+const showNewPw = ref(false);
+const showAddAquario = ref(false);
+const editingAquario = ref<number | null>(null);
+const newAquario = ref({ nome: '', device_id: '', descricao: '' });
+
+// ========== ESTADO DO TELEGRAM ==========
+const telegramConfig = ref({ chat_id: '', alertas_enabled: true });
+const telegramLoading = ref(false);
 
 // ========== AUTENTICAÇÃO ==========
 const router = useRouter();
@@ -1452,20 +1828,16 @@ const currentUser = ref<{ id: number; nome: string; email: string } | null>(null
 
 // Verificar auth ao montar
 onMounted(async () => {
-  const token = localStorage.getItem('auth_token');
-  if (!token) {
-    router.push('/login');
-    return;
-  }
   try {
-    const res = await $fetch<{ success: boolean; user: any }>('/api/auth/me');
-    if (res.success) {
+    const res = await $fetch<{ success: boolean; user: any }>('/api/auth/me', {
+      credentials: 'include'
+    });
+    if (res.success && res.user) {
       currentUser.value = res.user;
     } else {
       router.push('/login');
     }
   } catch {
-    localStorage.removeItem('auth_token');
     router.push('/login');
   }
 });
@@ -1476,6 +1848,208 @@ function handleLogout() {
   $fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
   router.push('/login');
 }
+
+// ========== FUNÇÕES DO PERFIL ==========
+const openProfile = async () => {
+  showProfile.value = true;
+  document.body.style.overflow = "hidden";
+  profileForm.value = { nome: '', email: '', currentPassword: '', newPassword: '' };
+  profileSuccess.value = '';
+  profileError.value = '';
+  
+  // Actualizar dados do utilizador da BD
+  try {
+    const res = await $fetch<{ success: boolean; user: any }>('/api/auth/me');
+    if (res.success && res.user) {
+      currentUser.value = res.user;
+    }
+  } catch (e) {
+    console.error('Erro ao obter dados do utilizador:', e);
+  }
+  
+  // Carregar config Telegram
+  try {
+    const telegramRes = await $fetch<{ success: boolean; config: any }>('/api/telegram/config');
+    if (telegramRes.success && telegramRes.config) {
+      telegramConfig.value = telegramRes.config;
+    }
+  } catch (e) {
+    console.error('Erro ao obter config Telegram:', e);
+  }
+  
+  await fetchUserAquarios();
+};
+
+const saveTelegram = async () => {
+  if (!telegramConfig.value.chat_id.trim()) return;
+  
+  telegramLoading.value = true;
+  profileSuccess.value = '';
+  profileError.value = '';
+  
+  try {
+    const res = await $fetch<{ success: boolean; message: string }>('/api/telegram/config', {
+      method: 'PUT',
+      body: {
+        chat_id: telegramConfig.value.chat_id,
+        alertas_enabled: telegramConfig.value.alertas_enabled
+      }
+    });
+    
+    if (res.success) {
+      profileSuccess.value = res.message;
+    }
+  } catch (e: any) {
+    profileError.value = e.data?.message || 'Erro ao configurar Telegram';
+  } finally {
+    telegramLoading.value = false;
+  }
+};
+
+const closeProfile = () => {
+  showProfile.value = false;
+  document.body.style.overflow = "";
+};
+
+const fetchUserAquarios = async () => {
+  try {
+    const res = await $fetch<{ success: boolean; aquarios: any[] }>('/api/aquarios');
+    if (res.success) {
+      userAquarios.value = res.aquarios;
+    }
+  } catch (e) {
+    console.error('Erro ao obter aquários:', e);
+  }
+};
+
+const updateNome = async () => {
+  if (!profileForm.value.nome.trim()) {
+    profileError.value = 'Nome não pode estar vazio';
+    return;
+  }
+  profileLoading.value = true;
+  profileError.value = '';
+  profileSuccess.value = '';
+  try {
+    const res = await $fetch<{ success: boolean; message: string }>('/api/auth/profile', {
+      method: 'PUT',
+      body: { nome: profileForm.value.nome }
+    });
+    if (res.success) {
+      profileSuccess.value = 'Nome actualizado com sucesso';
+      if (currentUser.value) {
+        currentUser.value.nome = profileForm.value.nome;
+      }
+      profileForm.value.nome = '';
+    }
+  } catch (e: any) {
+    profileError.value = e.data?.message || 'Erro ao actualizar nome';
+  } finally {
+    profileLoading.value = false;
+  }
+};
+
+const updateEmail = async () => {
+  if (!profileForm.value.email.trim()) {
+    profileError.value = 'Email não pode estar vazio';
+    return;
+  }
+  profileLoading.value = true;
+  profileError.value = '';
+  profileSuccess.value = '';
+  try {
+    const res = await $fetch<{ success: boolean; message: string }>('/api/auth/profile', {
+      method: 'PUT',
+      body: { email: profileForm.value.email }
+    });
+    if (res.success) {
+      profileSuccess.value = 'Email actualizado com sucesso';
+      if (currentUser.value) {
+        currentUser.value.email = profileForm.value.email;
+      }
+      profileForm.value.email = '';
+    }
+  } catch (e: any) {
+    profileError.value = e.data?.message || 'Erro ao actualizar email';
+  } finally {
+    profileLoading.value = false;
+  }
+};
+
+const updatePassword = async () => {
+  if (!profileForm.value.currentPassword || !profileForm.value.newPassword) {
+    profileError.value = 'Preencha ambos os campos de password';
+    return;
+  }
+  if (profileForm.value.newPassword.length < 6) {
+    profileError.value = 'Nova password deve ter pelo menos 6 caracteres';
+    return;
+  }
+  profileLoading.value = true;
+  profileError.value = '';
+  profileSuccess.value = '';
+  try {
+    const res = await $fetch<{ success: boolean; message: string }>('/api/auth/profile', {
+      method: 'PUT',
+      body: {
+        currentPassword: profileForm.value.currentPassword,
+        newPassword: profileForm.value.newPassword
+      }
+    });
+    if (res.success) {
+      profileSuccess.value = 'Password alterada com sucesso';
+      profileForm.value.currentPassword = '';
+      profileForm.value.newPassword = '';
+    }
+  } catch (e: any) {
+    profileError.value = e.data?.message || 'Erro ao alterar password';
+  } finally {
+    profileLoading.value = false;
+  }
+};
+
+// ========== FUNÇÕES DE AQUÁRIOS ==========
+const addAquario = async () => {
+  if (!newAquario.value.nome.trim()) return;
+  try {
+    const res = await $fetch<{ success: boolean }>('/api/aquarios', {
+      method: 'POST',
+      body: newAquario.value
+    });
+    if (res.success) {
+      profileSuccess.value = 'Aquário adicionado com sucesso';
+      newAquario.value = { nome: '', device_id: '', descricao: '' };
+      showAddAquario.value = false;
+      await fetchUserAquarios();
+    }
+  } catch (e: any) {
+    profileError.value = e.data?.message || 'Erro ao adicionar aquário';
+  }
+};
+
+const saveAquario = async (aq: any) => {
+  try {
+    await $fetch(`/api/aquarios/${aq.id}`, {
+      method: 'PUT',
+      body: { nome: aq.nome, descricao: aq.descricao, device_id: aq.device_id }
+    });
+    profileSuccess.value = 'Aquário actualizado';
+    setTimeout(() => profileSuccess.value = '', 3000);
+  } catch (e: any) {
+    profileError.value = e.data?.message || 'Erro ao guardar aquário';
+  }
+};
+
+const deleteAquario = async (id: number) => {
+  if (!confirm('Tem certeza que deseja eliminar este aquário?')) return;
+  try {
+    await $fetch(`/api/aquarios/${id}`, { method: 'DELETE' });
+    profileSuccess.value = 'Aquário eliminado';
+    await fetchUserAquarios();
+  } catch (e: any) {
+    profileError.value = e.data?.message || 'Erro ao eliminar aquário';
+  }
+};
 
 // Funções do burger menu
 const toggleBurgerMenu = () => {
@@ -2294,9 +2868,10 @@ const fetchESP32Logs = async () => {
   }
 };
 
-onMounted(() => {
+onMounted(async () => {
   addConsoleLog('AquaSense Dashboard iniciado', 'success');
   addConsoleLog('A carregar configuração...', 'info');
+  await loadAlertConfig();
   carregarConfig();
   fetchData();
   setInterval(fetchData, 5000);
@@ -2527,6 +3102,24 @@ onMounted(() => {
 
 .dropdown-item:hover .material-icons-outlined {
   color: #f1f5f9;
+}
+
+.dropdown-item.logout {
+  color: #f87171;
+}
+
+.dropdown-item.logout:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+.dropdown-item.logout .material-icons-outlined {
+  color: #f87171;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: rgba(148, 163, 184, 0.1);
+  margin: 4px 0;
 }
 
 /* Dropdown transition */
@@ -3011,26 +3604,117 @@ onMounted(() => {
   background: linear-gradient(to right, #6366f1, #8b5cf6);
 }
 
-/* Hora atual */
-.current-time-display {
+/* Hora e Fotoperíodo Row */
+.time-photo-row {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   justify-content: center;
-  gap: 8px;
-  padding: 0.75rem;
-  background: rgba(30, 41, 59, 0.5);
-  border-radius: 12px;
+  gap: 1rem;
   margin-top: 1rem;
 }
 
-.current-time-display span:first-child {
-  color: #64748b;
+.time-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
+  border: 1px solid rgba(248, 250, 252, 0.08);
+  border-radius: 16px;
+  flex: 1;
 }
-.current-time-display .time {
-  font-size: 1.5rem;
+
+.time-card .material-icons-outlined {
+  color: #64748b;
+  font-size: 1.4rem;
+}
+
+.time-value {
+  font-size: 1.75rem;
   font-weight: 700;
   color: #f59e0b;
-  font-family: monospace;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 2px;
+}
+
+.photo-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
+  border: 1px solid rgba(248, 250, 252, 0.08);
+  border-radius: 16px;
+  flex: 1;
+}
+
+.photo-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.photo-label {
+  font-size: 0.7rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.photo-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #06b6d4;
+}
+
+.photo-divider {
+  width: 1px;
+  height: 32px;
+  background: rgba(148, 163, 184, 0.2);
+}
+
+.schedule-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
+  border: 1px solid rgba(248, 250, 252, 0.08);
+  border-radius: 16px;
+  flex: 1;
+}
+
+.schedule-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.schedule-icon {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.schedule-item.white .schedule-icon {
+  background: linear-gradient(135deg, #fef3c7, #fbbf24);
+  box-shadow: 0 0 8px rgba(251, 191, 36, 0.5);
+}
+
+.schedule-item.blue .schedule-icon {
+  background: linear-gradient(135deg, #60a5fa, #3b82f6);
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
+}
+
+.schedule-times {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #cbd5e1;
+  font-family: 'JetBrains Mono', monospace;
 }
 
 /* ========== SECÇÃO DE PARÂMETROS ========== */
@@ -3497,6 +4181,20 @@ td {
   padding: 1rem;
 }
 
+@media (max-width: 600px) {
+  .modal-overlay {
+    padding: 0;
+    align-items: stretch;
+  }
+  
+  .modal-container {
+    max-width: 100%;
+    max-height: 100%;
+    height: 100%;
+    border-radius: 0;
+  }
+}
+
 .modal-container {
   background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
   border-radius: 20px;
@@ -3586,6 +4284,511 @@ td {
 }
 .custom-scroll::-webkit-scrollbar-thumb:hover {
   background: rgba(99, 102, 241, 0.7);
+}
+
+/* ========== MODAL DE PERFIL ========== */
+.profile-modal {
+  max-width: 520px;
+  width: 95vw;
+}
+
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  min-height: 48px;
+}
+
+.input-wrapper .input-icon {
+  flex-shrink: 0;
+}
+
+.input-wrapper:focus-within {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.input-wrapper.readonly {
+  background: rgba(30, 41, 59, 0.4);
+}
+
+.input-icon {
+  padding: 0 12px;
+  color: #64748b;
+  font-size: 20px;
+}
+
+.modern-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 14px 12px 14px 0;
+  color: #f1f5f9;
+  font-size: 0.95rem;
+  font-family: inherit;
+  outline: none;
+}
+
+.modern-input::placeholder {
+  color: #475569;
+}
+
+.modern-input:read-only {
+  color: #94a3b8;
+  cursor: default;
+}
+
+.input-action {
+  background: transparent;
+  border: none;
+  padding: 8px 12px;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 6px;
+  margin-right: 6px;
+}
+
+.input-action:hover:not(:disabled) {
+  background: rgba(99, 102, 241, 0.2);
+  color: #a5b4fc;
+}
+
+.input-action:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.input-action.toggle:hover {
+  background: rgba(51, 65, 85, 0.5);
+  color: #e2e8f0;
+}
+
+.input-badge {
+  font-size: 0.7rem;
+  padding: 4px 10px;
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+  border-radius: 20px;
+  margin-right: 12px;
+  font-weight: 500;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.action-btn.primary {
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  color: white;
+}
+
+.action-btn.primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+}
+
+.action-btn.secondary {
+  background: rgba(51, 65, 85, 0.5);
+  color: #94a3b8;
+}
+
+.action-btn.secondary:hover {
+  background: rgba(51, 65, 85, 0.7);
+  color: #e2e8f0;
+}
+
+.action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.section-header h3 {
+  margin: 0;
+}
+
+.add-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(99, 102, 241, 0.2);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 8px;
+  color: #a5b4fc;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.add-btn:hover {
+  background: rgba(99, 102, 241, 0.3);
+  transform: scale(1.05);
+}
+
+.add-aquario-form {
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.form-actions .action-btn {
+  flex: 1;
+}
+
+.aquarios-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.aquario-card-full {
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  border-radius: 14px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.aquario-card-full:hover {
+  border-color: rgba(99, 102, 241, 0.25);
+}
+
+.aquario-card-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  background: rgba(30, 41, 59, 0.4);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+}
+
+.aquario-icon {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(99, 102, 241, 0.25));
+  border-radius: 12px;
+  color: #60a5fa;
+  flex-shrink: 0;
+}
+
+.aquario-icon .material-icons-outlined {
+  font-size: 24px;
+}
+
+.aquario-title-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.aquario-nome {
+  font-weight: 600;
+  color: #f1f5f9;
+  font-size: 1rem;
+}
+
+.aquario-stats {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+  color: #6366f1;
+}
+
+.aquario-stats .material-icons-outlined {
+  font-size: 14px;
+}
+
+.aquario-fields {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.aquario-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.aquario-field label {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.icon-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(51, 65, 85, 0.4);
+  border: none;
+  border-radius: 8px;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.icon-btn:hover {
+  background: rgba(99, 102, 241, 0.2);
+  color: #a5b4fc;
+}
+
+.icon-btn.danger:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+}
+
+.icon-btn .material-icons-outlined {
+  font-size: 18px;
+}
+
+.aquarios-empty {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px;
+  color: #64748b;
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px dashed rgba(148, 163, 184, 0.2);
+  border-radius: 12px;
+}
+
+.aquarios-empty p {
+  margin: 0 0 4px;
+  color: #94a3b8;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: #6366f1;
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.link-btn:hover {
+  color: #a5b4fc;
+}
+
+.profile-message {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+  font-size: 0.9rem;
+}
+
+.profile-message.success {
+  background: rgba(34, 197, 94, 0.12);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.25);
+}
+
+.profile-message.error {
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.telegram-info {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin: 0 0 16px;
+  line-height: 1.5;
+}
+
+.telegram-help {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 12px;
+  background: rgba(99, 102, 241, 0.1);
+  border-radius: 10px;
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+.telegram-help .material-icons-outlined {
+  font-size: 18px;
+  color: #6366f1;
+  flex-shrink: 0;
+}
+
+/* ========== PROFILE MODAL RESPONSIVE ========== */
+@media (max-width: 600px) {
+  .profile-modal {
+    width: 100vw;
+    max-width: 100vw;
+    height: 100vh;
+    max-height: 100vh;
+    margin: 0;
+    border-radius: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .profile-modal .modal-header {
+    flex-shrink: 0;
+    padding: 16px;
+    background: #1e293b;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+  }
+  
+  .profile-modal .modal-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    padding-bottom: 100px;
+  }
+  
+  .profile-modal .settings-section {
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+  
+  .profile-modal .settings-section h3 {
+    font-size: 0.9rem;
+    margin-bottom: 12px;
+  }
+  
+  .modern-input {
+    padding: 12px 8px 12px 0;
+    font-size: 16px;
+    min-height: 44px;
+  }
+  
+  .input-icon {
+    padding: 0 10px;
+    font-size: 18px;
+  }
+  
+  .input-action {
+    padding: 10px;
+  }
+  
+  .action-btn {
+    padding: 14px 16px;
+    font-size: 0.9rem;
+    width: 100%;
+  }
+  
+  .aquario-card-header {
+    padding: 12px;
+    gap: 10px;
+  }
+  
+  .aquario-icon {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .aquario-icon .material-icons-outlined {
+    font-size: 18px;
+  }
+  
+  .aquario-fields {
+    padding: 12px;
+    gap: 10px;
+  }
+  
+  .aquario-field label {
+    font-size: 0.7rem;
+  }
+  
+  .add-aquario-form {
+    padding: 12px;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .section-header {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  .section-header h3 {
+    flex: 1;
+  }
+}
+
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
 }
 
 /* ========== MODAL DE GRÁFICOS ========== */
@@ -4448,6 +5651,22 @@ td {
   }
   .lighting-cards {
     grid-template-columns: 1fr;
+  }
+  .time-photo-row {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+  .time-card {
+    padding: 0.75rem 1rem;
+    min-width: auto;
+  }
+  .time-value {
+    font-size: 1.4rem;
+  }
+  .photo-card, .schedule-card {
+    padding: 0.75rem 1rem;
+    flex: 1;
+    min-width: 140px;
   }
   .sensors-grid {
     grid-template-columns: 1fr;

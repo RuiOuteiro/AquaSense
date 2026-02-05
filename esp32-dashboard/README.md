@@ -1,6 +1,6 @@
-# AquaSense - Sistema de Monitorização e Manutenção de Aquário
+# AquaSense - Sistema de Monitorização de Aquário
 
-Dashboard para monitorização e controlo do aquário
+Dashboard para monitorização e controlo de aquário com ESP32, IA e interface web.
 
 ## Início Rápido
 
@@ -19,11 +19,9 @@ mysql -u root -P 3309 < schema_dump.sql
 ```
 
 ### 2. Dashboard Web
-For windows Node.js is [required](https://nodejs.org/en/download).
 
 ```bash
-
-cd esp32-dashboard/app
+cd esp32-dashboard
 npm install        # Só na primeira vez
 npm run dev        # Inicia em http://localhost:3001
 ```
@@ -85,10 +83,33 @@ Password: admin123
 | `python3 ai/api_server.py` | Iniciar servidor IA |
 | `sudo /opt/lampp/lampp startmysql` | Iniciar MySQL |
 
+## Notificações Telegram
+
+O AquaSense envia alertas para o Telegram quando os sensores saem dos limites definidos.
+
+### Configurar Bot
+
+1. Abrir o Telegram e procurar **@BotFather**
+2. Enviar `/newbot` e segue as instruções
+3. Guardar o **token** do bot (já configurado no sistema)
+
+### Obter Chat ID
+
+1. Procurar **@userinfobot** no Telegram
+2. Enviar qualquer mensagem
+3. Copiar o **ID**
+
+### Ativar no Dashboard
+
+1. Abrir o **Perfil** no dashboard do Aquasense
+2. Na secção **Alertas Telegram**, colar o Chat ID
+3. Guardar
+4. Receber mensagem de confirmação no Telegram
+
 ## Portas
 
 | Serviço | Porta |
 |---------|-------|
 | Dashboard | 3001 |
-| API IA | 5000 |
+| IA API | 5000 |
 | MySQL | 3309 |

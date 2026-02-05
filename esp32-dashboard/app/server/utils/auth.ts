@@ -4,7 +4,7 @@ import type { H3Event } from 'h3'
 
 // Chave secreta para JWT (em produção usar variável de ambiente)
 const JWT_SECRET = process.env.JWT_SECRET || 'aquasense_super_secret_key_2026_change_in_production'
-const JWT_EXPIRES_IN = '7d'
+const JWT_EXPIRES_IN = '10y'
 
 export interface UserPayload {
   id: number
@@ -96,9 +96,9 @@ export function requireAuth(event: H3Event): UserPayload {
 export function setAuthCookie(event: H3Event, token: string) {
   setCookie(event, 'auth_token', token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: false, // Permitir HTTP em desenvolvimento
     sameSite: 'lax',
-    maxAge: 60 * 60 * 24 * 7, // 7 dias
+    maxAge: 60 * 60 * 24 * 365 * 10, // 10 anos (sessão persistente)
     path: '/'
   })
 }

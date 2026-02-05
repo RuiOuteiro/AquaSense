@@ -13,7 +13,7 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    // Buscar utilizador
+    // Procurar utilizador
     const [rows] = await pool.execute(
       'SELECT id, email, password_hash, nome, ativo FROM utilizadores WHERE email = ?',
       [email.toLowerCase()]

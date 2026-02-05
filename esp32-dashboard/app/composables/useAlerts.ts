@@ -33,8 +33,40 @@ const defaultConfig: AlertConfig = {
 }
 
 const alertConfig = ref<AlertConfig>({ ...defaultConfig })
+const configLoaded = ref(false)
 
 export function useAlerts() {
+  // Carregar config da API
+  async function loadConfig() {
+    if (configLoaded.value) return
+    try {
+      const res = await $fetch<{ success: boolean; config: AlertConfig }>('/api/alertas/config')
+      if (res.success && res.config) {
+        alertConfig.value = res.config
+        configLoaded.value = true
+      }
+    } catch (e) {
+      console.error('Erro ao carregar config alertas:', e)
+    }
+  }
+
+  // Guardar config na API
+  async function saveConfig(newConfig: AlertConfig): Promise<boolean> {
+    try {
+      const res = await $fetch<{ success: boolean }>('/api/alertas/config', {
+        method: 'PUT',
+        body: newConfig
+      })
+      if (res.success) {
+        alertConfig.value = newConfig
+        return true
+      }
+      return false
+    } catch (e) {
+      console.error('Erro ao guardar config alertas:', e)
+      return false
+    }
+  }
   function addAlert(alert: Omit<Alert, 'id' | 'timestamp'>) {
     if (!alertConfig.value.enabled) return
 
@@ -140,7 +172,10 @@ export function useAlerts() {
   }
 
   function updateConfig(newConfig: Partial<AlertConfig>) {
-    alertConfig.value = { ...alertConfig.value, ...newConfig }
+    const updated = { ...alertConfig.value, ...newConfig }
+    alertConfig.value = updated
+    // Guardar na API automaticamente
+    saveConfig(updated)
   }
 
   function getConfig() {
@@ -156,6 +191,8 @@ export function useAlerts() {
     clearAlerts,
     checkParameters,
     updateConfig,
-    getConfig
+    getConfig,
+    loadConfig,
+    saveConfig
   }
 }
