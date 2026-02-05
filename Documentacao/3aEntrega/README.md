@@ -654,10 +654,6 @@ O sistema oferece interação natural através de:
 - **Capacidade de histórico:** 1+ ano de dados
 - **Precisão do modelo IA:** ~98% em validação cruzada
 
-> **[PLACEHOLDER: Gráfico 1]** - Exemplo de dados recolhidos durante 24h
-
-> **[PLACEHOLDER: Gráfico 2]** - Comparação temperatura real vs medida
-
 ---
 
 ## Plano de Trabalho e Distribuição de Tarefas
