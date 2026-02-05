@@ -242,7 +242,7 @@ CREATE TABLE `utilizadores` (
 
 LOCK TABLES `utilizadores` WRITE;
 /*!40000 ALTER TABLE `utilizadores` DISABLE KEYS */;
-INSERT INTO `utilizadores` VALUES (1,'ruimiguel616@gmail.com','$2b$10$XTyVHHrrRzC5VgC71f.ldOg4Dz8bPxGecT7LAygAjaGdj/zItFuka','Rui','2026-02-04 18:24:10','2026-02-05 00:28:24',1,'7104165881',1);
+INSERT INTO `utilizadores` VALUES (1,'aquasense@email.pt','$2b$10$XTyVHHrrRzC5VgC71f.ldOg4Dz8bPxGecT7LAygAjaGdj/zItFuka','Aquasense Teste','2026-02-04 18:24:10','2026-02-05 00:28:24',1,'7104165881',1);
 /*!40000 ALTER TABLE `utilizadores` ENABLE KEYS */;
 UNLOCK TABLES;
 
