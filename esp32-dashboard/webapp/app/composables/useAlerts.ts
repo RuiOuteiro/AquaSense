@@ -16,6 +16,8 @@ export interface AlertConfig {
   turbidezMax: number
   humidadeMin: number
   humidadeMax: number
+  tempAmbienteMin: number
+  tempAmbienteMax: number
 }
 
 const alerts = ref<Alert[]>([])
@@ -29,7 +31,9 @@ const defaultConfig: AlertConfig = {
   phMax: 7.5,
   turbidezMax: 30,
   humidadeMin: 40,
-  humidadeMax: 80
+  humidadeMax: 80,
+  tempAmbienteMin: 18,
+  tempAmbienteMax: 30
 }
 
 const alertConfig = ref<AlertConfig>({ ...defaultConfig })

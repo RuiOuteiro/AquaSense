@@ -130,7 +130,7 @@ export function useAquarios() {
   }
 
   return {
-    aquarios: readonly(aquarios),
+    aquarios,
     novoAquario,
     mostrarFormulario,
     erro,
