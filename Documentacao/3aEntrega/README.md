@@ -38,7 +38,7 @@ Paulo Jadaugy - 20241711
 - [Arquitetura por Camadas IoT](#arquitetura-por-camadas-iot)
 - [Ferramentas de Desenvolvimento](#ferramentas-de-desenvolvimento)
 - [Comunicação entre Módulos](#comunicação-entre-módulos)
-- [Esboço do Artefacto Físico](#esboço-do-artefacto-físico)
+- [Artefacto Físico](#esboço-do-artefacto-físico)
 - [Descrição da Solução e Arquitetura Implementada](#descrição-da-solução-e-arquitetura-implementada)
 - [Desenvolvimento e Prototipagem](#desenvolvimento-e-prototipagem)
 - [Integração de IA, Interação Natural e Sistema Completo](#integração-de-ia-interação-natural-e-sistema-completo)
@@ -126,6 +126,8 @@ Destacamos as seguintes funcionalidades:
 
 ## Infraestrutura Computacional
 
+O sistema AquaSense opera numa infraestrutura distribuída que combina dispositivos embebidos, servidores locais e serviços cloud.
+
 ```mermaid
 graph TB
     subgraph "Camada Edge"
@@ -202,9 +204,9 @@ Responsável pela recolha de dados do ambiente físico e atuação sobre o aquá
 | Sensor pH + módulo | 1 | Leitura pH |
 | Sensor turbidez | 1 | Leitura turbidez |
 | Relé 2 canais | 1 | Ventoinha + luz noturna |
-| MOSFET (IRLZ44N) | 1 | PWM LED 12V |
+| Módulo MOSFET | 1 | PWM LED 12V |
 | Ventoinha 5V | 1 | Arrefecimento |
-| Fita LED branca 12V | 5m | Iluminação principal |
+| Fita LED branca/vermelha 12V | 5m | Iluminação principal |
 | Fita LED azul 12V | 3m | Iluminação noturna |
 | Fonte 12V + 5V | 2 | Alimentação |
 
@@ -244,8 +246,8 @@ Responsável pela comunicação entre dispositivos e servidor.
 
 #### Fluxo de Dados
 ```
-ESP32 → HTTP POST /api/sensors → Nitro Backend → MySQL
-ESP32 ← HTTP GET /api/config/esp32 ← Nitro Backend ← MySQL
+ESP32 -> HTTP POST /api/sensors -> Nitro Backend -> MySQL
+ESP32 <- HTTP GET /api/config/esp32 <- Nitro Backend <- MySQL
 ```
 
 #### Endpoints Principais
@@ -420,15 +422,15 @@ sequenceDiagram
 
 | Comunicação | Protocolo | Formato | Frequência |
 |-------------|-----------|---------|------------|
-| ESP32 → Backend | HTTP POST | JSON | 15 segundos |
-| Backend → ESP32 | HTTP GET | JSON | Por pedido |
-| Backend → MySQL | TCP/MySQL | SQL | Por operação |
-| Backend → Flask IA | HTTP REST | JSON | Por pedido |
-| Backend → Telegram | HTTPS | JSON | Por alerta |
+| ESP32 -> Backend | HTTP POST | JSON | 15 segundos |
+| Backend -> ESP32 | HTTP GET | JSON | Por pedido |
+| Backend -> MySQL | TCP/MySQL | SQL | Por operação |
+| Backend -> Flask IA | HTTP REST | JSON | Por pedido |
+| Backend -> Telegram | HTTPS | JSON | Por alerta |
 
 ### Estrutura de Mensagens
 
-**ESP32 → Backend (POST /api/sensors):**
+**ESP32 -> Backend (POST /api/sensors):**
 ```json
 {
   "device_id": "esp32_01",
@@ -443,7 +445,7 @@ sequenceDiagram
 }
 ```
 
-**Backend → ESP32 (GET /api/config/esp32):**
+**Backend -> ESP32 (GET /api/config/esp32):**
 ```json
 {
   "luz_estado": true,
@@ -458,7 +460,7 @@ sequenceDiagram
 
 ---
 
-## Esboço do Artefacto Físico
+## Artefacto Físico
 
 ### Descrição Geral
 
@@ -467,11 +469,11 @@ O artefacto físico do AquaSense consiste numa caixa de controlo impermeável qu
 ### Componentes Físicos
 
 **Caixa de Controlo:**
-- Caixa estanque IP65 (aproximadamente 20x15x10 cm)
-- ESP32 montado em placa de prototipagem
+- Caixa de plástico transparente (aproximadamente 40x15x15 cm)
+- ESP32 montado em breadboard
 - Módulo relé de 2 canais para controlo de cargas
-- MOSFET IRLZ44N para dimming PWM da iluminação
-- Fonte de alimentação 12V/5V integrada
+- Módulo mosfet para dimming PWM da iluminação
+- Fontes de alimentação 12V/5V
 - Buzzer para alertas sonoros locais
 - LED indicador de estado
 
@@ -482,9 +484,9 @@ O artefacto físico do AquaSense consiste numa caixa de controlo impermeável qu
 - DHT11 (exterior, mede ambiente)
 
 **Atuadores:**
-- Fita LED branca 12V (iluminação principal, com dimming)
+- Fita LED branca/vermelha 12V (iluminação principal, com dimming)
 - Fita LED azul 12V (iluminação noturna)
-- Ventoinha 5V/12V (arrefecimento por evaporação)
+- Ventoinha 5V (arrefecimento por evaporação)
 
 ### Layout Físico
 > **[Layout Fisico](/Documentacao/3aEntrega/Ficheiros/Layout%20Fisico.jpeg)** - Vista geral do sistema montado no aquário
@@ -538,11 +540,12 @@ flowchart LR
 - Montagem inicial do circuito em breadboard
 - Testes individuais de cada sensor
 - Validação da comunicação WiFi do ESP32
-- Primeiro protótipo de dashboard
+- Primeiro protótipo de dashboard em Nuxt
+- Integração com base de dados
 
 ### Fase 2: Integração Hardware
 
-- Soldagem de componentes em placa perfurada
+- Soldagem das fitas led em série
 - Integração de todos os sensores
 - Calibração do sensor de pH
 - Testes de atuadores (relés, Módulo MOSFET)
@@ -552,11 +555,10 @@ flowchart LR
 - Implementação do firmware ESP32
 - Desenvolvimento da API REST
 - Criação do dashboard Vue/Nuxt
-- Integração com base de dados
 
 ### Fase 4: Integração IA
 
-- Treino do modelo de rede neural
+- Desenvolvimento e treino do modelo de rede neural
 - Implementação do servidor Flask
 - Integração com o backend principal
 - Testes de sugestões de fotoperíodo
@@ -578,7 +580,7 @@ O AquaSense integra um modelo de rede neural desenvolvido em PyTorch que analisa
 
 **Arquitetura do Modelo:**
 - Tipo: Rede Neural Feedforward
-- Camadas: 3 camadas densas (64 → 32 → 16 neurónios)
+- Camadas: 3 camadas densas (64 -> 32 -> 16 neurónios)
 - Função de ativação: ReLU
 - Output: Sugestão de duração de fotoperíodo (horas)
 
@@ -602,14 +604,9 @@ flowchart LR
 
 O sistema oferece interação natural através de:
 
-1. **Notificações Telegram** - Alertas em linguagem natural
-   - "Temperatura da água atingiu 30°C! Valor acima do limite (28°C)."
-   - "AquaSense conectado com sucesso!"
+1. **Sugestões contextuais** - Recomendações sobre decisões de manutenção baseadas em dados
 
-2. **Sugestões contextuais** - Recomendações baseadas em dados
-   - "Sugerimos reduzir o fotoperíodo para 8h devido à turbidez elevada."
-
-3. **Dashboard intuitivo** - Interface visual sem necessidade de comandos
+2. **Dashboard intuitivo** - Interface visual sem necessidade de comandos
 
 ---
 
@@ -639,9 +636,9 @@ O sistema oferece interação natural através de:
 
 | Teste | Descrição | Resultado |
 |-------|-----------|-----------|
-| End-to-end | Sensor → BD → Dashboard | Latência < 5s |
+| End-to-end | Sensor -> BD -> Dashboard | Latência < 5s |
 | Ciclo completo | Alerta automático | Funcional |
-| IA integration | Sugestão de fotoperíodo | Precisão 85% |
+| IA | Sugestão de fotoperíodo | Precisão 85% |
 | Multi-utilizador | 3 utilizadores simultâneos | Sem conflitos |
 
 ### Resultados Quantitativos
@@ -649,7 +646,6 @@ O sistema oferece interação natural através de:
 - **Tempo médio de resposta API:** 45ms
 - **Consumo energético ESP32:** ~150mA (WiFi ativo)
 - **Frequência de leituras:** 15 segundos
-- **Capacidade de histórico:** 1+ ano de dados
 - **Precisão do modelo IA:** ~98% em validação cruzada
 
 ---
@@ -668,7 +664,7 @@ O sistema oferece interação natural através de:
 | Frontend Vue/Nuxt | Dashboard, modais, componentes | 40h |
 | Integração Telegram | Bot e sistema de notificações | 10h |
 | Testes hardware | Calibração e validação de sensores | 8h |
-| Documentação | Esquemas elétricos, README | 7h |
+| Documentação | Esquemas elétricos,vídeos, README | 7h |
 
 #### Paulo Jadaugy (20241711)
 **Responsabilidades principais:** Backend, APIs, Integração
@@ -678,7 +674,7 @@ O sistema oferece interação natural através de:
 | API REST | Endpoints Nuxt/Nitro | 30h |
 | Base de dados | Schema MySQL, queries | 15h |
 | Autenticação | Sistema JWT, segurança | 12h |
-| Integração IA | Comunicação backend ↔ Flask | 10h |
+| Integração IA | Comunicação backend <-> Flask | 10h |
 | Testes API | Validação de endpoints | 8h |
 | Deploy | Configuração de servidores | 5h |
 
@@ -699,42 +695,45 @@ O sistema oferece interação natural através de:
 
 ---
 
-## Próximas Etapas
+## Próximas Etapas (após a finalização da UC, devido a componentes ainda em trânsito)
 
-### Curto Prazo (1-2 meses)
+* Instalação de duas bombas peristálticas para dosagem de fertilizantes (micro e macronutrientes) no aquário, controladas através de módulo MOSFET.
+* Implementação de módulo MOSFET 220 V para controlo da válvula solenóide responsável pela injeção de CO₂, interrompendo o funcionamento quando o pH for detetado fora dos parâmetros definidos.
+* Construção de um alimentador automático de peixes.
+* Implementação de sensor de nível tipo float switch.
+* Implementação de sensor de fugas de água (leak sensor).
+* Implementação de câmara de monitorização.
+* Otimização do modelo de inteligência artificial para validação e aprendizagem baseada no feedback do utilizador, após a execução das ações sugeridas pela IA.
 
-- [ ] **Sensor de nível de água** - Deteção automática de evaporação
-- [ ] **Notificações push** - Alternativa ao Telegram via PWA
-- [ ] **Modo offline** - Armazenamento local no ESP32 quando sem rede
-- [ ] **Calibração automática** - Assistente para calibrar sensores
+Se quiseres, também posso normalizar isto para formato de relatório técnico ou documentação de projeto, porque neste tipo de listas convém manter consistência entre termos elétricos, eletrónicos e de automação.
 
-### Médio Prazo (3-6 meses)
-
-- [ ] **Aplicação móvel nativa** - Android/iOS com React Native
-- [ ] **Múltiplos aquários** - Gestão de vários sistemas numa conta
-- [ ] **Integração Home Assistant** - Protocolo MQTT
-- [ ] **Previsão de manutenção** - IA para prever necessidade de limpeza
-- [ ] **Comunidade** - Partilha de configurações entre utilizadores
-
-### Longo Prazo (6-12 meses)
-
-- [ ] **Sensor de amónia/nitritos** - Parâmetros críticos adicionais
-- [ ] **Alimentador automático** - Integração com dispensador
-- [ ] **Câmara** - Streaming e deteção de anomalias visuais
-- [ ] **Marketplace** - Venda de kits pré-montados
-- [ ] **API pública** - Integração com serviços de terceiros
 
 ---
 
 ## Conclusão
 
-O AquaSense resultou de um trabalho prolongado e exigente, integrando conhecimentos de IoT, Sistemas Distribuídos, Engenharia de Software e Inteligência Artificial num único sistema funcional. 
+O projeto AquaSense atingiu com sucesso os objetivos propostos, resultando num sistema funcional de monitorização e controlo inteligente de aquários. A solução desenvolvida demonstra a viabilidade de criar um produto IoT completo utilizando tecnologias acessíveis e de baixo custo.
 
-Ao longo do projeto, foi desenvolvida uma solução capaz de monitorizar automaticamente a qualidade da água através de sensores e análise inteligente de dados. 
-A arquitetura modular reflete um processo de aprendizagem contínuo, permitindo a integração eficaz entre hardware e software. 
+### Objetivos Alcançados
 
-Para além da componente técnica, o projeto reforçou competências de planeamento, tomada de decisão e resolução de problemas reais. 
-O AquaSense representa, assim, não apenas uma solução tecnológica, mas o culminar prático de quatro unidades curriculares interligadas.
+**Monitorização em tempo real** - Leituras de temperatura, pH, turbidez e condições ambientais a cada 15 segundos
+
+**Automação inteligente** - Controlo automático de iluminação com fade PWM e ventilação por temperatura
+
+**Interface intuitiva** - Dashboard web responsivo com gráficos e configurações
+
+**Sistema de alertas** - Notificações Telegram em tempo real para situações críticas
+
+**Integração de IA** - Modelo de rede neural para sugestões de fotoperíodo
+
+**Custo acessível** - Solução completa por menos de 50€ em componentes
+
+### Lições Aprendidas
+
+1. **Calibração de sensores** - A precisão depende fortemente de calibração cuidadosa
+2. **Comunicação WiFi** - Necessidade de reconexão automática robusta
+3. **Gestão de estado** - Sincronização entre ESP32 e servidor é crítica
+4. **User experience** - Interface simples é mais importante que funcionalidades complexas
 
 ### Contribuição do Projeto
 
