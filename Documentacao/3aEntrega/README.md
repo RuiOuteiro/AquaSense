@@ -734,9 +734,17 @@ O projeto constrói uma base técnica sólida para futuras melhorias, além de s
 
 ---
 
-## Autoavaliação: 20
+## Autoavaliação
 
-A classificação atribuída reflete o cumprimento integral dos objetivos propostos, a complexidade técnica do sistema desenvolvido e a qualidade da integração entre hardware, software e lógica de controlo. O projeto demonstra domínio consistente das quatro disciplinas envolvidas neste projeto PBL, ultrapassando o mínimo exigido em contexto académico, sendo adicionalmente um sistema operacional e utilizado continuamente, 24h por dia.
+Consideramos que existe cumprimento integral dos objetivos propostos. O projeto demonstra domínio das quatro disciplinas envolvidas neste projeto PBL.
+
+Para além do que foi proposto incialmente, foram adicionadas/alteradas algumas funcionalidades nomeadamente a respeito da iluminação, inicialmente tinhamos pensado usar luz branca, mas dada a importância de criar um sistema perfeito para aquários plantados, implementamos duas fitas led de cor vermelha, e três de cor azul. Sendo as azuis consideradas como luz noturna pelo efeito estético quando ligadas após o fim do fotoperiodo normal, tudo isto configurável através da web app.
+
+Além disto, tinhamos planeado construir um sistema de deteção de turbidez através de um LED e um sensor que recebia a luz do led, no entanto esta estratégia revelou ser ineficaz, pelo que obtemos um sensor de turbidez propriamente dito. 
+
+Embora de implementação simples, foram ainda adicionados um buzzer e um led que são activados aquando da activação da ventoinha, para um alerta local.
+
+Tinhamos outras ideias de implementação, descritas [aqui](#próximas-etapas)
 
 ---
 
