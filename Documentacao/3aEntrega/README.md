@@ -126,8 +126,6 @@ Destacamos as seguintes funcionalidades:
 
 ## Infraestrutura Computacional
 
-O sistema AquaSense opera numa infraestrutura distribuída que combina dispositivos embebidos, servidores locais e serviços cloud.
-
 ```mermaid
 graph TB
     subgraph "Camada Edge"
@@ -730,28 +728,13 @@ O sistema oferece interação natural através de:
 
 ## Conclusão
 
-O projeto AquaSense atingiu com sucesso os objetivos propostos, resultando num sistema funcional de monitorização e controlo inteligente de aquários. A solução desenvolvida demonstra a viabilidade de criar um produto IoT completo utilizando tecnologias acessíveis e de baixo custo.
+O AquaSense resultou de um trabalho prolongado e exigente, integrando conhecimentos de IoT, Sistemas Distribuídos, Engenharia de Software e Inteligência Artificial num único sistema funcional. 
 
-### Objetivos Alcançados
+Ao longo do projeto, foi desenvolvida uma solução capaz de monitorizar automaticamente a qualidade da água através de sensores e análise inteligente de dados. 
+A arquitetura modular reflete um processo de aprendizagem contínuo, permitindo a integração eficaz entre hardware e software. 
 
-**Monitorização em tempo real** - Leituras de temperatura, pH, turbidez e condições ambientais a cada 15 segundos
-
-**Automação inteligente** - Controlo automático de iluminação com fade PWM e ventilação por temperatura
-
-**Interface intuitiva** - Dashboard web responsivo com gráficos e configurações
-
-**Sistema de alertas** - Notificações Telegram em tempo real para situações críticas
-
-**Integração de IA** - Modelo de rede neural para sugestões de fotoperíodo
-
-**Custo acessível** - Solução completa por menos de 50€ em componentes
-
-### Lições Aprendidas
-
-1. **Calibração de sensores** - A precisão depende fortemente de calibração cuidadosa
-2. **Comunicação WiFi** - Necessidade de reconexão automática robusta
-3. **Gestão de estado** - Sincronização entre ESP32 e servidor é crítica
-4. **User experience** - Interface simples é mais importante que funcionalidades complexas
+Para além da componente técnica, o projeto reforçou competências de planeamento, tomada de decisão e resolução de problemas reais. 
+O AquaSense representa, assim, não apenas uma solução tecnológica, mas o culminar prático de quatro unidades curriculares interligadas.
 
 ### Contribuição do Projeto
 
