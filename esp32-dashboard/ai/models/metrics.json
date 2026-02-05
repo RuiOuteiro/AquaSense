@@ -1,11 +1,11 @@
 {
-  "source": "synthetic",
-  "n_samples": 10000,
-  "epochs_trained": 242,
-  "best_val_loss": 0.00044366627524141224,
+  "source": "database",
+  "n_samples": 20202,
+  "epochs_trained": 160,
+  "best_val_loss": 5.832346238920927e-05,
   "test_metrics": {
-    "photoperiod_mae": 0.17716899514198303,
-    "tpa_mae": 1.8803963661193848,
-    "feeding_mae": 1.0744750499725342
+    "photoperiod_mae": 0.01770971529185772,
+    "tpa_mae": 0.14391639828681946,
+    "feeding_mae": 0.10475640743970871
   }
 }
