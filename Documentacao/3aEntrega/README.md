@@ -313,6 +313,11 @@ Responsável pelo armazenamento, processamento e análise inteligente dos dados.
 
 Responsável pela interface com o utilizador.
 
+<div align="center">
+  <img src="https://github.com/RuiOuteiro/AquaSense/blob/main/Documentacao/3aEntrega/Ficheiros/Frontend.png" alt="Frontend Aquasense" width="500"/>
+  <p>Exemplo do UI utilizado no Frontend</p>
+</div>
+
 #### Tecnologias
 
 | Componente | Tecnologia |
