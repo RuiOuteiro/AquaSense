@@ -657,37 +657,38 @@ O sistema oferece interação natural através de:
 #### Rui Outeiro (20231566)
 **Responsabilidades principais:** Hardware, Firmware, Frontend, Telegram
 
-| Tarefa | Descrição | Esforço |
-|--------|-----------|---------|
-| Hardware | Montagem e soldagem do circuito completo | 25h |
-| Firmware ESP32 | Código Arduino para sensores e atuadores | 30h |
-| Frontend Vue/Nuxt | Dashboard, modais, componentes | 40h |
-| Integração Telegram | Bot e sistema de notificações | 10h |
-| Testes hardware | Calibração e validação de sensores | 8h |
-| Documentação | Esquemas elétricos,vídeos, README | 7h |
+| Área | Tarefa | Descrição |
+|-----|-------|-----------|
+| Hardware | Montagem do circuito | Montagem e soldagem do circuito completo |
+| Firmware ESP32 | Desenvolvimento de firmware | Código Arduino para sensores e atuadores |
+| Frontend Vue/Nuxt | Interface web | Dashboard, modais e componentes |
+| Integração Telegram | Notificações | Bot e sistema de notificações |
+| Testes hardware | Validação | Calibração e validação de sensores |
+| Documentação | Documentação técnica | Esquemas elétricos, vídeos e README |
 
-#### Paulo Jadaugy (20241711)
-**Responsabilidades principais:** Backend, APIs, Integração
+### Paulo Jadaugy (20241711)
+Responsabilidades principais: Backend, APIs, Integração
 
-| Tarefa | Descrição | Esforço |
-|--------|-----------|---------|
-| API REST | Endpoints Nuxt/Nitro | 30h |
-| Base de dados | Schema MySQL, queries | 15h |
-| Autenticação | Sistema JWT, segurança | 12h |
-| Integração IA | Comunicação backend <-> Flask | 10h |
-| Testes API | Validação de endpoints | 8h |
-| Deploy | Configuração de servidores | 5h |
+| Área | Tarefa | Descrição |
+|-----|-------|-----------|
+| Backend | API REST | Endpoints Nuxt/Nitro |
+| Backend | Base de dados | Schema MySQL e queries |
+| Segurança | Autenticação | Sistema JWT |
+| Backend / IA | Integração IA | Comunicação backend <-> Flask |
+| Backend | Testes API | Validação de endpoints |
+| Infraestrutura | Deploy | Configuração de servidores |
 
-#### Emanuel Carvalho (20231627)
-**Responsabilidades principais:** Inteligência Artificial, Arduino
+### Emanuel Carvalho (20231627)
+Responsabilidades principais: Inteligência Artificial, Arduino
 
-| Tarefa | Descrição | Esforço |
-|--------|-----------|---------|
-| Modelo IA | Arquitetura e treino PyTorch | 35h |
-| Servidor Flask | API para inferência | 12h |
-| Dataset | Recolha e preparação de dados | 15h |
-| Arduino | Apoio no desenvolvimento firmware | 10h |
-| Testes IA | Validação do modelo | 8h |
+| Área | Tarefa | Descrição |
+|-----|-------|-----------|
+| IA | Modelo IA | Arquitetura e treino em PyTorch |
+| IA | Servidor Flask | API para inferência |
+| IA | Dataset | Recolha e preparação de dados |
+| Firmware | Arduino | Apoio no desenvolvimento de firmware |
+| IA | Testes IA | Validação do modelo |
+
 
 ### Diagrama de Gantt Simplificado
 
