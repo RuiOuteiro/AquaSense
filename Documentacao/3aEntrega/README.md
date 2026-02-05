@@ -101,122 +101,191 @@ graph TD
     style DW fill:#7d94f5,stroke:#333,stroke-width:1px
 ```
     
-### Camada de perceção/dispositivos
+## Arquitetura por Camadas IoT
 
-#### Hardware 
+---
+
+### 1. Camada de Perceção (Dispositivos)
+
+Responsável pela recolha de dados do ambiente físico e atuação sobre o aquário.
+
+#### Hardware
 
 ![Imagem do circuito](./Ficheiros/circuit_image.svg)
-[Link do projeto](https://app.cirkitdesigner.com/project/a4304a47-1a98-431c-bca2-73c1af9060d3)
 
-## Ligações ao ESP32
+[Link do projeto no Cirkit Designer](https://app.cirkitdesigner.com/project/a4304a47-1a98-431c-bca2-73c1af9060d3)
 
-| GPIO ESP32 | Componente                     | Tipo de sinal   | Função                                   |
-| ---------- | ------------------------------ | --------------- | ---------------------------------------- |
-| GPIO 4     | Sensor DS18B20                 | OneWire         | Temperatura da água                      |
-| GPIO 26    | Sensor DHT11                   | Digital         | Temperatura e humidade ambiente          |
-| GPIO 34    | Sensor de pH                   | Analógico (ADC) | Leitura de pH                            |
-| GPIO 35    | Sensor de turbidez             | Analógico (ADC) | Leitura de turbidez                      |
-| GPIO 27    | Relé K1 (ventoinha)            | Digital         | Liga/desliga a ventoinha (ativo em LOW)  |
-| GPIO 25    | LED vermelho                   | Digital         | Indicador do estado da ventoinha         |
-| GPIO 33    | Buzzer passivo                 | PWM             | Alerta sonoro                            |
-| GPIO 21    | Módulo MOSFET (luz branca/vermelha 12V) | PWM    | Controlo de intensidade da luz principal |
-| GPIO 23    | Relé K2 (luz noturna)          | Digital         | Liga/desliga luz noturna                 |
-| 3V3        | Sensores                       | Alimentação     | Alimentação lógica                       |
-| 5V         | Relé / MOSFET                  | Alimentação     | Alimentação de módulos                   |
-| GND        | Todos os módulos e sensores    | GND comum       | Massa comum partilhada por todo o sistema|
+**Ligações ao ESP32:**
 
-## Material Utilizado
+| GPIO | Componente | Tipo | Função |
+|------|------------|------|--------|
+| GPIO 4 | DS18B20 | OneWire | Temperatura da água |
+| GPIO 26 | DHT11 | Digital | Temperatura/humidade ambiente |
+| GPIO 34 | Sensor pH | ADC | Leitura de pH |
+| GPIO 35 | Sensor turbidez | ADC | Leitura de turbidez |
+| GPIO 27 | Relé K1 | Digital | Ventoinha (ativo LOW) |
+| GPIO 25 | LED vermelho | Digital | Indicador ventoinha |
+| GPIO 33 | Buzzer passivo | PWM | Alerta sonoro |
+| GPIO 21 | MOSFET | PWM | Luz principal 12V |
+| GPIO 23 | Relé K2 | Digital | Luz noturna |
 
-| Componente                       | Quantidade | Observações             |
-| -------------------------------- | ---------- | ----------------------- |
-| ESP32                            | 1          | Controlador principal   |
-| Sensor DS18B20                   | 1          | Temperatura da água     |
-| Sensor DHT11                     | 1          | Temperatura e humidade  |
-| Sensor de pH com módulo          | 1          | Leitura de pH       |
-| Sensor de turbidez               | 1          | Leitura de turbidez         |
-| Relé 2 canais                    | 1          | Ventoinha + luz noturna |
-| Módulo MOSFET (IRLZ44N / F5305S) | 1          | PWM para LED 12V        |
-| Ventoinha 5V                     | 1          | Arrefecimento           |
-| Fita LED branca 12V              | 5 metros   | Iluminação principal    |
-| Fita LED vermelha 12V            | 2 metros   | Iluminação principal    |
-| Fita LED azul 12V                | 3 metros   | Iluminação noturna      |
-| LED vermelho                     | 1          | Indicador ventoinha ligada |
-| Buzzer passivo                   | 1          | Indicador ventoinha ligada |
-| Fonte 12V                        | 1          | Alimentação             |
-| Fonte 5V                         | 1          | Alimentação             | 
-| Resistência 4.7 kΩ               | 1          | Pull-up DS18B20         |
-| Resistência 10 kΩ                | 3          | Divisores de tensão     |
-| Resistência 1.2 kΩ               | 2          | Divisor turbidez        |
-| Resistência 220 Ω                | 2          | LED + buzzer            |
+**Material:**
 
-#### Software
+| Componente | Qtd | Notas |
+|------------|-----|-------|
+| ESP32 | 1 | Controlador principal |
+| DS18B20 | 1 | Temp. água |
+| DHT11 | 1 | Temp/humidade ambiente |
+| Sensor pH + módulo | 1 | Leitura pH |
+| Sensor turbidez | 1 | Leitura turbidez |
+| Relé 2 canais | 1 | Ventoinha + luz noturna |
+| MOSFET (IRLZ44N) | 1 | PWM LED 12V |
+| Ventoinha 5V | 1 | Arrefecimento |
+| Fita LED branca 12V | 5m | Iluminação principal |
+| Fita LED azul 12V | 3m | Iluminação noturna |
+| Fonte 12V + 5V | 2 | Alimentação |
 
-## Bibliotecas de Firmware (ESP32)
+#### Software (Firmware ESP32)
 
-| Biblioteca        | Função                             |
-| ----------------- | ---------------------------------- |
-| WiFi.h            | Conectividade WiFi                 |
-| HTTPClient.h      | Comunicação HTTP REST              |
-| ArduinoJson       | Serialização e parsing de JSON     |
-| OneWire           | Comunicação OneWire                |
-| DallasTemperature | Leitura do sensor DS18B20          |
-| DHT               | Leitura do sensor DHT11            |
-| time.h            | Sincronização horária via NTP      |
-| LEDC              | Controlo PWM (buzzer e iluminação) |
+| Biblioteca | Função |
+|------------|--------|
+| WiFi.h | Conectividade WiFi |
+| HTTPClient.h | Comunicação REST |
+| ArduinoJson | Parsing JSON |
+| OneWire + DallasTemperature | Sensor DS18B20 |
+| DHT | Sensor DHT11 |
+| time.h | Sincronização NTP |
+| LEDC | Controlo PWM |
 
-## Web App
+#### Processamento
+- Leitura periódica dos sensores (temperatura, pH, turbidez, humidade)
+- Controlo automático da ventoinha por temperatura
+- Controlo de iluminação por horário/modo com fade PWM
+- Envio de dados em batch via HTTP POST (JSON)
 
-| Camada        | Tecnologia          | Função                                 |
-| ------------- | ------------------- | -------------------------------------- |
-| Frontend      | Nuxt 4              | Interface de utilizador                |
-| Backend       | Nitro (Nuxt Server) | API REST e lógica de servidor          |
-| Base de Dados | MySQL               | Armazenamento de dados e configurações |
+#### Segurança
+- Validação de leituras antes do envio
+- Reconexão automática WiFi
+- Timeout em requests HTTP
 
-## Inteligência Artificial
+---
 
-| Componente | Tecnologia | Função                         |
-| ---------- | ---------- | ------------------------------ |
-| Framework  | PyTorch    | Rede Neural                    |
-| API        | Flask      | Exposição dos serviços de IA   |
+### 2. Camada de Rede (Conectividade)
 
-## Integrações
+Responsável pela comunicação entre dispositivos e servidor.
 
-| Serviço          | Função                         |
-| ---------------- | ------------------------------ |
-| Telegram Bot API | Alertas                        |
+#### Protocolo
+- **WiFi 2.4GHz** - Ligação do ESP32 à rede local
+- **HTTP/REST** - Comunicação ESP32 ↔ Backend
+- **JSON** - Formato de dados
+
+#### Fluxo de Dados
+```
+ESP32 → HTTP POST /api/sensors → Nitro Backend → MySQL
+ESP32 ← HTTP GET /api/config/esp32 ← Nitro Backend ← MySQL
+```
+
+#### Endpoints Principais
+
+| Método | Endpoint | Função |
+|--------|----------|--------|
+| POST | `/api/sensors` | Receber dados dos sensores |
+| GET | `/api/config/esp32` | Enviar configurações ao ESP32 |
+| GET/PUT | `/api/config` | Configurações do dashboard |
+| GET/PUT | `/api/alertas/config` | Configuração de alertas |
+| POST | `/api/auth/login` | Autenticação |
+
+#### Segurança
+- JWT para autenticação de utilizadores
+- Cookies HTTP-only para sessões
+- CORS configurado
+
+---
+
+### 3. Camada de Processamento (Backend + IA)
+
+Responsável pelo armazenamento, processamento e análise inteligente dos dados.
+
+#### Backend (Nitro/Nuxt)
+
+| Componente | Tecnologia | Função |
+|------------|------------|--------|
+| Runtime | Node.js | Execução |
+| Framework | Nuxt 4 / Nitro | API REST |
+| Base de Dados | MySQL | Persistência |
+| Auth | JWT + bcrypt | Autenticação |
+
+#### Inteligência Artificial
+
+| Componente | Tecnologia | Função |
+|------------|------------|--------|
+| Rede Neural | PyTorch | Modelo preditivo |
+| API Server | Flask | Exposição REST |
+| Preprocessing | scikit-learn | Normalização dados |
+
+**Endpoints IA:**
+
+| Endpoint | Função |
+|----------|--------|
+| GET `/api/ai/health` | Status do modelo |
+| GET `/api/ai/photoperiod` | Sugestão de fotoperíodo |
+| POST `/api/ai/apply` | Aplicar sugestão |
+
+#### Processamento
+- Armazenamento de leituras históricas
+- Cálculo de médias e estatísticas
+- Verificação de limites e geração de alertas
+- Inferência do modelo neural para sugestões
+
+#### Segurança
+- Passwords com hash bcrypt (salt 10)
+- Tokens JWT com expiração
+- Validação de inputs em todos os endpoints
+
+---
+
+### 4. Camada de Aplicação (Frontend)
+
+Responsável pela interface com o utilizador.
+
+#### Tecnologias
+
+| Componente | Tecnologia |
+|------------|------------|
+| Framework | Nuxt 4 + Vue 3 |
+| Styling | CSS custom |
+| Icons | Material Icons |
+| Fonts | Inter, JetBrains Mono |
+
+#### Funcionalidades
+- Dashboard em tempo real com gráficos
+- Configuração de fotoperíodo e ventilação
+- Gestão de alertas e notificações
+- Histórico de leituras
+- Sugestões de IA
+- Perfil de utilizador
+
+#### Integrações
+
+| Serviço | Função |
+|---------|--------|
+| Telegram Bot API | Notificações de alertas |
+
+#### Segurança
+- Autenticação obrigatória
+- Sessões com cookies seguros
+- Logout automático
+
+---
 
 ## Ferramentas de Desenvolvimento
 
-| Ferramenta      | Uso                            |
-| --------------- | ------------------------------ |
-| Node.js         | Ambiente de desenvolvimento web|
-| Arduino IDE     | Compilação e upload do firmware|
-| VS Code         | Desenvolvimento geral          |
-| GitHub          | Colaboração, controlo          |
-| XAMPP           | Ambiente local de servidor     |
-| Draw.io         | Diagramas e documentação       |
-| Cirkit Designer | Desenho do circuito eletrónico |
-
-#### Processamento de dados 
-#### Conectividade 
-#### Segurança
-
-
-### Camada de rede 
-#### Hardware 
-#### Software
-#### Conectividade 
-#### Segurança
-### Camada de processamento de dados
-#### Hardware
-#### Software
-#### Processamento de dados
-#### Conectividade
-#### Segurança
-
-### Camada de aplicação
-#### Hardware 
-#### Software
-#### Processamento de dados 
-#### Conectividade 
-#### Segurança
+| Ferramenta | Uso |
+|------------|-----|
+| VS Code | IDE principal |
+| Arduino IDE | Firmware ESP32 |
+| Node.js | Runtime web |
+| GitHub | Controlo de versões |
+| XAMPP | MySQL local |
+| Draw.io | Diagramas |
+| Cirkit Designer | Esquemas elétricos |
