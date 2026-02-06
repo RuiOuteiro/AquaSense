@@ -248,8 +248,8 @@ Aqui incluímos tudo o que é hardware - sensores, atuadores e o próprio ESP32.
 | Relé 2 canais | 1 | Ventoinha + luz noturna |
 | Módulo MOSFET | 1 | PWM LED 12V |
 | Ventoinha 5V | 1 | Arrefecimento |
-| Fita LED branca/vermelha 12V | 5m | Iluminação principal |
-| Fita LED azul 12V | 3m | Iluminação noturna |
+| Fita LED branca/vermelha 12V | 5 de 1m/2 de 1m | Iluminação principal |
+| Fita LED azul 12V | 3 de 1m | Iluminação noturna |
 | Fonte 12V + 5V | 2 | Alimentação |
 
 #### Software (Firmware ESP32)
