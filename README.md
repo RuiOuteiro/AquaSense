@@ -62,6 +62,7 @@ esp32-dashboard/
 #define WIFI_SSID "nome_da_rede"
 #define WIFI_PASSWORD "password"
 #define SERVER_IP "192.168.1.X"  // IP do servidor
+#define DEVICE_ID "ESP32_001" //ID do dispositivo
 ```
 
 ### Base de Dados (`.env`)
