@@ -36,15 +36,58 @@ Paulo Jadaugy - 20241711
 - [Identificação de Requisitos](#identificação-de-requisitos)
 - [Infraestrutura Computacional](#infraestrutura-computacional)
 - [Arquitetura por Camadas IoT](#arquitetura-por-camadas-iot)
+  - [1. Camada de Perceção (Dispositivos)](#1-camada-de-perceção-dispositivos)
+    - [Hardware](#hardware)
+    - [Software (Firmware ESP32)](#software-firmware-esp32)
+  - [2. Camada de Rede (Conectividade)](#2-camada-de-rede-conectividade)
+    - [Protocolo](#protocolo)
+    - [Fluxo de Dados](#fluxo-de-dados)
+    - [Endpoints Principais](#endpoints-principais)
+    - [Segurança](#segurança)
+  - [3. Camada de Processamento (Backend + IA)](#3-camada-de-processamento-backend--ia)
+    - [Backend (Nitro/Nuxt)](#backend-nitronuxt)
+    - [Inteligência Artificial](#inteligência-artificial)
+    - [Processamento](#processamento)
+    - [Segurança](#segurança-1)
+  - [4. Camada de Aplicação (Frontend)](#4-camada-de-aplicação-frontend)
+    - [Tecnologias](#tecnologias)
+    - [Funcionalidades](#funcionalidades)
+    - [Integrações](#integrações)
+    - [Segurança](#segurança-2)
 - [Ferramentas de Desenvolvimento](#ferramentas-de-desenvolvimento)
+  - [Especificações dos Servidores](#especificações-dos-servidores)
+  - [Requisitos de Sistema](#requisitos-de-sistema)
 - [Comunicação entre Módulos](#comunicação-entre-módulos)
+  - [Diagrama de Comunicação](#diagrama-de-comunicação)
+  - [Protocolos Utilizados](#protocolos-utilizados)
+  - [Estrutura de Mensagens](#estrutura-de-mensagens)
 - [Protótipo Físico](#protótipo-físico)
-- [Descrição da Solução e Arquitetura Implementada](#descrição-da-solução-e-arquitetura-implementada)
+  - [Descrição Geral](#descrição-geral)
+  - [Componentes Físicos](#componentes-físicos)
+  - [Layout e fotos](#layout-e-fotos)
+- [Solução e Arquitetura](#solução-e-arquitetura)
+  - [Visão Geral](#visão-geral)
+  - [Fluxo de Dados Principal](#fluxo-de-dados-principal)
+  - [Decisões Arquiteturais](#decisões-arquiteturais)
 - [Desenvolvimento e Prototipagem](#desenvolvimento-e-prototipagem)
-- [Integração de IA](#integração-de-ia)
+  - [Fase 1 - Prova de conceito](#fase-1---prova-de-conceito)
+  - [Fase 2 - Hardware](#fase-2---hardware)
+  - [Fase 3 - Software](#fase-3---software)
+  - [Fase 4 - IA](#fase-4---ia)
+  - [Fase 5 - Testes e documentação](#fase-5---testes-e-documentação)
+- [Componente de Inteligência Artificial](#componente-de-inteligência-artificial)
+  - [Modelo de Inteligência Artificial](#modelo-de-inteligência-artificial)
+  - [Interação Natural](#interação-natural)
 - [Testes e Resultados](#testes-e-resultados)
+  - [Testes de Hardware](#testes-de-hardware)
+  - [Testes de Software](#testes-de-software)
+  - [Testes de Integração](#testes-de-integração)
+  - [Alguns números](#alguns-números)
 - [Plano de Trabalho e Distribuição de Tarefas](#plano-de-trabalho-e-distribuição-de-tarefas)
+  - [Quem fez o quê](#quem-fez-o-quê)
+  - [Diagrama de Gantt Simplificado](#diagrama-de-gantt-simplificado)
 - [Próximas Etapas](#próximas-etapas)
+  - [O que conseguimos](#o-que-conseguimos)
 - [Conclusão](#conclusão)
 - [Autoavaliação](#autoavaliação)
  
@@ -52,9 +95,7 @@ Paulo Jadaugy - 20241711
  
 ## Introdução
  
-O AquaSense é um sistema inteligente para gestão e manutenção de aquários, cujo principal objetivo é
-automatizar e optimizar tarefas críticas como iluminação, controlo de parâmetros da água e arrefecimento,
-tirando partido de conectividade Wi-Fi, aplicação web e técnicas de inteligência artificial bem como alertas em tempo real.
+O AquaSense é um projecto que desenvolvemos para automatizar a gestão de aquários. Na prática, trata-se de um sistema que monitoriza parâmetros da água (temperatura, pH, turbidez), controla a iluminação e a ventilação, e envia alertas pelo Telegram quando algo não está bem. Tudo isto é acessível através de uma web app, e usamos também um modelo de IA para sugerir ajustes ao fotoperíodo.
  
  
 ## Público-Alvo
@@ -127,7 +168,7 @@ Destacamos as seguintes funcionalidades:
 
 ## Infraestrutura Computacional
 
-O sistema AquaSense opera numa infraestrutura distribuída que combina dispositivos embebidos, servidores locais e serviços cloud.
+O AquaSense usa um ESP32 ligado por WiFi a um servidor local que corre o backend, a base de dados e o modelo de IA. Para notificações, recorre à API do Telegram.
 
 ```mermaid
 graph TB
@@ -173,7 +214,7 @@ graph TB
 
 ### 1. Camada de Perceção (Dispositivos)
 
-Responsável pela recolha de dados do ambiente físico e atuação sobre o aquário.
+Aqui incluímos tudo o que é hardware - sensores, atuadores e o próprio ESP32.
 
 #### Hardware
 
@@ -240,7 +281,7 @@ Responsável pela recolha de dados do ambiente físico e atuação sobre o aquá
 
 ### 2. Camada de Rede (Conectividade)
 
-Responsável pela comunicação entre dispositivos e servidor.
+Esta camada trata da comunicação entre o ESP32 e o servidor.
 
 #### Protocolo
 - **WiFi 2.4GHz** - Ligação do ESP32 à rede local
@@ -264,15 +305,15 @@ ESP32 <- HTTP GET /api/config/esp32 <- Nitro Backend <- MySQL
 | POST | `/api/auth/login` | Autenticação |
 
 #### Segurança
-- JWT para autenticação de utilizadores
-- Cookies HTTP-only para sessões
-- CORS configurado
+- Usamos JWT para autenticar os utilizadores
+- As sessões ficam em cookies HTTP-only
+- O CORS está configurado para aceitar apenas origens conhecidas
 
 ---
 
 ### 3. Camada de Processamento (Backend + IA)
 
-Responsável pelo armazenamento, processamento e análise inteligente dos dados.
+Do lado do servidor, é onde os dados são guardados, processados e onde corre o modelo de IA.
 
 #### Backend (Nitro/Nuxt)
 
@@ -300,24 +341,24 @@ Responsável pelo armazenamento, processamento e análise inteligente dos dados.
 | POST `/api/ai/apply` | Aplicar sugestão |
 
 #### Processamento
-- Guarda o histórico de leituras para consulta posterior
-- Calcula médias e estatísticas a partir dos dados recolhidos
-- Compara os valores com os limites definidos e gera alertas quando necessário
-- Recorre ao modelo neural para produzir sugestões de fotoperíodo
+- Guarda todas as leituras no MySQL para consulta posterior
+- Calcula médias a partir dos dados que vai acumulando
+- Quando algum valor sai dos limites definidos pelo utilizador, gera um alerta
+- O modelo neural corre no Flask e devolve sugestões de fotoperíodo
  
 #### Segurança
-- Armazena as passwords com hash bcrypt (fator de custo 10)
-- Utiliza tokens JWT com validade limitada para gerir sessões
-- Valida todos os dados recebidos nos endpoints antes de os processar
+- As passwords ficam guardadas com hash bcrypt (salt 10)
+- Os tokens JWT têm validade limitada
+- Todos os inputs são validados antes de chegar à base de dados
  
 ---
 
 ### 4. Camada de Aplicação (Frontend)
 
-Responsável pela interface com o utilizador.
+A interface web é o ponto de contacto do utilizador com o sistema.
 
 <div align="center">
-  <img src="https://github.com/RuiOuteiro/AquaSense/blob/main/Documentacao/3aEntrega/Ficheiros/Frontend.png" alt="Frontend Aquasense" width="500"/>
+  <img src="./Ficheiros/Frontend.png" alt="Frontend Aquasense" width="500"/>
   <p>Exemplo do UI utilizado no Frontend</p>
 </div>
 
@@ -331,12 +372,12 @@ Responsável pela interface com o utilizador.
 | Fonts | Inter, JetBrains Mono |
 
 #### Funcionalidades
-- Apresenta os dados em tempo real e gráficos interativos
-- Permite configurar o fotoperíodo e o comportamento da ventilação
-- Inclui gestão de alertas na app e notificações via Telegram
-- Disponibiliza um histórico completo das leituras dos sensores
-- Mostra sugestões geradas pelo modelo de IA
-- Cada utilizador tem o seu próprio perfil podendo configurar vários aquários
+- Mostra os dados em tempo real e permite ver gráficos das últimas horas
+- Dá para configurar o fotoperíodo e escolher quando a ventoinha liga
+- Tem gestão de alertas na app e envia notificações pelo Telegram
+- Guarda o histórico de todas as leituras dos sensores
+- Mostra as sugestões que o modelo de IA calcula
+- Cada utilizador tem o seu perfil e pode ter vários aquários registados
  
 #### Integrações
 
@@ -346,9 +387,9 @@ Responsável pela interface com o utilizador.
 
 #### Segurança
 
-- Todas as páginas exigem autenticação prévia
-- As sessões são mantidas com cookies seguros
-- Sessão terminada automaticamente quando apropriado
+- Sem login não se acede a nada
+- As sessões usam cookies httpOnly
+- O logout é feito pelo utilizador ou automaticamente
 
 ---
 
@@ -377,9 +418,9 @@ Responsável pela interface com o utilizador.
 
 ### Requisitos de Sistema
 
-- **Servidor:** Node.js 18+, Python 3.9+, MySQL 8.0+
-- **Rede:** WiFi 2.4GHz, acesso à internet para APIs externas
-- **ESP32:** 4MB Flash, WiFi integrado
+- **Servidor:** precisa de Node.js 18+, Python 3.9+ e MySQL 8.0+
+- **Rede:** WiFi 2.4GHz e acesso à internet (para o Telegram)
+- **ESP32:** qualquer modelo com 4MB Flash e WiFi
 
 ---
 
@@ -468,8 +509,7 @@ sequenceDiagram
 
 ### Descrição Geral
 
-Este protótipo físico do AquaSense contém uma caixa à prova de água que abriga toda a eletrônica, posicionada ao lado do aquário. 
-Desta caixa, existem cabos que se estendem até os sensores submersos, bem como até os atuadores (iluminação e ventilação).
+Toda a electrónica está dentro de uma caixa de plástico transparente ao lado do aquário. Da caixa saem cabos para os sensores que estão dentro de água e para as fitas LED e ventoinha.
 
 ### Componentes Físicos
 
@@ -489,28 +529,27 @@ Desta caixa, existem cabos que se estendem até os sensores submersos, bem como 
 - DHT11 (exterior, mede ambiente)
 
 **Atuadores:**
-- Fita LED branca/vermelha 12V (iluminação principal, com dimming)
-- Fita LED azul 12V (iluminação noturna)
-- Ventoinha 5V (arrefecimento por evaporação)
+- 2 fitas LED vermelhas + 5 brancas 12V - são a luz principal do aquário, controladas por PWM para fazer fade
+- 3 fitas LED azuis 12V - usamos como luz noturna pelo efeito estético
+- Ventoinha 5V que liga quando a temperatura da água sobe acima do limite
 
-### Layout Físico
-> **[Layout Fisico](/Documentacao/3aEntrega/Ficheiros/Layout%20Fisico.jpeg)** - Vista geral do sistema montado no aquário
+### Layout e fotos
 
-### Fotografias do Protótipo
+> **[Ver layout físico](./Ficheiros/Layout%20Fisico.jpeg)**
 
-**[Links Fotografias Protótipo](/Documentacao/3aEntrega/Ficheiros/Prototipo/)**
+> **[Ver fotografias do protótipo](./Ficheiros/Prototipo/)**
 
 ---
 
-## Descrição da Solução e Arquitetura Implementada
+## Solução e Arquitetura
 
-### Visão Geral da Solução
+### Visão Geral
 
-Em termos de arquitetura existem três camadas que separam claramente as responsabilidades:
+Dividimos o sistema em três partes:
 
-1. **Camada de Perceção (Edge)** - ESP32 com sensores e atuadores
-2. **Camada de Processamento (Backend)** - Servidor Nuxt com API REST e IA
-3. **Camada de Apresentação (Frontend)** - Dashboard web
+1. **Edge** - o ESP32 com os sensores e atuadores, que está fisicamente no aquário
+2. **Backend** - servidor Nuxt com a API, base de dados e o modelo de IA
+3. **Frontend** - o dashboard web onde o utilizador vê tudo e configura o sistema
 
 ### Fluxo de Dados Principal
 
@@ -527,61 +566,46 @@ flowchart LR
 
 ### Decisões Arquiteturais
 
-| Decisão | Justificação |
-|---------|--------------|
-| Nuxt 4 full-stack | Unifica frontend e backend, reduz complexidade |
-| MySQL | Robusto, suporta queries complexas para históricos |
-| Flask para IA | Ecossistema Python rico em ML, fácil integração |
-| HTTP/JSON | Simples, debugável, suportado nativamente pelo ESP32 |
-| JWT | Autenticação stateless, escalável |
-| Telegram | Gratuito, ubíquo, API simples |
+| Decisão | Porquê |
+|---------|--------|
+| Nuxt 4 full-stack | Permite ter frontend e backend no mesmo projecto, simplifica bastante |
+| MySQL | Já conhecíamos e funciona bem para guardar históricos |
+| Flask para IA | O Python tem as melhores bibliotecas para ML, e o Flask é leve |
+| HTTP/JSON | Fácil de implementar e de fazer debug, o ESP32 suporta nativamente |
+| JWT | Não precisa de guardar estado no servidor |
+| Telegram | É grátis, toda a gente usa, e a API é fácil de integrar |
 
 ---
 
 ## Desenvolvimento e Prototipagem
 
-### Fase 1: Prova de Conceito
+### Fase 1 - Prova de conceito
 
-- Montagem inicial do circuito em breadboard
-- Testes individuais de cada sensor
-- Validação da comunicação WiFi do ESP32
-- Primeiro protótipo de dashboard em Nuxt
-- Integração com base de dados
+Começámos por montar o circuito em breadboard e testar cada sensor individualmente. Depois confirmámos que o ESP32 conseguia ligar-se ao WiFi e comunicar com o servidor. Nesta fase também fizémos o primeiro protótipo do dashboard em Nuxt e ligámos à base de dados.
 
-### Fase 2: Integração Hardware
+### Fase 2 - Hardware
 
-- Soldagem das fitas led em série
-- Integração de todos os sensores
-- Calibração do sensor de pH
-- Testes de atuadores (relés, Módulo MOSFET)
+Soldámos as fitas LED em série, integrámos todos os sensores no circuito, e calibrámos o sensor de pH com soluções padrão. Testámos também os relés e o módulo MOSFET.
 
-### Fase 3: Desenvolvimento Software
+### Fase 3 - Software
 
-- Implementação do firmware ESP32
-- Desenvolvimento da API REST
-- Criação do dashboard Vue/Nuxt
+O Rui ficou com o firmware do ESP32 e o dashboard, o Paulo tratou da API e da base de dados. Usamos Arduino/C++ no ESP32, Nuxt/Nitro no backend e Vue no frontend.
 
-### Fase 4: Integração IA
+### Fase 4 - IA
 
-- Desenvolvimento e treino do modelo de rede neural
-- Implementação do servidor Flask
-- Integração com o backend principal
-- Testes de sugestões de fotoperíodo
+O Emanuel construiu o modelo em PyTorch e pôs a correr num servidor Flask. Quando ficou pronto, o Paulo ligou-o ao backend e testámos se as sugestões de fotoperíodo faziam sentido com dados reais.
 
-### Fase 5: Testes e Refinamento
+### Fase 5 - Testes e documentação
 
-- Testes de estabilidade 24/7
-- Correção de bugs
-- Otimização de performance
-- Documentação
+O sistema ficou ligado vários dias seguidos para vermos se aguentava. Apareceram alguns bugs (sobretudo com reconexão WiFi e timeouts), que fomos resolvendo. A documentação e os esquemas foram preparados nesta altura.
 
 ---
 
-## Integração de IA
+## Componente de Inteligência Artificial
 
 ### Modelo de Inteligência Artificial
 
-O AquaSense integra um modelo de rede neural desenvolvido em PyTorch que analisa os dados históricos do aquário para fornecer sugestões de otimização.
+Usamos uma rede neural feita em PyTorch que, com base nos dados recolhidos do aquário, sugere ajustes ao fotoperíodo.
 
 **Arquitetura do Modelo:**
 - Tipo: Rede Neural Feedforward
@@ -594,7 +618,7 @@ O AquaSense integra um modelo de rede neural desenvolvido em PyTorch que analisa
 - Turbidez  
 - pH
 
-**Processo de Inferência:**
+**Como funciona a inferência:**
 
 ```mermaid
 flowchart LR
@@ -607,11 +631,11 @@ flowchart LR
 
 ### Interação Natural
 
-O sistema oferece interação natural através de:
+Em termos de interação com o utilizador:
 
-1. **Sugestões contextuais** - Recomendações sobre decisões de manutenção baseadas em dados
+1. **Sugestões contextuais** - o modelo dá recomendações com base nos dados que recolhe
 
-2. **Dashboard intuitivo** - Interface visual sem necessidade de comandos
+2. **Dashboard** - o utilizador configura tudo visualmente, sem precisar de escrever comandos
 
 ---
 
@@ -646,53 +670,44 @@ O sistema oferece interação natural através de:
 | IA | Sugestão de fotoperíodo | Precisão 85% |
 | Multi-utilizador | 3 utilizadores simultâneos | Sem conflitos |
 
-### Resultados Quantitativos
+### Alguns números
 
-- **Tempo médio de resposta API:** 45ms
-- **Consumo energético ESP32:** ~150mA (WiFi ativo)
-- **Frequência de leituras:** 15 segundos
-- **Precisão do modelo IA:** ~98% em validação cruzada
+- A API responde em média em 45ms
+- O ESP32 consome cerca de 150mA com WiFi ligado
+- As leituras são enviadas a cada 15 segundos
+- O modelo de IA acerta em ~98% dos casos na validação cruzada
 
 ---
 
 ## Plano de Trabalho e Distribuição de Tarefas
 
-### Distribuição por Membro
+### Quem fez o quê
 
-#### Rui Outeiro (20231566)
-**Responsabilidades principais:** Hardware, Firmware, Frontend, Telegram
+**Rui Outeiro (20231566)** - Hardware, Firmware, Frontend, Telegram
 
-| Área | Tarefa | Descrição |
-|-----|-------|-----------|
-| Hardware | Montagem do circuito | Montagem e soldagem do circuito completo |
-| Firmware ESP32 | Desenvolvimento de firmware | Código Arduino para sensores e atuadores |
-| Frontend Vue/Nuxt | Interface web | Dashboard, modais e componentes |
-| Integração Telegram | Notificações | Bot e sistema de notificações |
-| Testes hardware | Validação | Calibração e validação de sensores |
-| Documentação | Documentação técnica | Esquemas elétricos, vídeos e README |
+- Montou e soldou todo o circuito (sensores, relés, LEDs, etc.)
+- Escreveu o firmware do ESP32 em Arduino/C++
+- Fez o dashboard inteiro em Vue/Nuxt (interface, modais, gráficos)
+- Implementou o bot do Telegram e o sistema de notificações
+- Calibrou os sensores e fez os testes de hardware
+- Tratou da documentação técnica, esquemas e vídeos
 
-### Paulo Jadaugy (20241711)
-Responsabilidades principais: Backend, APIs, Integração
+**Paulo Jadaugy (20241711)** - Backend, APIs, Integração
 
-| Área | Tarefa | Descrição |
-|-----|-------|-----------|
-| Backend | API REST | Endpoints Nuxt/Nitro |
-| Backend | Base de dados | Schema MySQL e queries |
-| Segurança | Autenticação | Sistema JWT |
-| Backend / IA | Integração IA | Comunicação backend <-> Flask |
-| Backend | Testes API | Validação de endpoints |
-| Infraestrutura | Deploy | Configuração de servidores |
+- Desenvolveu a API REST em Nuxt/Nitro
+- Criou o schema MySQL e as queries
+- Implementou a autenticação com JWT
+- Fez a integração entre o backend e o servidor Flask de IA
+- Testou e validou os endpoints
+- Configurou a infraestrutura dos servidores
 
-### Emanuel Carvalho (20231627)
-Responsabilidades principais: Inteligência Artificial, Arduino
+**Emanuel Carvalho (20231627)** - IA, Arduino
 
-| Área | Tarefa | Descrição |
-|-----|-------|-----------|
-| IA | Modelo IA | Arquitetura e treino em PyTorch |
-| IA | Servidor Flask | API para inferência |
-| IA | Dataset | Recolha e preparação de dados |
-| Firmware | Arduino | Apoio no desenvolvimento de firmware |
-| IA | Testes IA | Validação do modelo |
+- Desenhou e treinou o modelo de rede neural em PyTorch
+- Criou o servidor Flask para servir o modelo
+- Recolheu e preparou o dataset
+- Ajudou no desenvolvimento do firmware Arduino
+- Fez os testes e validação do modelo
 
 
 ### Diagrama de Gantt Simplificado
@@ -703,37 +718,33 @@ Responsabilidades principais: Inteligência Artificial, Arduino
 
 ## Próximas Etapas 
 
-- Instalação de duas bombas peristálticas para dosagem de fertilizantes (micro e macronutrientes) no aquário, controladas através de módulo MOSFET.
-- Implementação de módulo MOSFET 220 V para controlo da válvula solenóide responsável pela injeção de gás carbónico cortando a energia quando o pH for detetado fora dos parâmetros definidos.
-- Construção de um alimentador automático para peixes, com reservatório de ração, mecanismo de dosagem e atuador elétrico (motor)
-- Implementação de sensor de nível com float switch.
-- Implementação de sensor de fugas de água.
-- Implementação de câmara de monitorização.
-- Otimização do modelo de inteligência artificial para validação e aprendizagem baseada no feedback do utilizador, após a execução das ações sugeridas pela IA.
+Há várias coisas que queremos adicionar ao sistema assim que os componentes chegarem:
+
+- Duas bombas peristálticas para dosagem automática de fertilizantes (micro e macro), controladas por MOSFET
+- Módulo MOSFET 220V para cortar a válvula solenóide de CO2 quando o pH sair dos parâmetros
+- Um alimentador automático para os peixes, com reservatório e motor para dosagem
+- Sensor de nível de água com float switch
+- Sensor de fugas de água
+- Câmara para monitorização visual do aquário
+- Melhorar o modelo de IA para aprender com o feedback do utilizador após aplicar as sugestões
 
 ---
 
-### Objetivos Alcançados
+### O que conseguimos
 
-**Monitorização em tempo real** - Leituras de temperatura, pH, turbidez e condições ambientais a cada 15 segundos
-
-**Controlos Automáticos** - Controlo automático de iluminação com fade PWM e ventilação por temperatura
-
-**Interface intuitiva** - Dashboard web responsivo com gráficos e configurações
-
-**Sistema de alertas** - Notificações na web app e Telegram em tempo real para situações críticas
-
-**Integração de IA** - Modelo de rede neural para sugestões de fotoperíodo e decisões de manuteção do aquário
+- Leituras de temperatura, pH, turbidez e humidade a cada 15 segundos, visiveis no dashboard
+- A iluminação liga e desliga sozinha com transição suave, e a ventoinha activa-se quando a temperatura sobe
+- O dashboard mostra tudo em tempo real com gráficos e funciona bem no telemóvel
+- Os alertas chegam ao Telegram em menos de 2 segundos quando algo sai dos limites
+- O modelo de IA já sugere ajustes ao fotoperíodo com base na turbidez e temperatura
 
 ---
 
 ## Conclusão
 
-O projeto AquaSense alcançou com sucesso todos os objetivos, e um sistema funcional foi desenvolvido para fornecer monitoramento e controle inteligente de aquários. 
-A solução demonstra que é possível implementar um sistema completo de IoT usando tecnologias acessíveis e de baixo custo, sem comprometer a funcionalidade ou a confiabilidade. 
-Ele é usado diariamente em um contexto real de aquário. 
+O AquaSense cumpriu aquilo a que nos propusemos - temos um sistema funcional que monitoriza o aquário em tempo real, controla a iluminação e a ventilação, e envia alertas quando algo está fora dos parâmetros. O sistema está montado e em uso diário num aquário real, o que mostra que é viável construir algo deste tipo com componentes acessíveis e sem grandes custos.
 
-O projeto constrói uma base técnica sólida para futuras melhorias, além de ser flexível e transferível para diferentes ambientes de monitoramento ambiental.
+A arquitectura que escolhemos permite expandir o sistema com relativa facilidade - as próximas etapas já estão pensadas e só dependem da chegada dos componentes.
 
 ---
 
