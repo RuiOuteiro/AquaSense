@@ -629,6 +629,12 @@ flowchart LR
     E --> F[Sugestão ao Utilizador]
 ```
 
+[Relatório técnico do modelo de Inteligência Artificial](https://github.com/RuiOuteiro/AquaSense/blob/main/esp32-dashboard/ai/README.md)
+
+[Relatório final do modelo preditivo](https://github.com/RuiOuteiro/AquaSense/blob/main/Documentacao/3aEntrega/Ficheiros/Relatorios/Relatorio%20Modelo%20Preditivo%20-%20IA.pdf)
+
+---
+
 ### Interação Natural
 
 Em termos de interação com o utilizador:
