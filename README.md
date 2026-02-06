@@ -45,12 +45,14 @@ python3 api_server.py             # Inicia em http://localhost:5000
 
 ```
 esp32-dashboard/
-├── app/              # Frontend Vue/Nuxt
-├── server/           # API endpoints
-├── ai/               # Modelo de IA
-│   ├── api_server.py # Servidor Flask
-│   └── src/          # Módulos do modelo
-└── aquasense/        # Código ESP32
+├── ai/                # Modelo de IA
+│   ├── api_server.py  # Servidor Flask
+│   └── src/           # Módulos do modelo
+├── aquasense/         # Código ESP32 (Arduino/C++)
+└── webapp/            # Web Application Root
+    ├── app/           # Frontend (Vue/Nuxt)
+    ├── public/        # Static assets (images, icons, etc.)
+    └── server/        # API endpoints / Backend
 ```
 
 ## Configuração
