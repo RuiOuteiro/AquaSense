@@ -14,7 +14,7 @@
 // ========== CONFIGURAÇÃO DO SERVIDOR ==========
 #define SERVER_IP "<Server_IP>"
 #define SERVER_PORT 3001
-#define DEVICEID "ESP32_001"
+#define DEVICE_ID "ESP32_001"
 
 // Macro auxiliar para converter número em string
 #define stringify(x) stringify2(x)

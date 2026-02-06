@@ -352,7 +352,7 @@ void enviarTodosDados(float temp, float tempAmb, float hum, float ph, float tens
   
   // Construir JSON com todos os sensores
   StaticJsonDocument<512> doc;
-  doc["device_id"] = DEVICEID;
+  doc["device_id"] = DEVICE_ID;
   JsonArray sensors = doc.createNestedArray("sensors");
   
   // Adicionar sensores válidos
